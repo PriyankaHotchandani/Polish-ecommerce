@@ -1,0 +1,127 @@
+{
+    "common": {
+        "welcome": "Witamy",
+        "loading": "Ładowanie...",
+        "error": "Wystąpił błąd",
+        "save": "Zapisz",
+        "cancel": "Anuluj",
+        "delete": "Usuń",
+        "edit": "Edytuj",
+        "search": "Szukaj",
+        "filter": "Filtruj",
+        "sort": "Sortuj według",
+        "viewAll": "Zobacz wszystko",
+        "backToHome": "Powrót do strony głównej"
+    },
+    "nav": {
+        "home": "Strona główna",
+        "shop": "Sklep",
+        "household": "Artykuły gospodarstwa domowego",
+        "tools": "Narzędzia i sprzęt",
+        "b2b": "Portal hurtowy",
+        "about": "O nas",
+        "login": "Zaloguj się",
+        "logout": "Wyloguj się",
+        "myAccount": "Moje konto",
+        "cart": "Koszyk"
+    },
+    "product": {
+        "price": "Cena",
+        "wholesalePrice": "Cena hurtowa",
+        "retail": "Detaliczna",
+        "youSave": "Oszczędzasz",
+        "addToCart": "Dodaj do koszyka",
+        "buyNow": "Kup teraz",
+        "outOfStock": "Brak w magazynie",
+        "inStock": "Dostępny",
+        "sku": "SKU",
+        "brand": "Marka",
+        "category": "Kategoria",
+        "specifications": "Specyfikacja",
+        "description": "Opis",
+        "details": "Szczegóły produktu"
+    },
+    "shop": {
+        "title": "Sklep",
+        "allProducts": "Wszystkie produkty",
+        "categories": "Kategorie",
+        "priceRange": "Zakres cen",
+        "brands": "Marki",
+        "clearFilters": "Wyczyść filtry",
+        "sortByNewest": "Najnowsze",
+        "sortByPriceLow": "Cena: od najniższej",
+        "sortByPriceHigh": "Cena: od najwyższej",
+        "sortByName": "Nazwa: A-Z",
+        "noProducts": "Nie znaleziono produktów",
+        "productsFound": "Znaleziono {count} produktów"
+    },
+    "auth": {
+        "signIn": "Zaloguj się",
+        "signUp": "Zarejestruj się",
+        "signOut": "Wyloguj się",
+        "email": "Email",
+        "password": "Hasło",
+        "confirmPassword": "Potwierdź hasło",
+        "forgotPassword": "Zapomniałeś hasła?",
+        "noAccount": "Nie masz konta?",
+        "hasAccount": "Masz już konto?",
+        "accountType": "Typ konta",
+        "retailCustomer": "Klient detaliczny (B2C)",
+        "businessCustomer": "Klient biznesowy (B2B)",
+        "companyName": "Nazwa firmy",
+        "nipNumber": "Numer NIP",
+        "welcomeBack": "Witaj ponownie!",
+        "createAccount": "Utwórz konto"
+    },
+    "b2b": {
+        "portal": "Portal hurtowy",
+        "loginRequired": "Zaloguj się kontem B2B, aby uzyskać dostęp do cen hurtowych",
+        "benefits": "Korzyści B2B",
+        "wholesalePricing": "Ekskluzywne ceny hurtowe",
+        "bulkOrders": "Rabaty hurtowe",
+        "invoices": "Automatyczne faktury VAT",
+        "dedicatedSupport": "Dedykowany opiekun konta"
+    },
+    "cart": {
+        "title": "Koszyk",
+        "empty": "Twój koszyk jest pusty",
+        "subtotal": "Suma częściowa",
+        "tax": "VAT (23%)",
+        "total": "Razem",
+        "checkout": "Przejdź do kasy",
+        "continueShopping": "Kontynuuj zakupy",
+        "quantity": "Ilość",
+        "remove": "Usuń",
+        "updateCart": "Aktualizuj koszyk"
+    },
+    "order": {
+        "myOrders": "Moje zamówienia",
+        "orderNumber": "Zamówienie nr",
+        "orderDate": "Data zamówienia",
+        "status": "Status",
+        "total": "Razem",
+        "viewDetails": "Zobacz szczegóły",
+        "pending": "Oczekujące",
+        "processing": "W realizacji",
+        "shipped": "Wysłane",
+        "delivered": "Dostarczone",
+        "requireInvoice": "Wymagana faktura B2B"
+    },
+    "home": {
+        "hero": {
+            "title": "BM SP. Z O. O.",
+            "subtitle": "Twój zaufany partner w artykułach gospodarstwa domowego i profesjonalnych narzędziach",
+            "shopHousehold": "Artykuły dla domu",
+            "shopTools": "Narzędzia"
+        },
+        "featured": "Produkty wyróżnione",
+        "newArrivals": "Nowości",
+        "popularCategories": "Popularne kategorie"
+    },
+    "about": {
+        "title": "O nas",
+        "ourStory": "Nasza historia",
+        "mission": "Nasza misja",
+        "values": "Nasze wartości"
+    }
+}

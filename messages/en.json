@@ -1,0 +1,127 @@
+{
+    "common": {
+        "welcome": "Welcome",
+        "loading": "Loading...",
+        "error": "An error occurred",
+        "save": "Save",
+        "cancel": "Cancel",
+        "delete": "Delete",
+        "edit": "Edit",
+        "search": "Search",
+        "filter": "Filter",
+        "sort": "Sort by",
+        "viewAll": "View All",
+        "backToHome": "Back to Home"
+    },
+    "nav": {
+        "home": "Home",
+        "shop": "Shop",
+        "household": "Household Products",
+        "tools": "Tools & Equipment",
+        "b2b": "Wholesale Portal",
+        "about": "About Us",
+        "login": "Login",
+        "logout": "Logout",
+        "myAccount": "My Account",
+        "cart": "Cart"
+    },
+    "product": {
+        "price": "Price",
+        "wholesalePrice": "Wholesale Price",
+        "retail": "Retail",
+        "youSave": "You save",
+        "addToCart": "Add to Cart",
+        "buyNow": "Buy Now",
+        "outOfStock": "Out of Stock",
+        "inStock": "In Stock",
+        "sku": "SKU",
+        "brand": "Brand",
+        "category": "Category",
+        "specifications": "Specifications",
+        "description": "Description",
+        "details": "Product Details"
+    },
+    "shop": {
+        "title": "Shop",
+        "allProducts": "All Products",
+        "categories": "Categories",
+        "priceRange": "Price Range",
+        "brands": "Brands",
+        "clearFilters": "Clear Filters",
+        "sortByNewest": "Newest First",
+        "sortByPriceLow": "Price: Low to High",
+        "sortByPriceHigh": "Price: High to Low",
+        "sortByName": "Name: A-Z",
+        "noProducts": "No products found",
+        "productsFound": "{count} products found"
+    },
+    "auth": {
+        "signIn": "Sign In",
+        "signUp": "Sign Up",
+        "signOut": "Sign Out",
+        "email": "Email",
+        "password": "Password",
+        "confirmPassword": "Confirm Password",
+        "forgotPassword": "Forgot Password?",
+        "noAccount": "Don't have an account?",
+        "hasAccount": "Already have an account?",
+        "accountType": "Account Type",
+        "retailCustomer": "Retail Customer (B2C)",
+        "businessCustomer": "Business Customer (B2B)",
+        "companyName": "Company Name",
+        "nipNumber": "NIP Number (Polish Tax ID)",
+        "welcomeBack": "Welcome back!",
+        "createAccount": "Create your account"
+    },
+    "b2b": {
+        "portal": "Wholesale Portal",
+        "loginRequired": "Please log in with a B2B account to access wholesale pricing",
+        "benefits": "B2B Benefits",
+        "wholesalePricing": "Exclusive Wholesale Pricing",
+        "bulkOrders": "Bulk Order Discounts",
+        "invoices": "Automatic Tax Invoices",
+        "dedicatedSupport": "Dedicated Account Manager"
+    },
+    "cart": {
+        "title": "Shopping Cart",
+        "empty": "Your cart is empty",
+        "subtotal": "Subtotal",
+        "tax": "VAT (23%)",
+        "total": "Total",
+        "checkout": "Proceed to Checkout",
+        "continueShopping": "Continue Shopping",
+        "quantity": "Quantity",
+        "remove": "Remove",
+        "updateCart": "Update Cart"
+    },
+    "order": {
+        "myOrders": "My Orders",
+        "orderNumber": "Order #",
+        "orderDate": "Order Date",
+        "status": "Status",
+        "total": "Total",
+        "viewDetails": "View Details",
+        "pending": "Pending",
+        "processing": "Processing",
+        "shipped": "Shipped",
+        "delivered": "Delivered",
+        "requireInvoice": "Require B2B Invoice"
+    },
+    "home": {
+        "hero": {
+            "title": "BM SP. Z O. O.",
+            "subtitle": "Your Trusted Partner for Household Products & Professional Tools",
+            "shopHousehold": "Shop Household",
+            "shopTools": "Shop Tools"
+        },
+        "featured": "Featured Products",
+        "newArrivals": "New Arrivals",
+        "popularCategories": "Popular Categories"
+    },
+    "about": {
+        "title": "About Us",
+        "ourStory": "Our Story",
+        "mission": "Our Mission",
+        "values": "Our Values"
+    }
+}
