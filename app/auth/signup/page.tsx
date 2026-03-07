@@ -45,6 +45,13 @@ export default function SignupPage() {
             const { data: authData, error: authError } = await supabase.auth.signUp({
                 email,
                 password,
+                options: {
+                    data: {
+                        role,
+                        company_name: role === 'b2b_customer' ? companyName : null,
+                        nip_number: role === 'b2b_customer' ? nipNumber : null,
+                    },
+                },
             })
 
             if (authError) {
@@ -54,27 +61,6 @@ export default function SignupPage() {
             }
 
             if (authData.user) {
-                // Create user profile in users table
-                const { error: profileError } = await supabase
-                    .from('users')
-                    .insert([
-                        {
-                            id: authData.user.id,
-                            email: email,
-                            role: role,
-                            company_name: role === 'b2b_customer' ? companyName : null,
-                            nip_number: role === 'b2b_customer' ? nipNumber : null,
-                        },
-                    ])
-
-                if (profileError) {
-                    console.error('Profile creation error:', profileError)
-                    setError('Failed to create user profile: ' + profileError.message)
-                    setLoading(false)
-                    return
-                }
-
-                // Success - redirect to home page (user is now logged in)
                 router.push('/')
                 router.refresh()
             }

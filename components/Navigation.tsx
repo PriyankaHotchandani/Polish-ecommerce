@@ -9,20 +9,64 @@ import { useCart } from '@/contexts/CartContext'
 
 export default function Navigation() {
     const [user, setUser] = useState<User | null>(null)
+    const [displayName, setDisplayName] = useState('')
     const supabase = createClient()
     const router = useRouter()
     const { getItemCount } = useCart()
     const itemCount = getItemCount()
 
     useEffect(() => {
+        const resolveDisplayName = async (authUser: User | null) => {
+            if (!authUser) {
+                setDisplayName('')
+                return
+            }
+
+            try {
+                const { data: profile } = await supabase
+                    .from('users')
+                    .select('first_name,last_name')
+                    .eq('id', authUser.id)
+                    .single()
+
+                const nameFromProfile = `${profile?.first_name || ''} ${profile?.last_name || ''}`.trim()
+                const nameFromMetadata = (authUser.user_metadata?.full_name as string | undefined)
+                    || `${authUser.user_metadata?.first_name || ''} ${authUser.user_metadata?.last_name || ''}`.trim()
+
+                setDisplayName(nameFromProfile || nameFromMetadata || authUser.email?.split('@')[0] || 'User')
+            } catch {
+                const nameFromMetadata = (authUser.user_metadata?.full_name as string | undefined)
+                    || `${authUser.user_metadata?.first_name || ''} ${authUser.user_metadata?.last_name || ''}`.trim()
+
+                setDisplayName(nameFromMetadata || authUser.email?.split('@')[0] || 'User')
+            }
+        }
+
         const getUser = async () => {
-            const { data: { user } } = await supabase.auth.getUser()
-            setUser(user)
+            try {
+                const { data, error } = await supabase.auth.getUser()
+
+                if (error) {
+                    await supabase.auth.signOut()
+                    setUser(null)
+                    setDisplayName('')
+                    return
+                }
+
+                setUser(data.user)
+                await resolveDisplayName(data.user)
+            } catch {
+                await supabase.auth.signOut()
+                setUser(null)
+                setDisplayName('')
+            }
         }
         getUser()
 
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-            setUser(session?.user ?? null)
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+            const sessionUser = session?.user ?? null
+            setUser(sessionUser)
+            await resolveDisplayName(sessionUser)
         })
 
         return () => subscription.unsubscribe()
@@ -64,14 +108,22 @@ export default function Navigation() {
                         </div>
                     </div>
                     <div className="flex items-center gap-4">
-                        {/* Orders Link (for logged-in users) */}
+                        {/* Account and Orders Links (for logged-in users) */}
                         {user && (
-                            <Link
-                                href="/orders"
-                                className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-gray-900"
-                            >
-                                Orders
-                            </Link>
+                            <>
+                                <Link
+                                    href="/account"
+                                    className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-gray-900"
+                                >
+                                    Account
+                                </Link>
+                                <Link
+                                    href="/orders"
+                                    className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-gray-900"
+                                >
+                                    Orders
+                                </Link>
+                            </>
                         )}
 
                         {/* Cart Icon */}
@@ -101,7 +153,7 @@ export default function Navigation() {
 
                         {user ? (
                             <div className="flex items-center space-x-4">
-                                <span className="text-sm text-gray-700">{user.email}</span>
+                                <span className="text-sm text-gray-700">{displayName || user.email}</span>
                                 <button
                                     onClick={handleSignOut}
                                     className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"

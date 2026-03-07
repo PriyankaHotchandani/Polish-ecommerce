@@ -15,7 +15,9 @@ UPDATE public.users u
 SET 
     email = au.email,
     first_name = au.raw_user_meta_data->>'first_name',
-    last_name = au.raw_user_meta_data->>'last_name'
+    last_name = au.raw_user_meta_data->>'last_name',
+    company_name = au.raw_user_meta_data->>'company_name',
+    nip_number = au.raw_user_meta_data->>'nip_number'
 FROM auth.users au
 WHERE u.id = au.id;
 
@@ -29,6 +31,8 @@ BEGIN
         email = NEW.email,
         first_name = NEW.raw_user_meta_data->>'first_name',
         last_name = NEW.raw_user_meta_data->>'last_name',
+        company_name = NEW.raw_user_meta_data->>'company_name',
+        nip_number = NEW.raw_user_meta_data->>'nip_number',
         updated_at = NOW()
     WHERE id = NEW.id;
     
@@ -48,19 +52,23 @@ CREATE OR REPLACE FUNCTION handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
     -- Insert into public.users when new user signs up
-    INSERT INTO public.users (id, email, first_name, last_name, role)
+    INSERT INTO public.users (id, email, first_name, last_name, role, company_name, nip_number)
     VALUES (
         NEW.id,
         NEW.email,
         NEW.raw_user_meta_data->>'first_name',
         NEW.raw_user_meta_data->>'last_name',
-        COALESCE((NEW.raw_user_meta_data->>'role')::user_role, 'b2c_customer')
+        COALESCE((NEW.raw_user_meta_data->>'role')::public.user_role, 'b2c_customer'::public.user_role),
+        NEW.raw_user_meta_data->>'company_name',
+        NEW.raw_user_meta_data->>'nip_number'
     )
     ON CONFLICT (id) DO UPDATE
     SET 
         email = EXCLUDED.email,
         first_name = EXCLUDED.first_name,
-        last_name = EXCLUDED.last_name;
+        last_name = EXCLUDED.last_name,
+        company_name = EXCLUDED.company_name,
+        nip_number = EXCLUDED.nip_number;
     
     RETURN NEW;
 END;

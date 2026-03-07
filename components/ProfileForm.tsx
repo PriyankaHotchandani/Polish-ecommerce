@@ -1,0 +1,255 @@
+'use client'
+
+import { useState } from 'react'
+import { createClient } from '@/utils/supabase/client'
+import type { User as UserType } from '@/types/database.types'
+import { useToast } from '@/components/admin/Toast'
+import { useRouter } from 'next/navigation'
+
+interface ProfileFormProps {
+    user: UserType
+    onSaved?: () => void
+}
+
+export default function ProfileForm({ user, onSaved }: ProfileFormProps) {
+    const [isEditing, setIsEditing] = useState(false)
+    const [loading, setLoading] = useState(false)
+    const router = useRouter()
+
+    const [formData, setFormData] = useState({
+        first_name: user.first_name || '',
+        last_name: user.last_name || '',
+        phone: user.phone || '',
+        company_name: user.company_name || '',
+        nip_number: user.nip_number || '',
+    })
+
+    const supabase = createClient()
+    const { addToast } = useToast()
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target
+        setFormData(prev => ({
+            ...prev,
+            [name]: value
+        }))
+    }
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault()
+        setLoading(true)
+
+        try {
+            const { error } = await supabase
+                .from('users')
+                .update({
+                    first_name: formData.first_name || null,
+                    last_name: formData.last_name || null,
+                    phone: formData.phone || null,
+                    company_name: formData.company_name || null,
+                    nip_number: formData.nip_number || null,
+                })
+                .eq('id', user.id)
+
+            if (error) {
+                addToast(`Failed to save profile: ${error.message}`, 'error')
+            } else {
+                const fullName = `${formData.first_name} ${formData.last_name}`.trim()
+                await supabase.auth.updateUser({
+                    data: {
+                        first_name: formData.first_name || null,
+                        last_name: formData.last_name || null,
+                        full_name: fullName || null,
+                    },
+                })
+
+                addToast('Profile updated successfully', 'success')
+                setIsEditing(false)
+                onSaved?.()
+                router.refresh()
+            }
+        } catch (err: any) {
+            addToast(err.message || 'An error occurred', 'error')
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    return (
+        <>
+            <div className="bg-white rounded-lg shadow-sm p-6">
+                <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-xl font-bold text-gray-900">Personal Information</h2>
+                    {!isEditing && (
+                        <button
+                            onClick={() => setIsEditing(true)}
+                            className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors"
+                        >
+                            Edit Profile
+                        </button>
+                    )}
+                </div>
+
+                {isEditing ? (
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        <div className="grid grid-cols-2 gap-6">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    First Name
+                                </label>
+                                <input
+                                    type="text"
+                                    name="first_name"
+                                    value={formData.first_name}
+                                    onChange={handleChange}
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Last Name
+                                </label>
+                                <input
+                                    type="text"
+                                    name="last_name"
+                                    value={formData.last_name}
+                                    onChange={handleChange}
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                />
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Email
+                            </label>
+                            <input
+                                type="email"
+                                value={user.email || ''}
+                                disabled
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-600 cursor-not-allowed"
+                            />
+                            <p className="text-xs text-gray-500 mt-1">Email cannot be changed here</p>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Phone
+                            </label>
+                            <input
+                                type="tel"
+                                name="phone"
+                                value={formData.phone}
+                                onChange={handleChange}
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                            />
+                        </div>
+
+                        {user.role === 'b2b_customer' && (
+                            <>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Company Name
+                                    </label>
+                                    <input
+                                        type="text"
+                                        name="company_name"
+                                        value={formData.company_name}
+                                        onChange={handleChange}
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        NIP Number (Polish Tax ID)
+                                    </label>
+                                    <input
+                                        type="text"
+                                        name="nip_number"
+                                        value={formData.nip_number}
+                                        onChange={handleChange}
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                    />
+                                </div>
+                            </>
+                        )}
+
+                        <div className="flex gap-4 pt-4 border-t border-gray-200">
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {loading ? 'Saving...' : 'Save Changes'}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setIsEditing(false)
+                                    setFormData({
+                                        first_name: user.first_name || '',
+                                        last_name: user.last_name || '',
+                                        phone: user.phone || '',
+                                        company_name: user.company_name || '',
+                                        nip_number: user.nip_number || '',
+                                    })
+                                }}
+                                className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </form>
+                ) : (
+                    <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-6">
+                            <div>
+                                <p className="text-sm text-gray-600 mb-1">First Name</p>
+                                <p className="text-base font-medium text-gray-900">
+                                    {formData.first_name || '—'}
+                                </p>
+                            </div>
+                            <div>
+                                <p className="text-sm text-gray-600 mb-1">Last Name</p>
+                                <p className="text-base font-medium text-gray-900">
+                                    {formData.last_name || '—'}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div>
+                            <p className="text-sm text-gray-600 mb-1">Email</p>
+                            <p className="text-base font-medium text-gray-900">{user.email || '—'}</p>
+                        </div>
+
+                        <div>
+                            <p className="text-sm text-gray-600 mb-1">Phone</p>
+                            <p className="text-base font-medium text-gray-900">
+                                {formData.phone || '—'}
+                            </p>
+                        </div>
+
+                        {user.role === 'b2b_customer' && (
+                            <>
+                                <div>
+                                    <p className="text-sm text-gray-600 mb-1">Company Name</p>
+                                    <p className="text-base font-medium text-gray-900">
+                                        {formData.company_name || '—'}
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <p className="text-sm text-gray-600 mb-1">NIP Number</p>
+                                    <p className="text-base font-medium text-gray-900">
+                                        {formData.nip_number || '—'}
+                                    </p>
+                                </div>
+                            </>
+                        )}
+                    </div>
+                )}
+            </div>
+        </>
+    )
+}

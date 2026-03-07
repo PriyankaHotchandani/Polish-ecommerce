@@ -18,25 +18,43 @@ export interface Database {
             users: {
                 Row: {
                     id: string
+                    email: string | null
+                    first_name: string | null
+                    last_name: string | null
                     role: UserRole
                     company_name: string | null
                     nip_number: string | null
+                    phone: string | null
+                    default_billing_address_id: string | null
+                    default_shipping_address_id: string | null
                     created_at: string
                     updated_at: string
                 }
                 Insert: {
                     id: string
+                    email?: string | null
+                    first_name?: string | null
+                    last_name?: string | null
                     role?: UserRole
                     company_name?: string | null
                     nip_number?: string | null
+                    phone?: string | null
+                    default_billing_address_id?: string | null
+                    default_shipping_address_id?: string | null
                     created_at?: string
                     updated_at?: string
                 }
                 Update: {
                     id?: string
+                    email?: string | null
+                    first_name?: string | null
+                    last_name?: string | null
                     role?: UserRole
                     company_name?: string | null
                     nip_number?: string | null
+                    phone?: string | null
+                    default_billing_address_id?: string | null
+                    default_shipping_address_id?: string | null
                     created_at?: string
                     updated_at?: string
                 }

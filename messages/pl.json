@@ -107,6 +107,35 @@
         "delivered": "Dostarczone",
         "requireInvoice": "Wymagana faktura B2B"
     },
+    "account": {
+        "title": "Moje konto",
+        "subtitle": "Zarządzaj profilem i ustawieniami konta",
+        "accountType": "Typ konta",
+        "retail": "Detaliczny (B2C)",
+        "business": "Biznesowy (B2B)",
+        "memberSince": "Członek od",
+        "quickLinks": "Szybkie linki",
+        "viewOrders": "Wyświetl zamówienia",
+        "continueShopping": "Kontynuuj zakupy"
+    },
+    "profile": {
+        "personalInfo": "Informacje osobiste",
+        "editProfile": "Edytuj profil",
+        "firstName": "Imię",
+        "lastName": "Nazwisko",
+        "email": "Email",
+        "emailNote": "Email nie może być zmieniony tutaj",
+        "phone": "Telefon",
+        "company": "Nazwa firmy",
+        "nip": "Numer NIP (polski NIP)",
+        "editPassword": "Zmień hasło",
+        "saveChanges": "Zapisz zmiany",
+        "cancel": "Anuluj",
+        "profileUpdated": "Profil został pomyślnie zaktualizowany",
+        "profileUpdateFailed": "Nie udało się zapisać profilu",
+        "defaultBilling": "Domyślny adres rozliczeniowy",
+        "defaultShipping": "Domyślny adres dostawy"
+    },
     "home": {
         "hero": {
             "title": "BM SP. Z O. O.",

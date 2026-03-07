@@ -107,6 +107,35 @@
         "delivered": "Delivered",
         "requireInvoice": "Require B2B Invoice"
     },
+    "account": {
+        "title": "My Account",
+        "subtitle": "Manage your profile and account settings",
+        "accountType": "Account Type",
+        "retail": "Retail (B2C)",
+        "business": "Business (B2B)",
+        "memberSince": "Member Since",
+        "quickLinks": "Quick Links",
+        "viewOrders": "View Orders",
+        "continueShopping": "Continue Shopping"
+    },
+    "profile": {
+        "personalInfo": "Personal Information",
+        "editProfile": "Edit Profile",
+        "firstName": "First Name",
+        "lastName": "Last Name",
+        "email": "Email",
+        "emailNote": "Email cannot be changed here",
+        "phone": "Phone",
+        "company": "Company Name",
+        "nip": "NIP Number (Polish Tax ID)",
+        "editPassword": "Change Password",
+        "saveChanges": "Save Changes",
+        "cancel": "Cancel",
+        "profileUpdated": "Profile updated successfully",
+        "profileUpdateFailed": "Failed to save profile",
+        "defaultBilling": "Default Billing Address",
+        "defaultShipping": "Default Shipping Address"
+    },
     "home": {
         "hero": {
             "title": "BM SP. Z O. O.",

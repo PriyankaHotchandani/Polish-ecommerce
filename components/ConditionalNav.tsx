@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import Link from 'next/link'
 import Navigation from './Navigation'
+import ProfileCompletenessPrompt from './ProfileCompletenessPrompt'
 
 export default function ConditionalNav() {
     const pathname = usePathname()
@@ -13,9 +14,21 @@ export default function ConditionalNav() {
 
     useEffect(() => {
         async function checkAdmin() {
-            const { data: { user } } = await supabase.auth.getUser()
+            try {
+                const { data, error } = await supabase.auth.getUser()
 
-            if (user) {
+                if (error) {
+                    await supabase.auth.signOut()
+                    setIsAdmin(false)
+                    return
+                }
+
+                const user = data.user
+                if (!user) {
+                    setIsAdmin(false)
+                    return
+                }
+
                 const { data: userData } = await supabase
                     .from('users')
                     .select('role')
@@ -23,6 +36,9 @@ export default function ConditionalNav() {
                     .single()
 
                 setIsAdmin(userData?.role === 'admin')
+            } catch {
+                await supabase.auth.signOut()
+                setIsAdmin(false)
             }
         }
 
@@ -37,6 +53,7 @@ export default function ConditionalNav() {
     return (
         <>
             <Navigation />
+            <ProfileCompletenessPrompt />
             {/* Floating Admin Panel Button */}
             {isAdmin && (
                 <Link
