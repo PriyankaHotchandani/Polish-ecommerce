@@ -2,6 +2,40 @@ import { createClient } from '@/utils/supabase/server'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 
+type Address = {
+    fullName?: string
+    email?: string
+    phone?: string
+    street?: string
+    city?: string
+    postalCode?: string
+    country?: string
+    companyName?: string
+    nipNumber?: string
+}
+
+const paymentMethodLabels: Record<string, string> = {
+    card: 'Card',
+    transfer: 'Bank Transfer',
+    cash_on_delivery: 'Cash on Delivery'
+}
+
+const paymentStatusLabels: Record<string, string> = {
+    pending: 'Pending',
+    processing: 'Processing',
+    completed: 'Completed',
+    failed: 'Failed',
+    refunded: 'Refunded'
+}
+
+const paymentStatusColors: Record<string, string> = {
+    pending: 'bg-yellow-100 text-yellow-800',
+    processing: 'bg-blue-100 text-blue-800',
+    completed: 'bg-green-100 text-green-800',
+    failed: 'bg-red-100 text-red-800',
+    refunded: 'bg-gray-100 text-gray-800'
+}
+
 const statusColors = {
     pending: 'bg-yellow-100 text-yellow-800',
     processing: 'bg-blue-100 text-blue-800',
@@ -55,6 +89,26 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                     >
                         View All Orders
                     </Link>
+                </div>
+            </div>
+        )
+    }
+
+    const renderAddressBlock = (title: string, address: Address | null | undefined) => {
+        if (!address) return null
+
+        return (
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <h3 className="text-sm font-semibold text-gray-900 mb-2">{title}</h3>
+                <div className="text-sm text-gray-700 space-y-1">
+                    {address.fullName && <p>{address.fullName}</p>}
+                    {address.companyName && <p>{address.companyName}</p>}
+                    {address.nipNumber && <p>NIP: {address.nipNumber}</p>}
+                    {address.street && <p>{address.street}</p>}
+                    {(address.postalCode || address.city) && <p>{address.postalCode} {address.city}</p>}
+                    {address.country && <p>{address.country}</p>}
+                    {address.phone && <p>Phone: {address.phone}</p>}
+                    {address.email && <p>Email: {address.email}</p>}
                 </div>
             </div>
         )
@@ -241,6 +295,30 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                         </div>
                     )}
                 </div>
+
+                {(order.shipping_address || order.billing_address || order.payment_method) && (
+                    <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+                        <h2 className="text-xl font-bold text-gray-900 mb-4">Delivery & Payment</h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {renderAddressBlock('Shipping Address', order.shipping_address as Address | null)}
+                            {renderAddressBlock('Billing Address', order.billing_address as Address | null)}
+                        </div>
+                        {order.payment_method && (
+                            <p className="mt-4 text-sm text-gray-700">
+                                <span className="font-semibold text-gray-900">Payment Method:</span>{' '}
+                                {paymentMethodLabels[order.payment_method] || order.payment_method}
+                            </p>
+                        )}
+                        <div className="mt-2">
+                            <span className="text-sm font-semibold text-gray-900">Payment Status:</span>{' '}
+                            <span className={`ml-2 px-3 py-1 text-xs font-semibold rounded-full ${
+                                paymentStatusColors[order.payment_status || 'pending']
+                            }`}>
+                                {paymentStatusLabels[order.payment_status || 'pending']}
+                            </span>
+                        </div>
+                    </div>
+                )}
 
                 {/* Actions */}
                 <div className="flex flex-col sm:flex-row gap-4">

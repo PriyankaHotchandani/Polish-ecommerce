@@ -3,6 +3,40 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import OrderStatusUpdater from '@/components/admin/OrderStatusUpdater'
 
+type Address = {
+    fullName?: string
+    email?: string
+    phone?: string
+    street?: string
+    city?: string
+    postalCode?: string
+    country?: string
+    companyName?: string
+    nipNumber?: string
+}
+
+const paymentMethodLabels: Record<string, string> = {
+    card: 'Card',
+    transfer: 'Bank Transfer',
+    cash_on_delivery: 'Cash on Delivery',
+}
+
+const paymentStatusLabels: Record<string, string> = {
+    pending: 'Pending',
+    processing: 'Processing',
+    completed: 'Completed',
+    failed: 'Failed',
+    refunded: 'Refunded',
+}
+
+const paymentStatusColors: Record<string, string> = {
+    pending: 'bg-yellow-100 text-yellow-800',
+    processing: 'bg-blue-100 text-blue-800',
+    completed: 'bg-green-100 text-green-800',
+    failed: 'bg-red-100 text-red-800',
+    refunded: 'bg-gray-100 text-gray-800',
+}
+
 export default async function AdminOrderDetailPage({
     params,
 }: {
@@ -36,6 +70,32 @@ export default async function AdminOrderDetailPage({
             delivered: 'bg-green-100 text-green-800',
         }
         return styles[status as keyof typeof styles] || 'bg-gray-100 text-gray-800'
+    }
+
+    const renderAddressBlock = (title: string, address: Address | null | undefined) => {
+        if (!address) {
+            return (
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                    <p className="text-sm text-gray-600">{title}: not provided</p>
+                </div>
+            )
+        }
+
+        return (
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <h3 className="text-sm font-semibold text-gray-900 mb-2">{title}</h3>
+                <div className="text-sm text-gray-700 space-y-1">
+                    {address.fullName && <p>{address.fullName}</p>}
+                    {address.companyName && <p>{address.companyName}</p>}
+                    {address.nipNumber && <p>NIP: {address.nipNumber}</p>}
+                    {address.street && <p>{address.street}</p>}
+                    {(address.postalCode || address.city) && <p>{address.postalCode} {address.city}</p>}
+                    {address.country && <p>{address.country}</p>}
+                    {address.phone && <p>Phone: {address.phone}</p>}
+                    {address.email && <p>Email: {address.email}</p>}
+                </div>
+            </div>
+        )
     }
 
     return (
@@ -201,12 +261,25 @@ export default async function AdminOrderDetailPage({
                         </div>
                     </div>
 
-                    {/* TODO: Shipping Address Section */}
-                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                        <p className="text-sm text-yellow-800">
-                            <strong>Note:</strong> Shipping and billing addresses are currently captured client-side during checkout
-                            but not persisted in the database. Future enhancement: Add order_metadata table to store this information.
-                        </p>
+                    {/* Fulfillment details */}
+                    <div className="bg-white rounded-lg shadow-sm p-6">
+                        <h2 className="text-xl font-bold text-gray-900 mb-4">Fulfillment Details</h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {renderAddressBlock('Shipping Address', order.shipping_address as Address | null)}
+                            {renderAddressBlock('Billing Address', order.billing_address as Address | null)}
+                        </div>
+                        <div className="mt-4 text-sm text-gray-700">
+                            <span className="font-semibold text-gray-900">Payment Method:</span>{' '}
+                            {paymentMethodLabels[order.payment_method || ''] || 'Not specified'}
+                        </div>
+                        <div className="mt-2">
+                            <span className="text-sm font-semibold text-gray-900">Payment Status:</span>{' '}
+                            <span className={`ml-2 px-3 py-1 text-xs font-semibold rounded-full ${
+                                paymentStatusColors[order.payment_status || 'pending']
+                            }`}>
+                                {paymentStatusLabels[order.payment_status || 'pending']}
+                            </span>
+                        </div>
                     </div>
                 </div>
 

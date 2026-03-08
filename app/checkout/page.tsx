@@ -21,6 +21,8 @@ interface BillingAddress extends ShippingAddress {
     nipNumber?: string
 }
 
+type PaymentMethod = 'card' | 'transfer' | 'cash_on_delivery'
+
 export default function CheckoutPage() {
     const router = useRouter()
     const { items, getSubtotal, clearCart } = useCart()
@@ -54,7 +56,7 @@ export default function CheckoutPage() {
         nipNumber: ''
     })
 
-    const [paymentMethod, setPaymentMethod] = useState<'card' | 'transfer' | 'cash_on_delivery'>('card')
+    const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('card')
     const [requireInvoice, setRequireInvoice] = useState(false)
 
     useEffect(() => {
@@ -119,42 +121,48 @@ export default function CheckoutPage() {
         try {
             const supabase = createClient()
 
-            // Create order
-            const { data: order, error: orderError } = await supabase
-                .from('orders')
-                .insert({
-                    user_id: user.id,
-                    status: 'pending',
-                    total_amount: total,
-                    is_b2b_invoice_required: requireInvoice
-                })
-                .select()
-                .single()
+            const effectiveBillingAddress: BillingAddress = billingIsSameAsShipping
+                ? {
+                    ...shippingAddress,
+                    companyName: billingAddress.companyName || undefined,
+                    nipNumber: billingAddress.nipNumber || undefined,
+                }
+                : billingAddress
 
-            if (orderError) throw orderError
-
-            // Create order items
+            // Prepare order items for atomic order creation with inventory check
             const orderItems = items.map(item => {
                 const price = userRole === 'b2b_customer'
                     ? item.product.price_wholesale
                     : item.product.price_retail
 
                 return {
-                    order_id: order.id,
                     product_id: item.product.id,
                     quantity: item.quantity,
                     price_at_purchase: Number(price)
                 }
             })
 
-            const { error: itemsError } = await supabase
-                .from('order_items')
-                .insert(orderItems)
+            // Create order atomically with inventory validation and decrement
+            const { data, error: rpcError } = await supabase
+                .rpc('create_order_with_inventory_check', {
+                    p_user_id: user.id,
+                    p_total_amount: total,
+                    p_is_b2b_invoice_required: requireInvoice,
+                    p_shipping_address: shippingAddress,
+                    p_billing_address: effectiveBillingAddress,
+                    p_payment_method: paymentMethod,
+                    p_order_items: orderItems
+                })
+                .single()
 
-            if (itemsError) throw itemsError
+            if (rpcError) throw rpcError
 
-            // Store order metadata (shipping/billing addresses, payment method)
-            // In a production app, you'd want to create an order_metadata table
+            // Check if order creation succeeded
+            if (!data.success) {
+                throw new Error(data.error_message || 'Failed to create order')
+            }
+
+            const orderId = data.order_id
 
             // Show success message - set this BEFORE clearing cart to prevent flashing
             setOrderSuccess(true)
@@ -164,12 +172,21 @@ export default function CheckoutPage() {
 
             // Redirect to confirmation page after brief success display
             setTimeout(() => {
-                router.replace(`/orders/${order.id}/confirmation`)
+                router.replace(`/orders/${orderId}/confirmation`)
             }, 1000)
 
         } catch (err: any) {
             console.error('Order creation error:', err)
-            setError(err.message || 'Failed to create order. Please try again.')
+            // Provide user-friendly error messages
+            let errorMsg = 'Failed to create order. Please try again.'
+            if (err.message && err.message.includes('Insufficient stock')) {
+                errorMsg = err.message + ' Please update your cart and try again.'
+            } else if (err.message && err.message.includes('Product not found')) {
+                errorMsg = 'One or more products in your cart is no longer available. Please update your cart.'
+            } else if (err.message) {
+                errorMsg = err.message
+            }
+            setError(errorMsg)
             setSubmitting(false)
         }
     }

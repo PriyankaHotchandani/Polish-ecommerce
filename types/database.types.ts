@@ -11,6 +11,7 @@ export type Json =
 
 export type UserRole = 'admin' | 'b2c_customer' | 'b2b_customer'
 export type OrderStatus = 'pending' | 'processing' | 'shipped' | 'delivered'
+export type PaymentStatus = 'pending' | 'processing' | 'completed' | 'failed' | 'refunded'
 
 export interface Database {
     public: {
@@ -142,6 +143,10 @@ export interface Database {
                     status: OrderStatus
                     total_amount: number
                     is_b2b_invoice_required: boolean
+                    shipping_address: Json | null
+                    billing_address: Json | null
+                    payment_method: string | null
+                    payment_status: PaymentStatus
                     created_at: string
                     updated_at: string
                 }
@@ -151,6 +156,10 @@ export interface Database {
                     status?: OrderStatus
                     total_amount: number
                     is_b2b_invoice_required?: boolean
+                    shipping_address?: Json | null
+                    billing_address?: Json | null
+                    payment_method?: string | null
+                    payment_status?: PaymentStatus
                     created_at?: string
                     updated_at?: string
                 }
@@ -160,6 +169,10 @@ export interface Database {
                     status?: OrderStatus
                     total_amount?: number
                     is_b2b_invoice_required?: boolean
+                    shipping_address?: Json | null
+                    billing_address?: Json | null
+                    payment_method?: string | null
+                    payment_status?: PaymentStatus
                     created_at?: string
                     updated_at?: string
                 }
