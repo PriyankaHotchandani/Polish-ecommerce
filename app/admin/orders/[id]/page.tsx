@@ -274,9 +274,8 @@ export default async function AdminOrderDetailPage({
                         </div>
                         <div className="mt-2">
                             <span className="text-sm font-semibold text-gray-900">Payment Status:</span>{' '}
-                            <span className={`ml-2 px-3 py-1 text-xs font-semibold rounded-full ${
-                                paymentStatusColors[order.payment_status || 'pending']
-                            }`}>
+                            <span className={`ml-2 px-3 py-1 text-xs font-semibold rounded-full ${paymentStatusColors[order.payment_status || 'pending']
+                                }`}>
                                 {paymentStatusLabels[order.payment_status || 'pending']}
                             </span>
                         </div>
