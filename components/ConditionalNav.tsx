@@ -5,7 +5,6 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import Link from 'next/link'
 import Navigation from './Navigation'
-import ProfileCompletenessPrompt from './ProfileCompletenessPrompt'
 
 export default function ConditionalNav() {
     const pathname = usePathname()
@@ -53,7 +52,6 @@ export default function ConditionalNav() {
     return (
         <>
             <Navigation />
-            <ProfileCompletenessPrompt />
             {/* Floating Admin Panel Button */}
             {isAdmin && (
                 <Link

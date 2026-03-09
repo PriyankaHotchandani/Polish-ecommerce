@@ -2,6 +2,7 @@ import { createClient } from '@/utils/supabase/server'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import OrderStatusUpdater from '@/components/admin/OrderStatusUpdater'
+import InvoiceButton from '@/components/InvoiceButton'
 
 type Address = {
     fullName?: string
@@ -319,11 +320,21 @@ export default async function AdminOrderDetailPage({
                             {order.is_b2b_invoice_required && (
                                 <div className="bg-blue-50 border border-blue-200 rounded p-3">
                                     <p className="text-sm text-blue-800 font-medium">
-                                        📄 VAT Invoice Required
+                                        📄 B2B Customer - VAT Invoice Required
                                     </p>
                                 </div>
                             )}
                         </div>
+                    </div>
+
+                    {/* Invoice */}
+                    <div className="bg-white rounded-lg shadow-sm p-6">
+                        <h2 className="text-xl font-bold text-gray-900 mb-4">Invoice</h2>
+                        <InvoiceButton
+                            orderId={order.id}
+                            existingInvoiceUrl={order.invoice_url}
+                            existingInvoiceNumber={order.invoice_number}
+                        />
                     </div>
 
                     {/* Order Information */}

@@ -138,7 +138,7 @@
     },
     "home": {
         "hero": {
-            "title": "BM SP. Z O. O.",
+            "title": "BM SP. Z O.O.",
             "subtitle": "Your Trusted Partner for Household Products & Professional Tools",
             "shopHousehold": "Shop Household",
             "shopTools": "Shop Tools"
@@ -152,5 +152,33 @@
         "ourStory": "Our Story",
         "mission": "Our Mission",
         "values": "Our Values"
+    },
+    "invoice": {
+        "title": "VAT Invoice",
+        "invoiceNumber": "Invoice Number",
+        "orderNumber": "Order Number",
+        "issueDate": "Issue Date",
+        "dueDate": "Due Date",
+        "paymentMethod": "Payment Method",
+        "seller": "Seller",
+        "buyer": "Buyer",
+        "item": "Item",
+        "sku": "SKU",
+        "quantity": "Qty",
+        "price": "Price",
+        "total": "Total",
+        "subtotal": "Subtotal (Net)",
+        "vat": "VAT",
+        "grandTotal": "Total (Gross)",
+        "footer": "This is a computer-generated invoice. Generated on",
+        "thankYou": "Thank you for your business!",
+        "nip": "NIP",
+        "companyName": "Company Name",
+        "paymentMethods": {
+            "card": "Card",
+            "transfer": "Bank Transfer",
+            "cash_on_delivery": "Cash on Delivery",
+            "notSpecified": "Not specified"
+        }
     }
 }

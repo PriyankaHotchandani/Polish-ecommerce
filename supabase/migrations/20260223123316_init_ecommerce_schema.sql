@@ -1,5 +1,5 @@
 -- E-commerce Platform Database Schema
--- BM SP. Z O. O. - Initial Migration
+-- BM SP. Z O.O. - Initial Migration
 
 -- Create ENUM types for user roles and order statuses
 CREATE TYPE user_role AS ENUM ('admin', 'b2c_customer', 'b2b_customer');

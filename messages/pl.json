@@ -138,7 +138,7 @@
     },
     "home": {
         "hero": {
-            "title": "BM SP. Z O. O.",
+            "title": "BM SP. Z O.O.",
             "subtitle": "Twój zaufany partner w artykułach gospodarstwa domowego i profesjonalnych narzędziach",
             "shopHousehold": "Artykuły dla domu",
             "shopTools": "Narzędzia"
@@ -152,5 +152,33 @@
         "ourStory": "Nasza historia",
         "mission": "Nasza misja",
         "values": "Nasze wartości"
+    },
+    "invoice": {
+        "title": "Faktura VAT",
+        "invoiceNumber": "Numer faktury",
+        "orderNumber": "Numer zamówienia",
+        "issueDate": "Data wystawienia",
+        "dueDate": "Termin płatności",
+        "paymentMethod": "Metoda płatności",
+        "seller": "Sprzedawca",
+        "buyer": "Nabywca",
+        "item": "Pozycja",
+        "sku": "SKU",
+        "quantity": "Ilość",
+        "price": "Cena",
+        "total": "Razem",
+        "subtotal": "Wartość netto",
+        "vat": "VAT",
+        "grandTotal": "Wartość brutto",
+        "footer": "To jest faktura wygenerowana automatycznie. Wygenerowano dnia",
+        "thankYou": "Dziękujemy za współpracę!",
+        "nip": "NIP",
+        "companyName": "Nazwa firmy",
+        "paymentMethods": {
+            "card": "Karta",
+            "transfer": "Przelew bankowy",
+            "cash_on_delivery": "Za pobraniem",
+            "notSpecified": "Nie określono"
+        }
     }
 }

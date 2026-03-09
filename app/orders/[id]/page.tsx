@@ -1,6 +1,7 @@
 import { createClient } from '@/utils/supabase/server'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
+import InvoiceButton from '@/components/InvoiceButton'
 
 type Address = {
     fullName?: string
@@ -283,17 +284,6 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                             </span>
                         </div>
                     </div>
-
-                    {order.is_b2b_invoice_required && (
-                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-6">
-                            <p className="text-sm text-blue-800 font-medium">
-                                📄 VAT Invoice Required
-                            </p>
-                            <p className="text-sm text-blue-700 mt-1">
-                                Your invoice will be sent to your email within 24 hours.
-                            </p>
-                        </div>
-                    )}
                 </div>
 
                 {(order.shipping_address || order.billing_address || order.payment_method) && (
@@ -318,6 +308,28 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                         </div>
                     </div>
                 )}
+
+                {/* Invoice */}
+                <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+                    <h2 className="text-xl font-bold text-gray-900 mb-4">Invoice</h2>
+                    <InvoiceButton
+                        orderId={order.id}
+                        existingInvoiceUrl={order.invoice_url}
+                        existingInvoiceNumber={order.invoice_number}
+                    />
+                    {!order.invoice_url && (
+                        <p className="text-sm text-gray-600 mt-3">
+                            Click &quot;Generate Invoice&quot; to create and download your VAT invoice.
+                        </p>
+                    )}
+                    {order.is_b2b_invoice_required && (
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-3">
+                            <p className="text-sm text-blue-800 font-medium">
+                                📄 B2B Invoice - Required for your business records
+                            </p>
+                        </div>
+                    )}
+                </div>
 
                 {/* Actions */}
                 <div className="flex flex-col sm:flex-row gap-4">

@@ -1,5 +1,5 @@
 -- Seed Data for E-commerce Platform Testing
--- BM SP. Z O. O. - Test Data
+-- BM SP. Z O.O. - Test Data
 
 -- =====================================================
 -- INSERT CATEGORIES

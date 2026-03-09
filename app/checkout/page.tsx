@@ -21,7 +21,60 @@ interface BillingAddress extends ShippingAddress {
     nipNumber?: string
 }
 
+interface SavedAddress {
+    id: string
+    address_type: 'shipping' | 'billing' | 'both'
+    label: string
+    full_name: string
+    company_name: string | null
+    street: string
+    city: string
+    postal_code: string
+    country: string
+    phone: string
+    is_default: boolean
+}
+
 type PaymentMethod = 'card' | 'transfer' | 'cash_on_delivery'
+
+function normalizeAddressValue(value: string | undefined): string {
+    return (value || '').trim()
+}
+
+function normalizeAddressComparable(value: string | undefined): string {
+    return normalizeAddressValue(value).toLowerCase()
+}
+
+function addressesMatch(a: ShippingAddress, b: BillingAddress): boolean {
+    return (
+        normalizeAddressComparable(a.fullName) === normalizeAddressComparable(b.fullName) &&
+        normalizeAddressComparable(a.phone) === normalizeAddressComparable(b.phone) &&
+        normalizeAddressComparable(a.street) === normalizeAddressComparable(b.street) &&
+        normalizeAddressComparable(a.city) === normalizeAddressComparable(b.city) &&
+        normalizeAddressComparable(a.postalCode) === normalizeAddressComparable(b.postalCode) &&
+        normalizeAddressComparable(a.country) === normalizeAddressComparable(b.country)
+    )
+}
+
+function mapSavedToShippingAddress(address: SavedAddress, email: string): ShippingAddress {
+    return {
+        fullName: address.full_name,
+        email,
+        phone: address.phone,
+        street: address.street,
+        city: address.city,
+        postalCode: address.postal_code,
+        country: address.country,
+    }
+}
+
+function mapSavedToBillingAddress(address: SavedAddress, email: string): BillingAddress {
+    return {
+        ...mapSavedToShippingAddress(address, email),
+        companyName: address.company_name || '',
+        nipNumber: '',
+    }
+}
 
 export default function CheckoutPage() {
     const router = useRouter()
@@ -33,6 +86,11 @@ export default function CheckoutPage() {
     const [error, setError] = useState<string | null>(null)
     const [orderSuccess, setOrderSuccess] = useState(false)
     const [billingIsSameAsShipping, setBillingIsSameAsShipping] = useState(true)
+    const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([])
+    const [selectedShippingAddressId, setSelectedShippingAddressId] = useState<string | null>(null)
+    const [selectedBillingAddressId, setSelectedBillingAddressId] = useState<string | null>(null)
+    const [useSavedShippingAddress, setUseSavedShippingAddress] = useState(true)
+    const [useSavedBillingAddress, setUseSavedBillingAddress] = useState(true)
 
     const [shippingAddress, setShippingAddress] = useState<ShippingAddress>({
         fullName: '',
@@ -80,6 +138,44 @@ export default function CheckoutPage() {
             const role = userData?.role || 'b2c_customer'
             setUserRole(role)
 
+            const { data: savedAddressData } = await supabase
+                .from('saved_addresses')
+                .select('*')
+                .eq('user_id', user.id)
+                .order('is_default', { ascending: false })
+                .order('updated_at', { ascending: false })
+
+            const userSavedAddresses = (savedAddressData || []) as SavedAddress[]
+            setSavedAddresses(userSavedAddresses)
+
+            const shippingCandidates = userSavedAddresses.filter(
+                (address) => address.address_type === 'shipping' || address.address_type === 'both'
+            )
+            const billingCandidates = userSavedAddresses.filter(
+                (address) => address.address_type === 'billing' || address.address_type === 'both'
+            )
+
+            if (shippingCandidates.length > 0) {
+                const selectedShipping = shippingCandidates[0]
+                setSelectedShippingAddressId(selectedShipping.id)
+                setUseSavedShippingAddress(true)
+                setShippingAddress(mapSavedToShippingAddress(selectedShipping, user.email || ''))
+            } else {
+                setUseSavedShippingAddress(false)
+            }
+
+            if (billingCandidates.length > 0) {
+                const selectedBilling = billingCandidates[0]
+                setSelectedBillingAddressId(selectedBilling.id)
+                setUseSavedBillingAddress(true)
+                setBillingAddress((prev) => ({
+                    ...mapSavedToBillingAddress(selectedBilling, user.email || ''),
+                    nipNumber: prev.nipNumber || '',
+                }))
+            } else {
+                setUseSavedBillingAddress(false)
+            }
+
             // Pre-fill email
             setShippingAddress(prev => ({ ...prev, email: user.email || '' }))
             setBillingAddress(prev => ({ ...prev, email: user.email || '' }))
@@ -112,6 +208,64 @@ export default function CheckoutPage() {
     const vat = subtotal * vatRate
     const shippingCost = subtotal >= 500 ? 0 : 25 // Free shipping over 500 PLN
     const total = subtotal + vat + shippingCost
+    const shippingSavedAddresses = savedAddresses.filter(
+        (address) => address.address_type === 'shipping' || address.address_type === 'both'
+    )
+    const billingSavedAddresses = savedAddresses.filter(
+        (address) => address.address_type === 'billing' || address.address_type === 'both'
+    )
+
+    const saveAddressIfNew = async (
+        supabase: ReturnType<typeof createClient>,
+        userId: string,
+        address: BillingAddress,
+        addressType: 'shipping' | 'billing',
+        label: string
+    ) => {
+        const normalized = {
+            full_name: normalizeAddressValue(address.fullName),
+            street: normalizeAddressValue(address.street),
+            city: normalizeAddressValue(address.city),
+            postal_code: normalizeAddressValue(address.postalCode),
+            country: normalizeAddressValue(address.country),
+            phone: normalizeAddressValue(address.phone),
+        }
+
+        const { data: existingAddress } = await supabase
+            .from('saved_addresses')
+            .select('id')
+            .eq('user_id', userId)
+            .eq('address_type', addressType)
+            .eq('full_name', normalized.full_name)
+            .eq('street', normalized.street)
+            .eq('city', normalized.city)
+            .eq('postal_code', normalized.postal_code)
+            .eq('country', normalized.country)
+            .eq('phone', normalized.phone)
+            .maybeSingle()
+
+        if (existingAddress) {
+            return
+        }
+
+        const { error: saveError } = await supabase.from('saved_addresses').insert({
+            user_id: userId,
+            address_type: addressType,
+            label,
+            full_name: address.fullName,
+            company_name: address.companyName || null,
+            street: address.street,
+            city: address.city,
+            postal_code: address.postalCode,
+            country: address.country,
+            phone: address.phone,
+            is_default: false,
+        })
+
+        if (saveError) {
+            throw saveError
+        }
+    }
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -121,10 +275,36 @@ export default function CheckoutPage() {
         try {
             const supabase = createClient()
 
+            const selectedShippingAddress = useSavedShippingAddress
+                ? shippingSavedAddresses.find((address) => address.id === selectedShippingAddressId)
+                : null
+
+            if (useSavedShippingAddress && !selectedShippingAddress) {
+                throw new Error('Please select a saved shipping address or add a new one.')
+            }
+
+            const finalShippingAddress: ShippingAddress = selectedShippingAddress
+                ? mapSavedToShippingAddress(selectedShippingAddress, user.email || '')
+                : shippingAddress
+
+            const selectedBillingAddress = !billingIsSameAsShipping && useSavedBillingAddress
+                ? billingSavedAddresses.find((address) => address.id === selectedBillingAddressId)
+                : null
+
+            if (!billingIsSameAsShipping && useSavedBillingAddress && !selectedBillingAddress) {
+                throw new Error('Please select a saved billing address or add a new one.')
+            }
+
             const effectiveBillingAddress: BillingAddress = billingIsSameAsShipping
                 ? {
-                    ...shippingAddress,
+                    ...finalShippingAddress,
                     companyName: billingAddress.companyName || undefined,
+                    nipNumber: billingAddress.nipNumber || undefined,
+                }
+                : selectedBillingAddress
+                ? {
+                    ...mapSavedToBillingAddress(selectedBillingAddress, user.email || ''),
+                    companyName: billingAddress.companyName || selectedBillingAddress.company_name || undefined,
                     nipNumber: billingAddress.nipNumber || undefined,
                 }
                 : billingAddress
@@ -148,7 +328,7 @@ export default function CheckoutPage() {
                     p_user_id: user.id,
                     p_total_amount: total,
                     p_is_b2b_invoice_required: requireInvoice,
-                    p_shipping_address: shippingAddress,
+                    p_shipping_address: finalShippingAddress,
                     p_billing_address: effectiveBillingAddress,
                     p_payment_method: paymentMethod,
                     p_order_items: orderItems
@@ -163,6 +343,29 @@ export default function CheckoutPage() {
             }
 
             const orderId = data.order_id
+
+            // Auto-save addresses from checkout for future reuse.
+            try {
+                await saveAddressIfNew(
+                    supabase,
+                    user.id,
+                    finalShippingAddress,
+                    'shipping',
+                    'Checkout Shipping'
+                )
+
+                if (!addressesMatch(finalShippingAddress, effectiveBillingAddress)) {
+                    await saveAddressIfNew(
+                        supabase,
+                        user.id,
+                        effectiveBillingAddress,
+                        'billing',
+                        'Checkout Billing'
+                    )
+                }
+            } catch (addressSaveError) {
+                console.error('Address auto-save failed:', addressSaveError)
+            }
 
             // Show success message - set this BEFORE clearing cart to prevent flashing
             setOrderSuccess(true)
@@ -234,103 +437,177 @@ export default function CheckoutPage() {
                         <div className="lg:col-span-2 space-y-6">
                             {/* Shipping Address */}
                             <div className="bg-white rounded-lg shadow-sm p-6">
-                                <h2 className="text-xl font-bold text-gray-900 mb-6">Shipping Address</h2>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div className="md:col-span-2">
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            Full Name *
-                                        </label>
-                                        <input
-                                            type="text"
-                                            required
-                                            value={shippingAddress.fullName}
-                                            onChange={(e) => setShippingAddress({ ...shippingAddress, fullName: e.target.value })}
-                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            Email *
-                                        </label>
-                                        <input
-                                            type="email"
-                                            required
-                                            value={shippingAddress.email}
-                                            onChange={(e) => setShippingAddress({ ...shippingAddress, email: e.target.value })}
-                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            Phone *
-                                        </label>
-                                        <input
-                                            type="tel"
-                                            required
-                                            value={shippingAddress.phone}
-                                            onChange={(e) => setShippingAddress({ ...shippingAddress, phone: e.target.value })}
-                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                                        />
-                                    </div>
-
-                                    <div className="md:col-span-2">
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            Street Address *
-                                        </label>
-                                        <input
-                                            type="text"
-                                            required
-                                            value={shippingAddress.street}
-                                            onChange={(e) => setShippingAddress({ ...shippingAddress, street: e.target.value })}
-                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            City *
-                                        </label>
-                                        <input
-                                            type="text"
-                                            required
-                                            value={shippingAddress.city}
-                                            onChange={(e) => setShippingAddress({ ...shippingAddress, city: e.target.value })}
-                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            Postal Code *
-                                        </label>
-                                        <input
-                                            type="text"
-                                            required
-                                            value={shippingAddress.postalCode}
-                                            onChange={(e) => setShippingAddress({ ...shippingAddress, postalCode: e.target.value })}
-                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                                        />
-                                    </div>
-
-                                    <div className="md:col-span-2">
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            Country *
-                                        </label>
-                                        <select
-                                            value={shippingAddress.country}
-                                            onChange={(e) => setShippingAddress({ ...shippingAddress, country: e.target.value })}
-                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                                        >
-                                            <option value="Poland">Poland</option>
-                                            <option value="Germany">Germany</option>
-                                            <option value="Czech Republic">Czech Republic</option>
-                                            <option value="Slovakia">Slovakia</option>
-                                        </select>
-                                    </div>
+                                <div className="flex items-center justify-between mb-6">
+                                    <h2 className="text-xl font-bold text-gray-900">Shipping Address</h2>
+                                    {shippingSavedAddresses.length > 0 && (
+                                        <div className="inline-flex rounded-md border border-gray-300 overflow-hidden">
+                                            <button
+                                                type="button"
+                                                onClick={() => setUseSavedShippingAddress(true)}
+                                                className={`px-3 py-1.5 text-sm font-medium ${
+                                                    useSavedShippingAddress
+                                                        ? 'bg-gray-900 text-white'
+                                                        : 'bg-white text-gray-700'
+                                                }`}
+                                            >
+                                                Saved
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setUseSavedShippingAddress(false)}
+                                                className={`px-3 py-1.5 text-sm font-medium ${
+                                                    !useSavedShippingAddress
+                                                        ? 'bg-gray-900 text-white'
+                                                        : 'bg-white text-gray-700'
+                                                }`}
+                                            >
+                                                Add New
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
+
+                                {useSavedShippingAddress && shippingSavedAddresses.length > 0 ? (
+                                    <div className="space-y-3">
+                                        {shippingSavedAddresses.map((address) => (
+                                            <label
+                                                key={address.id}
+                                                className={`block p-4 border rounded-lg cursor-pointer transition ${
+                                                    selectedShippingAddressId === address.id
+                                                        ? 'border-green-500 bg-green-50'
+                                                        : 'border-gray-200 hover:border-gray-300'
+                                                }`}
+                                            >
+                                                <div className="flex items-start gap-3">
+                                                    <input
+                                                        type="radio"
+                                                        name="saved-shipping-address"
+                                                        checked={selectedShippingAddressId === address.id}
+                                                        onChange={() => {
+                                                            setSelectedShippingAddressId(address.id)
+                                                            setShippingAddress(
+                                                                mapSavedToShippingAddress(address, user?.email || '')
+                                                            )
+                                                        }}
+                                                        className="mt-1 h-4 w-4 text-green-600"
+                                                    />
+                                                    <div>
+                                                        <p className="font-semibold text-gray-900">
+                                                            {address.label}
+                                                            {address.is_default && (
+                                                                <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-800">
+                                                                    Default
+                                                                </span>
+                                                            )}
+                                                        </p>
+                                                        <p className="text-sm text-gray-700 mt-1">{address.full_name}</p>
+                                                        <p className="text-sm text-gray-600">{address.street}</p>
+                                                        <p className="text-sm text-gray-600">
+                                                            {address.postal_code} {address.city}, {address.country}
+                                                        </p>
+                                                        <p className="text-sm text-gray-600">{address.phone}</p>
+                                                    </div>
+                                                </div>
+                                            </label>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="md:col-span-2">
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                Full Name *
+                                            </label>
+                                            <input
+                                                type="text"
+                                                required={!useSavedShippingAddress}
+                                                value={shippingAddress.fullName}
+                                                onChange={(e) => setShippingAddress({ ...shippingAddress, fullName: e.target.value })}
+                                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                Email *
+                                            </label>
+                                            <input
+                                                type="email"
+                                                required={!useSavedShippingAddress}
+                                                value={shippingAddress.email}
+                                                onChange={(e) => setShippingAddress({ ...shippingAddress, email: e.target.value })}
+                                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                Phone *
+                                            </label>
+                                            <input
+                                                type="tel"
+                                                required={!useSavedShippingAddress}
+                                                value={shippingAddress.phone}
+                                                onChange={(e) => setShippingAddress({ ...shippingAddress, phone: e.target.value })}
+                                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                            />
+                                        </div>
+
+                                        <div className="md:col-span-2">
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                Street Address *
+                                            </label>
+                                            <input
+                                                type="text"
+                                                required={!useSavedShippingAddress}
+                                                value={shippingAddress.street}
+                                                onChange={(e) => setShippingAddress({ ...shippingAddress, street: e.target.value })}
+                                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                City *
+                                            </label>
+                                            <input
+                                                type="text"
+                                                required={!useSavedShippingAddress}
+                                                value={shippingAddress.city}
+                                                onChange={(e) => setShippingAddress({ ...shippingAddress, city: e.target.value })}
+                                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                Postal Code *
+                                            </label>
+                                            <input
+                                                type="text"
+                                                required={!useSavedShippingAddress}
+                                                value={shippingAddress.postalCode}
+                                                onChange={(e) => setShippingAddress({ ...shippingAddress, postalCode: e.target.value })}
+                                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                            />
+                                        </div>
+
+                                        <div className="md:col-span-2">
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                Country *
+                                            </label>
+                                            <select
+                                                value={shippingAddress.country}
+                                                onChange={(e) => setShippingAddress({ ...shippingAddress, country: e.target.value })}
+                                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                            >
+                                                <option value="Poland">Poland</option>
+                                                <option value="Germany">Germany</option>
+                                                <option value="Czech Republic">Czech Republic</option>
+                                                <option value="Slovakia">Slovakia</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
 
                             {/* Billing Address */}
@@ -353,34 +630,191 @@ export default function CheckoutPage() {
                                     </div>
 
                                     {!billingIsSameAsShipping && (
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <div className="md:col-span-2">
-                                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                    Company Name *
-                                                </label>
-                                                <input
-                                                    type="text"
-                                                    required
-                                                    value={billingAddress.companyName}
-                                                    onChange={(e) => setBillingAddress({ ...billingAddress, companyName: e.target.value })}
-                                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                                                />
-                                            </div>
+                                        <div className="space-y-4">
+                                            {billingSavedAddresses.length > 0 && (
+                                                <div className="inline-flex rounded-md border border-gray-300 overflow-hidden">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setUseSavedBillingAddress(true)}
+                                                        className={`px-3 py-1.5 text-sm font-medium ${
+                                                            useSavedBillingAddress
+                                                                ? 'bg-gray-900 text-white'
+                                                                : 'bg-white text-gray-700'
+                                                        }`}
+                                                    >
+                                                        Saved
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setUseSavedBillingAddress(false)}
+                                                        className={`px-3 py-1.5 text-sm font-medium ${
+                                                            !useSavedBillingAddress
+                                                                ? 'bg-gray-900 text-white'
+                                                                : 'bg-white text-gray-700'
+                                                        }`}
+                                                    >
+                                                        Add New
+                                                    </button>
+                                                </div>
+                                            )}
 
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                    NIP Number *
-                                                </label>
-                                                <input
-                                                    type="text"
-                                                    required
-                                                    value={billingAddress.nipNumber}
-                                                    onChange={(e) => setBillingAddress({ ...billingAddress, nipNumber: e.target.value })}
-                                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                                                />
-                                            </div>
+                                            {useSavedBillingAddress && billingSavedAddresses.length > 0 && (
+                                                <div className="space-y-3">
+                                                    {billingSavedAddresses.map((address) => (
+                                                        <label
+                                                            key={address.id}
+                                                            className={`block p-4 border rounded-lg cursor-pointer transition ${
+                                                                selectedBillingAddressId === address.id
+                                                                    ? 'border-green-500 bg-green-50'
+                                                                    : 'border-gray-200 hover:border-gray-300'
+                                                            }`}
+                                                        >
+                                                            <div className="flex items-start gap-3">
+                                                                <input
+                                                                    type="radio"
+                                                                    name="saved-billing-address"
+                                                                    checked={selectedBillingAddressId === address.id}
+                                                                    onChange={() => {
+                                                                        setSelectedBillingAddressId(address.id)
+                                                                        setBillingAddress((prev) => ({
+                                                                            ...mapSavedToBillingAddress(address, user?.email || ''),
+                                                                            nipNumber: prev.nipNumber || '',
+                                                                        }))
+                                                                    }}
+                                                                    className="mt-1 h-4 w-4 text-green-600"
+                                                                />
+                                                                <div>
+                                                                    <p className="font-semibold text-gray-900">
+                                                                        {address.label}
+                                                                        {address.is_default && (
+                                                                            <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-800">
+                                                                                Default
+                                                                            </span>
+                                                                        )}
+                                                                    </p>
+                                                                    <p className="text-sm text-gray-700 mt-1">
+                                                                        {address.full_name}
+                                                                    </p>
+                                                                    <p className="text-sm text-gray-600">{address.street}</p>
+                                                                    <p className="text-sm text-gray-600">
+                                                                        {address.postal_code} {address.city}, {address.country}
+                                                                    </p>
+                                                                    <p className="text-sm text-gray-600">{address.phone}</p>
+                                                                </div>
+                                                            </div>
+                                                        </label>
+                                                    ))}
+                                                </div>
+                                            )}
 
-                                            {/* Add other billing address fields as needed */}
+                                            {(!useSavedBillingAddress || billingSavedAddresses.length === 0) && (
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                    <div className="md:col-span-2">
+                                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                            Full Name *
+                                                        </label>
+                                                        <input
+                                                            type="text"
+                                                            required={!useSavedBillingAddress}
+                                                            value={billingAddress.fullName}
+                                                            onChange={(e) =>
+                                                                setBillingAddress({ ...billingAddress, fullName: e.target.value })
+                                                            }
+                                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                                        />
+                                                    </div>
+
+                                                    <div className="md:col-span-2">
+                                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                            Company Name *
+                                                        </label>
+                                                        <input
+                                                            type="text"
+                                                            required
+                                                            value={billingAddress.companyName}
+                                                            onChange={(e) =>
+                                                                setBillingAddress({ ...billingAddress, companyName: e.target.value })
+                                                            }
+                                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                                        />
+                                                    </div>
+
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                            NIP Number *
+                                                        </label>
+                                                        <input
+                                                            type="text"
+                                                            required
+                                                            value={billingAddress.nipNumber}
+                                                            onChange={(e) =>
+                                                                setBillingAddress({ ...billingAddress, nipNumber: e.target.value })
+                                                            }
+                                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                                        />
+                                                    </div>
+
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                            Phone *
+                                                        </label>
+                                                        <input
+                                                            type="tel"
+                                                            required={!useSavedBillingAddress}
+                                                            value={billingAddress.phone}
+                                                            onChange={(e) =>
+                                                                setBillingAddress({ ...billingAddress, phone: e.target.value })
+                                                            }
+                                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                                        />
+                                                    </div>
+
+                                                    <div className="md:col-span-2">
+                                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                            Street Address *
+                                                        </label>
+                                                        <input
+                                                            type="text"
+                                                            required={!useSavedBillingAddress}
+                                                            value={billingAddress.street}
+                                                            onChange={(e) =>
+                                                                setBillingAddress({ ...billingAddress, street: e.target.value })
+                                                            }
+                                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                                        />
+                                                    </div>
+
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                            City *
+                                                        </label>
+                                                        <input
+                                                            type="text"
+                                                            required={!useSavedBillingAddress}
+                                                            value={billingAddress.city}
+                                                            onChange={(e) =>
+                                                                setBillingAddress({ ...billingAddress, city: e.target.value })
+                                                            }
+                                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                                        />
+                                                    </div>
+
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                            Postal Code *
+                                                        </label>
+                                                        <input
+                                                            type="text"
+                                                            required={!useSavedBillingAddress}
+                                                            value={billingAddress.postalCode}
+                                                            onChange={(e) =>
+                                                                setBillingAddress({ ...billingAddress, postalCode: e.target.value })
+                                                            }
+                                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                                        />
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                     )}
 

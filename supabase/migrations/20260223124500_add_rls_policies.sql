@@ -1,5 +1,5 @@
 -- Row Level Security Policies
--- BM SP. Z O. O. E-commerce Platform
+-- BM SP. Z O.O. E-commerce Platform
 
 -- =====================================================
 -- HELPER FUNCTION FOR ADMIN CHECK

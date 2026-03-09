@@ -84,7 +84,7 @@ export default function Navigation() {
                 <div className="flex justify-between h-16">
                     <div className="flex">
                         <Link href="/" className="flex items-center">
-                            <span className="text-xl font-bold text-gray-900">BM SP. Z O. O.</span>
+                            <span className="text-xl font-bold text-gray-900">BM SP. Z O.O.</span>
                         </Link>
                         <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
                             <Link

@@ -26,20 +26,24 @@ export default function ProfileCompletenessPrompt() {
                 const { data, error } = await supabase.auth.getUser()
 
                 if (!mounted || error || !data.user) {
+                    setUserId(null)
+                    setDismissed(false)
                     setVisible(false)
                     return
                 }
 
                 setUserId(data.user.id)
 
-                const dismissedKey = `profile_prompt_dismissed_${data.user.id}`
+                const dismissedKey = `profile_prompt_dismissed_v2_${data.user.id}`
                 if (sessionStorage.getItem(dismissedKey) === '1') {
                     setDismissed(true)
                     setVisible(false)
                     return
                 }
 
-                const { data: profile } = await supabase
+                setDismissed(false)
+
+                const { data: profile, error: profileError } = await supabase
                     .from('users')
                     .select('first_name,last_name,phone,role,company_name')
                     .eq('id', data.user.id)
@@ -56,9 +60,13 @@ export default function ProfileCompletenessPrompt() {
 
                 const missingCommonFields = !profile.first_name || !profile.last_name || !profile.phone
                 const missingB2BFields = profile.role === 'b2b_customer' && !profile.company_name
-                setVisible(missingCommonFields || missingB2BFields)
-            } catch {
+                const shouldShow = missingCommonFields || missingB2BFields
+                
+                setVisible(shouldShow)
+            } catch (err) {
                 if (mounted) {
+                    setUserId(null)
+                    setDismissed(false)
                     setVisible(false)
                 }
             }
@@ -66,8 +74,26 @@ export default function ProfileCompletenessPrompt() {
 
         loadProfileState()
 
+        const {
+            data: { subscription },
+        } = supabase.auth.onAuthStateChange((_event, session) => {
+            if (!mounted) {
+                return
+            }
+
+            if (!session?.user) {
+                setUserId(null)
+                setDismissed(false)
+                setVisible(false)
+                return
+            }
+
+            void loadProfileState()
+        })
+
         return () => {
             mounted = false
+            subscription.unsubscribe()
         }
     }, [supabase])
 
@@ -77,7 +103,7 @@ export default function ProfileCompletenessPrompt() {
 
     const dismissPrompt = () => {
         if (userId) {
-            sessionStorage.setItem(`profile_prompt_dismissed_${userId}`, '1')
+            sessionStorage.setItem(`profile_prompt_dismissed_v2_${userId}`, '1')
         }
         setDismissed(true)
         setVisible(false)

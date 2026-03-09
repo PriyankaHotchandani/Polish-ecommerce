@@ -2,12 +2,12 @@ export default function AboutPage() {
     return (
         <div className="min-h-screen bg-gray-50">
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-                <h1 className="text-4xl font-bold text-gray-900 mb-8">About BM SP. Z O. O.</h1>
+                <h1 className="text-4xl font-bold text-gray-900 mb-8">About BM SP. Z O.O.</h1>
 
                 <div className="bg-white rounded-lg shadow-sm p-8 mb-8">
                     <h2 className="text-2xl font-bold text-gray-900 mb-4">Our Story</h2>
                     <p className="text-gray-700 leading-relaxed mb-4">
-                        BM SP. Z O. O. is a leading Polish retail and wholesale business specializing in household items,
+                        BM SP. Z O.O. is a leading Polish retail and wholesale business specializing in household items,
                         tools, and equipment. For years, we have been serving both individual consumers and business clients
                         with quality products and competitive pricing.
                     </p>

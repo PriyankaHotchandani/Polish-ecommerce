@@ -25,7 +25,7 @@ export default async function Home() {
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 sm:py-32">
           <div className="text-center mb-16">
             <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-6 tracking-tight">
-              BM SP. Z O. O.
+              BM SP. Z O.O.
             </h1>
             <p className="text-xl sm:text-2xl md:text-3xl text-green-50 mb-4 font-light">
               Your Trusted Partner for Quality Products
@@ -159,7 +159,7 @@ export default async function Home() {
               <div className="text-5xl mb-4">📄</div>
               <h3 className="text-xl font-bold mb-3">VAT Invoices</h3>
               <p className="text-gray-300">
-                Automatic VAT invoice generation with your company details and NIP number
+                Automatic VAT invoice generation for all orders - download instantly from your order page
               </p>
             </div>
 

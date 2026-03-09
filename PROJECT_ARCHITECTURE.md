@@ -1,7 +1,7 @@
-# PROJECT_ARCHITECTURE: BM SP. Z O. O. E-commerce Platform
+# PROJECT_ARCHITECTURE: BM SP. Z O.O. E-commerce Platform
 
 ## 1. Project Overview
-**Goal:** Build a highly scalable, bespoke headless e-commerce platform for BM SP. Z O. O., a major Polish retail and wholesale business specializing in household items, tools, and equipment. 
+**Goal:** Build a highly scalable, bespoke headless e-commerce platform for BM SP. Z O.O., a major Polish retail and wholesale business specializing in household items, tools, and equipment. 
 **Objective:** Transition the company's primary digital footprint away from third-party marketplaces to a fully independent, direct-to-consumer (DTC) and business-to-business (B2B) owned platform.
 **Tech Stack:** - Frontend: Next.js (App Router), React, TypeScript, Tailwind CSS.
 - Internationalization: `next-intl` (Build in English first, translate to Polish later).

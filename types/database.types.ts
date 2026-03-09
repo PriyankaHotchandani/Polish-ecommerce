@@ -1,4 +1,4 @@
-// Database Types for BM SP. Z O. O. E-commerce Platform
+// Database Types for BM SP. Z O.O. E-commerce Platform
 // Generated from Supabase schema
 
 export type Json =
@@ -28,6 +28,7 @@ export interface Database {
                     phone: string | null
                     default_billing_address_id: string | null
                     default_shipping_address_id: string | null
+                    locale: string | null
                     created_at: string
                     updated_at: string
                 }
@@ -56,6 +57,7 @@ export interface Database {
                     phone?: string | null
                     default_billing_address_id?: string | null
                     default_shipping_address_id?: string | null
+                    locale?: string | null
                     created_at?: string
                     updated_at?: string
                 }
@@ -147,6 +149,9 @@ export interface Database {
                     billing_address: Json | null
                     payment_method: string | null
                     payment_status: PaymentStatus
+                    invoice_number: string | null
+                    invoice_url: string | null
+                    invoice_generated_at: string | null
                     created_at: string
                     updated_at: string
                 }
@@ -160,6 +165,9 @@ export interface Database {
                     billing_address?: Json | null
                     payment_method?: string | null
                     payment_status?: PaymentStatus
+                    invoice_number?: string | null
+                    invoice_url?: string | null
+                    invoice_generated_at?: string | null
                     created_at?: string
                     updated_at?: string
                 }
@@ -173,6 +181,9 @@ export interface Database {
                     billing_address?: Json | null
                     payment_method?: string | null
                     payment_status?: PaymentStatus
+                    invoice_number?: string | null
+                    invoice_url?: string | null
+                    invoice_generated_at?: string | null
                     created_at?: string
                     updated_at?: string
                 }
@@ -203,6 +214,56 @@ export interface Database {
                     created_at?: string
                 }
             }
+            saved_addresses: {
+                Row: {
+                    id: string
+                    user_id: string
+                    address_type: 'shipping' | 'billing' | 'both'
+                    label: string
+                    full_name: string
+                    company_name: string | null
+                    street: string
+                    city: string
+                    postal_code: string
+                    country: string
+                    phone: string
+                    is_default: boolean
+                    created_at: string
+                    updated_at: string
+                }
+                Insert: {
+                    id?: string
+                    user_id: string
+                    address_type: 'shipping' | 'billing' | 'both'
+                    label: string
+                    full_name: string
+                    company_name?: string | null
+                    street: string
+                    city: string
+                    postal_code: string
+                    country?: string
+                    phone: string
+                    is_default?: boolean
+                    created_at?: string
+                    updated_at?: string
+                }
+                Update: {
+                    id?: string
+                    user_id?: string
+                    address_type?: 'shipping' | 'billing' | 'both'
+                    label?: string
+                    full_name?: string
+                    company_name?: string | null
+                    street?: string
+                    city?: string
+                    postal_code?: string
+                    country?: string
+                    phone?: string
+                    is_default?: boolean
+                    created_at?: string
+                    updated_at?: string
+                }
+            }
         }
     }
 }
@@ -213,6 +274,7 @@ export type Category = Database['public']['Tables']['categories']['Row']
 export type Product = Database['public']['Tables']['products']['Row']
 export type Order = Database['public']['Tables']['orders']['Row']
 export type OrderItem = Database['public']['Tables']['order_items']['Row']
+export type SavedAddress = Database['public']['Tables']['saved_addresses']['Row']
 
 // Insert types
 export type UserInsert = Database['public']['Tables']['users']['Insert']
@@ -220,12 +282,14 @@ export type CategoryInsert = Database['public']['Tables']['categories']['Insert'
 export type ProductInsert = Database['public']['Tables']['products']['Insert']
 export type OrderInsert = Database['public']['Tables']['orders']['Insert']
 export type OrderItemInsert = Database['public']['Tables']['order_items']['Insert']
+export type SavedAddressInsert = Database['public']['Tables']['saved_addresses']['Insert']
 
 // Update types
 export type UserUpdate = Database['public']['Tables']['users']['Update']
 export type CategoryUpdate = Database['public']['Tables']['categories']['Update']
 export type ProductUpdate = Database['public']['Tables']['products']['Update']
 export type OrderUpdate = Database['public']['Tables']['orders']['Update']
+export type SavedAddressUpdate = Database['public']['Tables']['saved_addresses']['Update']
 export type OrderItemUpdate = Database['public']['Tables']['order_items']['Update']
 
 // Product with relations

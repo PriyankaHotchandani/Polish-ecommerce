@@ -1,4 +1,4 @@
-# BM SP. Z O. O. E-commerce Platform - Implementation Summary
+# BM SP. Z O.O. E-commerce Platform - Implementation Summary
 
 ## 🎉 What Has Been Implemented
 

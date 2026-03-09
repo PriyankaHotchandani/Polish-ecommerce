@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/utils/supabase/server'
 import Link from 'next/link'
 import ProfileForm from '@/components/ProfileForm'
+import SavedAddresses from '@/components/SavedAddresses'
 
 export default async function AccountPage() {
     const supabase = await createClient()
@@ -160,8 +161,13 @@ export default async function AccountPage() {
                 </div>
 
                 {/* Main content */}
-                <div className="lg:col-span-3">
+                <div className="lg:col-span-3 space-y-8">
                     <ProfileForm user={profile} />
+                    
+                    {/* Saved Addresses Section */}
+                    <div className="bg-white rounded-lg shadow-sm p-6">
+                        <SavedAddresses userId={authUser.id} />
+                    </div>
                 </div>
             </div>
         </div>
