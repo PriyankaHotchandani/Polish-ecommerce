@@ -163,7 +163,7 @@ export default async function AccountPage() {
                 {/* Main content */}
                 <div className="lg:col-span-3 space-y-8">
                     <ProfileForm user={profile} />
-                    
+
                     {/* Saved Addresses Section */}
                     <div className="bg-white rounded-lg shadow-sm p-6">
                         <SavedAddresses userId={authUser.id} />

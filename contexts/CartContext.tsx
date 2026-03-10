@@ -1,6 +1,6 @@
 'use client'
 
-import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react'
+import React, { createContext, useContext, useReducer, useEffect, useMemo, useCallback, ReactNode } from 'react'
 import type { Product } from '@/types/database.types'
 import type { CartItem, Cart } from '@/types/cart.types'
 
@@ -86,27 +86,27 @@ export function CartProvider({ children }: { children: ReactNode }) {
         }
     }, [items, isLoaded])
 
-    const addItem = (product: Product, quantity: number = 1) => {
+    const addItem = useCallback((product: Product, quantity: number = 1) => {
         dispatch({ type: 'ADD_ITEM', payload: { product, quantity } })
-    }
+    }, [])
 
-    const removeItem = (productId: string) => {
+    const removeItem = useCallback((productId: string) => {
         dispatch({ type: 'REMOVE_ITEM', payload: productId })
-    }
+    }, [])
 
-    const updateQuantity = (productId: string, quantity: number) => {
+    const updateQuantity = useCallback((productId: string, quantity: number) => {
         dispatch({ type: 'UPDATE_QUANTITY', payload: { productId, quantity } })
-    }
+    }, [])
 
-    const clearCart = () => {
+    const clearCart = useCallback(() => {
         dispatch({ type: 'CLEAR_CART' })
-    }
+    }, [])
 
-    const getItemCount = () => {
+    const getItemCount = useCallback(() => {
         return items.reduce((total, item) => total + item.quantity, 0)
-    }
+    }, [items])
 
-    const getSubtotal = (userRole: 'b2c_customer' | 'b2b_customer' | null) => {
+    const getSubtotal = useCallback((userRole: 'b2c_customer' | 'b2b_customer' | null) => {
         return items.reduce((total, item) => {
             const price =
                 userRole === 'b2b_customer'
@@ -114,9 +114,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
                     : Number(item.product.price_retail)
             return total + price * item.quantity
         }, 0)
-    }
+    }, [items])
 
-    const value: Cart = {
+    const value = useMemo<Cart>(() => ({
         items,
         addItem,
         removeItem,
@@ -124,7 +124,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         clearCart,
         getItemCount,
         getSubtotal,
-    }
+    }), [items, addItem, removeItem, updateQuantity, clearCart, getItemCount, getSubtotal])
 
     return <CartContext.Provider value={value}>{children}</CartContext.Provider>
 }

@@ -34,14 +34,9 @@ export default function ProfileCompletenessPrompt() {
 
                 setUserId(data.user.id)
 
+                // Check if user has dismissed the prompt
                 const dismissedKey = `profile_prompt_dismissed_v2_${data.user.id}`
-                if (sessionStorage.getItem(dismissedKey) === '1') {
-                    setDismissed(true)
-                    setVisible(false)
-                    return
-                }
-
-                setDismissed(false)
+                const isDismissed = sessionStorage.getItem(dismissedKey) === '1'
 
                 const { data: profile, error: profileError } = await supabase
                     .from('users')
@@ -54,15 +49,36 @@ export default function ProfileCompletenessPrompt() {
                 }
 
                 if (!profile) {
+                    setDismissed(false)
                     setVisible(true)
                     return
                 }
 
-                const missingCommonFields = !profile.first_name || !profile.last_name || !profile.phone
-                const missingB2BFields = profile.role === 'b2b_customer' && !profile.company_name
+                // Check if any required field is missing or empty (including whitespace-only strings)
+                const hasFirstName = profile.first_name && profile.first_name.trim() !== ''
+                const hasLastName = profile.last_name && profile.last_name.trim() !== ''
+                const hasPhone = profile.phone && profile.phone.trim() !== ''
+
+                const missingCommonFields = !hasFirstName || !hasLastName || !hasPhone
+                const missingB2BFields = profile.role === 'b2b_customer' && (!profile.company_name || profile.company_name.trim() === '')
                 const shouldShow = missingCommonFields || missingB2BFields
-                
-                setVisible(shouldShow)
+
+                // If fields are now complete, clear the dismissal (so it won't show anymore)
+                // If fields are still missing but was dismissed, respect the dismissal
+                if (!shouldShow) {
+                    // Fields are complete - clear dismissal flag and hide
+                    sessionStorage.removeItem(dismissedKey)
+                    setDismissed(false)
+                    setVisible(false)
+                } else if (isDismissed) {
+                    // Fields missing but user dismissed - keep it hidden
+                    setDismissed(true)
+                    setVisible(false)
+                } else {
+                    // Fields missing and not dismissed - show the prompt
+                    setDismissed(false)
+                    setVisible(true)
+                }
             } catch (err) {
                 if (mounted) {
                     setUserId(null)

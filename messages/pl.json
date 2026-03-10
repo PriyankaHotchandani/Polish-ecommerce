@@ -169,6 +169,8 @@
         "total": "Razem",
         "subtotal": "Wartość netto",
         "vat": "VAT",
+        "shipping": "Koszt dostawy",
+        "adjustment": "Korekta",
         "grandTotal": "Wartość brutto",
         "footer": "To jest faktura wygenerowana automatycznie. Wygenerowano dnia",
         "thankYou": "Dziękujemy za współpracę!",

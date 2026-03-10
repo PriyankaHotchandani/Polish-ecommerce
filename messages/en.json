@@ -169,6 +169,8 @@
         "total": "Total",
         "subtotal": "Subtotal (Net)",
         "vat": "VAT",
+        "shipping": "Shipping",
+        "adjustment": "Adjustment",
         "grandTotal": "Total (Gross)",
         "footer": "This is a computer-generated invoice. Generated on",
         "thankYou": "Thank you for your business!",

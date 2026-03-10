@@ -61,6 +61,7 @@ export default function Navigation() {
                 setDisplayName('')
             }
         }
+
         getUser()
 
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {

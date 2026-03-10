@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import type { SavedAddress, SavedAddressInsert } from '@/types/database.types'
 
@@ -20,6 +20,7 @@ interface AddressFormData {
 export default function SavedAddresses({ userId }: { userId: string }) {
     const [addresses, setAddresses] = useState<SavedAddress[]>([])
     const [loading, setLoading] = useState(true)
+    const [submitting, setSubmitting] = useState(false)
     const [showForm, setShowForm] = useState(false)
     const [editingId, setEditingId] = useState<string | null>(null)
     const [formData, setFormData] = useState<AddressFormData>({
@@ -35,13 +36,13 @@ export default function SavedAddresses({ userId }: { userId: string }) {
         is_default: false,
     })
     const [error, setError] = useState<string | null>(null)
-    const supabase = createClient()
+    const supabase = useMemo(() => createClient(), [])
 
     useEffect(() => {
         loadAddresses()
-    }, [])
+    }, [userId])
 
-    const loadAddresses = async () => {
+    const loadAddresses = useCallback(async () => {
         try {
             const { data, error } = await supabase
                 .from('saved_addresses')
@@ -52,17 +53,19 @@ export default function SavedAddresses({ userId }: { userId: string }) {
 
             if (error) throw error
             setAddresses(data || [])
+            setError(null)
         } catch (err) {
             console.error('Error loading addresses:', err)
             setError('Failed to load addresses')
         } finally {
             setLoading(false)
         }
-    }
+    }, [supabase, userId])
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         setError(null)
+        setSubmitting(true)
 
         try {
             if (editingId) {
@@ -96,6 +99,8 @@ export default function SavedAddresses({ userId }: { userId: string }) {
         } catch (err) {
             console.error('Error saving address:', err)
             setError('Failed to save address')
+        } finally {
+            setSubmitting(false)
         }
     }
 
@@ -324,9 +329,12 @@ export default function SavedAddresses({ userId }: { userId: string }) {
                         <div className="flex gap-3">
                             <button
                                 type="submit"
-                                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                                disabled={submitting}
+                                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                {editingId ? 'Update Address' : 'Save Address'}
+                                {submitting
+                                    ? (editingId ? 'Updating...' : 'Saving...')
+                                    : (editingId ? 'Update Address' : 'Save Address')}
                             </button>
                             <button
                                 type="button"
@@ -334,7 +342,8 @@ export default function SavedAddresses({ userId }: { userId: string }) {
                                     setShowForm(false)
                                     resetForm()
                                 }}
-                                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors"
+                                disabled={submitting}
+                                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 Cancel
                             </button>
@@ -368,8 +377,8 @@ export default function SavedAddresses({ userId }: { userId: string }) {
                                             {address.address_type === 'both'
                                                 ? 'Shipping & Billing'
                                                 : address.address_type === 'shipping'
-                                                ? 'Shipping'
-                                                : 'Billing'}
+                                                    ? 'Shipping'
+                                                    : 'Billing'}
                                         </span>
                                     </div>
                                     <div className="text-sm text-gray-600 space-y-1">

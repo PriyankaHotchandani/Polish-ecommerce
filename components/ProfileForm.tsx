@@ -40,7 +40,8 @@ export default function ProfileForm({ user, onSaved }: ProfileFormProps) {
         setLoading(true)
 
         try {
-            const { error } = await supabase
+            // Update user profile in database
+            const { error: dbError } = await supabase
                 .from('users')
                 .update({
                     first_name: formData.first_name || null,
@@ -51,24 +52,39 @@ export default function ProfileForm({ user, onSaved }: ProfileFormProps) {
                 })
                 .eq('id', user.id)
 
-            if (error) {
-                addToast(`Failed to save profile: ${error.message}`, 'error')
-            } else {
-                const fullName = `${formData.first_name} ${formData.last_name}`.trim()
-                await supabase.auth.updateUser({
+            if (dbError) {
+                throw new Error(`Failed to save profile: ${dbError.message}`)
+            }
+
+            // Update auth metadata in the background (fire and forget - non-blocking)
+            const fullName = `${formData.first_name} ${formData.last_name}`.trim()
+            setTimeout(() => {
+                supabase.auth.updateUser({
                     data: {
                         first_name: formData.first_name || null,
                         last_name: formData.last_name || null,
                         full_name: fullName || null,
                     },
+                }).catch((authError) => {
+                    console.warn('Auth metadata update failed:', authError)
                 })
+            }, 0)
 
-                addToast('Profile updated successfully', 'success')
-                setIsEditing(false)
-                onSaved?.()
-                router.refresh()
+            addToast('Profile updated successfully', 'success')
+            setIsEditing(false)
+
+            // Call optional callback
+            if (onSaved) {
+                onSaved()
             }
+
+            // Force a full page reload to update all components with fresh data
+            setTimeout(() => {
+                window.location.reload()
+            }, 500)
+
         } catch (err: any) {
+            console.error('Profile update error:', err)
             addToast(err.message || 'An error occurred', 'error')
         } finally {
             setLoading(false)

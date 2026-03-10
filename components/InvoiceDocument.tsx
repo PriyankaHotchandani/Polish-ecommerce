@@ -111,6 +111,11 @@ interface InvoiceItem {
     total: number
 }
 
+interface InvoiceCharge {
+    label: string
+    amount: number
+}
+
 interface InvoiceData {
     invoiceNumber: string
     orderNumber: string
@@ -140,6 +145,7 @@ interface InvoiceData {
     subtotal: number
     vatRate: number
     vatAmount: number
+    additionalCharges?: InvoiceCharge[]
     total: number
     paymentMethod: string
 }
@@ -151,110 +157,116 @@ interface InvoiceDocumentProps {
 
 export const InvoiceDocument = ({ data, locale = 'pl' }: InvoiceDocumentProps) => {
     const t = getInvoiceTranslations(locale)
-    
+
     return (
-    <Document>
-        <Page size="A4" style={styles.page}>
-            {/* Header */}
-            <View style={styles.header}>
-                <Text style={styles.companyName}>{data.seller.name}</Text>
-                <Text style={styles.companyDetails}>
-                    {data.seller.address}, {data.seller.postalCode} {data.seller.city}
-                    {'\n'}{t.nip}: {data.seller.nip}
-                    {'\n'}Email: {data.seller.email} | Phone: {data.seller.phone}
-                </Text>
-            </View>
+        <Document>
+            <Page size="A4" style={styles.page}>
+                {/* Header */}
+                <View style={styles.header}>
+                    <Text style={styles.companyName}>{data.seller.name}</Text>
+                    <Text style={styles.companyDetails}>
+                        {data.seller.address}, {data.seller.postalCode} {data.seller.city}
+                        {'\n'}{t.nip}: {data.seller.nip}
+                        {'\n'}Email: {data.seller.email} | Phone: {data.seller.phone}
+                    </Text>
+                </View>
 
-            {/* Invoice Title */}
-            <Text style={styles.invoiceTitle}>{t.title.toUpperCase()}</Text>
+                {/* Invoice Title */}
+                <Text style={styles.invoiceTitle}>{t.title.toUpperCase()}</Text>
 
-            {/* Invoice Details */}
-            <View style={styles.section}>
-                <View style={styles.row}>
-                    <Text style={styles.label}>{t.invoiceNumber}:</Text>
-                    <Text style={styles.value}>{data.invoiceNumber}</Text>
-                </View>
-                <View style={styles.row}>
-                    <Text style={styles.label}>{t.orderNumber}:</Text>
-                    <Text style={styles.value}>{data.orderNumber}</Text>
-                </View>
-                <View style={styles.row}>
-                    <Text style={styles.label}>{t.issueDate}:</Text>
-                    <Text style={styles.value}>{data.issueDate}</Text>
-                </View>
-                <View style={styles.row}>
-                    <Text style={styles.label}>{t.dueDate}:</Text>
-                    <Text style={styles.value}>{data.dueDate}</Text>
-                </View>
-                <View style={styles.row}>
-                    <Text style={styles.label}>{t.paymentMethod}:</Text>
-                    <Text style={styles.value}>{data.paymentMethod}</Text>
-                </View>
-            </View>
-
-            {/* Buyer Information */}
-            <View style={styles.section}>
-                <Text style={styles.sectionTitle}>{t.buyer}</Text>
-                <Text>{data.buyer.companyName || data.buyer.name}</Text>
-                <Text>{data.buyer.address}</Text>
-                <Text>
-                    {data.buyer.postalCode} {data.buyer.city}, {data.buyer.country}
-                </Text>
-                {data.buyer.nipNumber && <Text>{t.nip}: {data.buyer.nipNumber}</Text>}
-                <Text>Email: {data.buyer.email}</Text>
-                <Text>Phone: {data.buyer.phone}</Text>
-            </View>
-
-            {/* Items Table */}
-            <View style={styles.table}>
-                <View style={styles.tableHeader}>
-                    <Text style={styles.tableCol1}>#</Text>
-                    <Text style={styles.tableCol2}>{t.item} / {t.sku}</Text>
-                    <Text style={styles.tableCol3}>{t.quantity}</Text>
-                    <Text style={styles.tableCol4}>{t.price}</Text>
-                    <Text style={styles.tableCol5}>{t.total}</Text>
-                </View>
-                {data.items.map((item, index) => (
-                    <View key={index} style={styles.tableRow}>
-                        <Text style={styles.tableCol1}>{index + 1}</Text>
-                        <Text style={styles.tableCol2}>
-                            {item.title}
-                            {'\n'}{t.sku}: {item.sku}
-                        </Text>
-                        <Text style={styles.tableCol3}>{item.quantity}</Text>
-                        <Text style={styles.tableCol4}>{item.price.toFixed(2)} PLN</Text>
-                        <Text style={styles.tableCol5}>{item.total.toFixed(2)} PLN</Text>
+                {/* Invoice Details */}
+                <View style={styles.section}>
+                    <View style={styles.row}>
+                        <Text style={styles.label}>{t.invoiceNumber}:</Text>
+                        <Text style={styles.value}>{data.invoiceNumber}</Text>
                     </View>
-                ))}
-            </View>
+                    <View style={styles.row}>
+                        <Text style={styles.label}>{t.orderNumber}:</Text>
+                        <Text style={styles.value}>{data.orderNumber}</Text>
+                    </View>
+                    <View style={styles.row}>
+                        <Text style={styles.label}>{t.issueDate}:</Text>
+                        <Text style={styles.value}>{data.issueDate}</Text>
+                    </View>
+                    <View style={styles.row}>
+                        <Text style={styles.label}>{t.dueDate}:</Text>
+                        <Text style={styles.value}>{data.dueDate}</Text>
+                    </View>
+                    <View style={styles.row}>
+                        <Text style={styles.label}>{t.paymentMethod}:</Text>
+                        <Text style={styles.value}>{data.paymentMethod}</Text>
+                    </View>
+                </View>
 
-            {/* Totals */}
-            <View style={styles.totalsSection}>
-                <View style={styles.totalRow}>
-                    <Text>{t.subtotal}:</Text>
-                    <Text>{data.subtotal.toFixed(2)} PLN</Text>
+                {/* Buyer Information */}
+                <View style={styles.section}>
+                    <Text style={styles.sectionTitle}>{t.buyer}</Text>
+                    <Text>{data.buyer.companyName || data.buyer.name}</Text>
+                    <Text>{data.buyer.address}</Text>
+                    <Text>
+                        {data.buyer.postalCode} {data.buyer.city}, {data.buyer.country}
+                    </Text>
+                    {data.buyer.nipNumber && <Text>{t.nip}: {data.buyer.nipNumber}</Text>}
+                    <Text>Email: {data.buyer.email}</Text>
+                    <Text>Phone: {data.buyer.phone}</Text>
                 </View>
-                <View style={styles.totalRow}>
-                    <Text>{t.vat} ({(data.vatRate * 100).toFixed(0)}%):</Text>
-                    <Text>{data.vatAmount.toFixed(2)} PLN</Text>
-                </View>
-                <View style={[styles.totalRow, styles.grandTotal]}>
-                    <Text style={styles.totalLabel}>{t.grandTotal}:</Text>
-                    <Text style={styles.totalLabel}>{data.total.toFixed(2)} PLN</Text>
-                </View>
-            </View>
 
-            {/* Footer */}
-            <View style={styles.footer}>
-                <Text>
-                    {t.footer}{' '}
-                    {new Date().toLocaleDateString(locale === 'pl' ? 'pl-PL' : 'en-GB')} at {new Date().toLocaleTimeString(locale === 'pl' ? 'pl-PL' : 'en-GB')}
-                </Text>
-                <Text>{t.thankYou}</Text>
-            </View>
-        </Page>
-    </Document>
+                {/* Items Table */}
+                <View style={styles.table}>
+                    <View style={styles.tableHeader}>
+                        <Text style={styles.tableCol1}>#</Text>
+                        <Text style={styles.tableCol2}>{t.item} / {t.sku}</Text>
+                        <Text style={styles.tableCol3}>{t.quantity}</Text>
+                        <Text style={styles.tableCol4}>{t.price}</Text>
+                        <Text style={styles.tableCol5}>{t.total}</Text>
+                    </View>
+                    {data.items.map((item, index) => (
+                        <View key={index} style={styles.tableRow}>
+                            <Text style={styles.tableCol1}>{index + 1}</Text>
+                            <Text style={styles.tableCol2}>
+                                {item.title}
+                                {'\n'}{t.sku}: {item.sku}
+                            </Text>
+                            <Text style={styles.tableCol3}>{item.quantity}</Text>
+                            <Text style={styles.tableCol4}>{item.price.toFixed(2)} PLN</Text>
+                            <Text style={styles.tableCol5}>{item.total.toFixed(2)} PLN</Text>
+                        </View>
+                    ))}
+                </View>
+
+                {/* Totals */}
+                <View style={styles.totalsSection}>
+                    <View style={styles.totalRow}>
+                        <Text>{t.subtotal}:</Text>
+                        <Text>{data.subtotal.toFixed(2)} PLN</Text>
+                    </View>
+                    <View style={styles.totalRow}>
+                        <Text>{t.vat} ({(data.vatRate * 100).toFixed(0)}%):</Text>
+                        <Text>{data.vatAmount.toFixed(2)} PLN</Text>
+                    </View>
+                    {data.additionalCharges?.map((charge, index) => (
+                        <View style={styles.totalRow} key={`${charge.label}-${index}`}>
+                            <Text>{charge.label}:</Text>
+                            <Text>{charge.amount.toFixed(2)} PLN</Text>
+                        </View>
+                    ))}
+                    <View style={[styles.totalRow, styles.grandTotal]}>
+                        <Text style={styles.totalLabel}>{t.grandTotal}:</Text>
+                        <Text style={styles.totalLabel}>{data.total.toFixed(2)} PLN</Text>
+                    </View>
+                </View>
+
+                {/* Footer */}
+                <View style={styles.footer}>
+                    <Text>
+                        {t.footer}{' '}
+                        {new Date().toLocaleDateString(locale === 'pl' ? 'pl-PL' : 'en-GB')} at {new Date().toLocaleTimeString(locale === 'pl' ? 'pl-PL' : 'en-GB')}
+                    </Text>
+                    <Text>{t.thankYou}</Text>
+                </View>
+            </Page>
+        </Document>
     )
 }
 
-export type { InvoiceData, InvoiceItem }
+export type { InvoiceData, InvoiceItem, InvoiceCharge }

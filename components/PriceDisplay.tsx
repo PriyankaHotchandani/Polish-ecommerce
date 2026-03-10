@@ -57,7 +57,6 @@ export default function PriceDisplay({ price_retail, price_wholesale }: PriceDis
         fetchUserRole()
     }, [supabase])
 
-    // Format price in Polish Zloty
     const formatPrice = (price: number) => {
         return new Intl.NumberFormat('en-US', {
             style: 'currency',

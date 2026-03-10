@@ -2,7 +2,7 @@
 
 import { useCart } from '@/contexts/CartContext'
 import { useRouter } from 'next/navigation'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import Link from 'next/link'
 
@@ -91,6 +91,7 @@ export default function CheckoutPage() {
     const [selectedBillingAddressId, setSelectedBillingAddressId] = useState<string | null>(null)
     const [useSavedShippingAddress, setUseSavedShippingAddress] = useState(true)
     const [useSavedBillingAddress, setUseSavedBillingAddress] = useState(true)
+    const supabase = useMemo(() => createClient(), [])
 
     const [shippingAddress, setShippingAddress] = useState<ShippingAddress>({
         fullName: '',
@@ -114,87 +115,86 @@ export default function CheckoutPage() {
         nipNumber: ''
     })
 
-    const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('card')
+    const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(null)
     const [requireInvoice, setRequireInvoice] = useState(false)
 
-    useEffect(() => {
-        async function fetchUserData() {
-            const supabase = createClient()
-            const { data: { user } } = await supabase.auth.getUser()
+    const fetchUserData = useCallback(async () => {
+        const { data: { user } } = await supabase.auth.getUser()
 
-            if (!user) {
-                router.push('/auth/login?redirect=/checkout')
-                return
-            }
-
-            setUser(user)
-
-            const { data: userData } = await supabase
-                .from('users')
-                .select('role, company_name, nip_number')
-                .eq('id', user.id)
-                .maybeSingle()
-
-            const role = userData?.role || 'b2c_customer'
-            setUserRole(role)
-
-            const { data: savedAddressData } = await supabase
-                .from('saved_addresses')
-                .select('*')
-                .eq('user_id', user.id)
-                .order('is_default', { ascending: false })
-                .order('updated_at', { ascending: false })
-
-            const userSavedAddresses = (savedAddressData || []) as SavedAddress[]
-            setSavedAddresses(userSavedAddresses)
-
-            const shippingCandidates = userSavedAddresses.filter(
-                (address) => address.address_type === 'shipping' || address.address_type === 'both'
-            )
-            const billingCandidates = userSavedAddresses.filter(
-                (address) => address.address_type === 'billing' || address.address_type === 'both'
-            )
-
-            if (shippingCandidates.length > 0) {
-                const selectedShipping = shippingCandidates[0]
-                setSelectedShippingAddressId(selectedShipping.id)
-                setUseSavedShippingAddress(true)
-                setShippingAddress(mapSavedToShippingAddress(selectedShipping, user.email || ''))
-            } else {
-                setUseSavedShippingAddress(false)
-            }
-
-            if (billingCandidates.length > 0) {
-                const selectedBilling = billingCandidates[0]
-                setSelectedBillingAddressId(selectedBilling.id)
-                setUseSavedBillingAddress(true)
-                setBillingAddress((prev) => ({
-                    ...mapSavedToBillingAddress(selectedBilling, user.email || ''),
-                    nipNumber: prev.nipNumber || '',
-                }))
-            } else {
-                setUseSavedBillingAddress(false)
-            }
-
-            // Pre-fill email
-            setShippingAddress(prev => ({ ...prev, email: user.email || '' }))
-            setBillingAddress(prev => ({ ...prev, email: user.email || '' }))
-
-            // Pre-fill B2B company info
-            if (role === 'b2b_customer' && userData) {
-                setBillingAddress(prev => ({
-                    ...prev,
-                    companyName: userData.company_name || '',
-                    nipNumber: userData.nip_number || ''
-                }))
-                setRequireInvoice(true)
-            }
-
-            setLoading(false)
+        if (!user) {
+            router.push('/auth/login?redirect=/checkout')
+            return
         }
 
+        setUser(user)
+
+        const { data: userData } = await supabase
+            .from('users')
+            .select('role, company_name, nip_number')
+            .eq('id', user.id)
+            .maybeSingle()
+
+        const role = userData?.role || 'b2c_customer'
+        setUserRole(role)
+
+        const { data: savedAddressData } = await supabase
+            .from('saved_addresses')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('is_default', { ascending: false })
+            .order('updated_at', { ascending: false })
+
+        const userSavedAddresses = (savedAddressData || []) as SavedAddress[]
+        setSavedAddresses(userSavedAddresses)
+
+        const shippingCandidates = userSavedAddresses.filter(
+            (address) => address.address_type === 'shipping' || address.address_type === 'both'
+        )
+        const billingCandidates = userSavedAddresses.filter(
+            (address) => address.address_type === 'billing' || address.address_type === 'both'
+        )
+
+        if (shippingCandidates.length > 0) {
+            const selectedShipping = shippingCandidates[0]
+            setSelectedShippingAddressId(selectedShipping.id)
+            setUseSavedShippingAddress(true)
+            setShippingAddress(mapSavedToShippingAddress(selectedShipping, user.email || ''))
+        } else {
+            setUseSavedShippingAddress(false)
+        }
+
+        if (billingCandidates.length > 0) {
+            const selectedBilling = billingCandidates[0]
+            setSelectedBillingAddressId(selectedBilling.id)
+            setUseSavedBillingAddress(true)
+            setBillingAddress((prev) => ({
+                ...mapSavedToBillingAddress(selectedBilling, user.email || ''),
+                nipNumber: prev.nipNumber || '',
+            }))
+        } else {
+            setUseSavedBillingAddress(false)
+        }
+
+        // Pre-fill email
+        setShippingAddress(prev => ({ ...prev, email: user.email || '' }))
+        setBillingAddress(prev => ({ ...prev, email: user.email || '' }))
+
+        // Pre-fill B2B company info
+        if (role === 'b2b_customer' && userData) {
+            setBillingAddress(prev => ({
+                ...prev,
+                companyName: userData.company_name || '',
+                nipNumber: userData.nip_number || ''
+            }))
+            setRequireInvoice(true)
+        }
+
+        setLoading(false)
+    }, [router, supabase])
+
+    useEffect(() => {
         fetchUserData()
-    }, [router])
+    }, [fetchUserData])
 
     // Redirect if cart is empty (but not during order processing)
     useEffect(() => {
@@ -203,19 +203,25 @@ export default function CheckoutPage() {
         }
     }, [items, loading, router, orderSuccess, submitting])
 
-    const subtotal = getSubtotal(userRole)
+    const subtotal = useMemo(() => getSubtotal(userRole), [getSubtotal, userRole])
     const vatRate = 0.23
-    const vat = subtotal * vatRate
-    const shippingCost = subtotal >= 500 ? 0 : 25 // Free shipping over 500 PLN
-    const total = subtotal + vat + shippingCost
-    const shippingSavedAddresses = savedAddresses.filter(
-        (address) => address.address_type === 'shipping' || address.address_type === 'both'
+    const vat = useMemo(() => subtotal * vatRate, [subtotal])
+    const shippingCost = useMemo(() => (subtotal >= 500 ? 0 : 25), [subtotal]) // Free shipping over 500 PLN
+    const total = useMemo(() => subtotal + vat + shippingCost, [subtotal, vat, shippingCost])
+    const shippingSavedAddresses = useMemo(
+        () => savedAddresses.filter(
+            (address) => address.address_type === 'shipping' || address.address_type === 'both'
+        ),
+        [savedAddresses]
     )
-    const billingSavedAddresses = savedAddresses.filter(
-        (address) => address.address_type === 'billing' || address.address_type === 'both'
+    const billingSavedAddresses = useMemo(
+        () => savedAddresses.filter(
+            (address) => address.address_type === 'billing' || address.address_type === 'both'
+        ),
+        [savedAddresses]
     )
 
-    const saveAddressIfNew = async (
+    const saveAddressIfNew = useCallback(async (
         supabase: ReturnType<typeof createClient>,
         userId: string,
         address: BillingAddress,
@@ -265,15 +271,19 @@ export default function CheckoutPage() {
         if (saveError) {
             throw saveError
         }
-    }
+    }, [])
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = useCallback(async (e: React.FormEvent) => {
         e.preventDefault()
         setError(null)
         setSubmitting(true)
 
         try {
-            const supabase = createClient()
+            const checkoutSupabase = createClient()
+
+            if (!paymentMethod) {
+                throw new Error('Please select a payment method to continue.')
+            }
 
             const selectedShippingAddress = useSavedShippingAddress
                 ? shippingSavedAddresses.find((address) => address.id === selectedShippingAddressId)
@@ -302,12 +312,12 @@ export default function CheckoutPage() {
                     nipNumber: billingAddress.nipNumber || undefined,
                 }
                 : selectedBillingAddress
-                ? {
-                    ...mapSavedToBillingAddress(selectedBillingAddress, user.email || ''),
-                    companyName: billingAddress.companyName || selectedBillingAddress.company_name || undefined,
-                    nipNumber: billingAddress.nipNumber || undefined,
-                }
-                : billingAddress
+                    ? {
+                        ...mapSavedToBillingAddress(selectedBillingAddress, user.email || ''),
+                        companyName: billingAddress.companyName || selectedBillingAddress.company_name || undefined,
+                        nipNumber: billingAddress.nipNumber || undefined,
+                    }
+                    : billingAddress
 
             // Prepare order items for atomic order creation with inventory check
             const orderItems = items.map(item => {
@@ -322,50 +332,29 @@ export default function CheckoutPage() {
                 }
             })
 
-            // Create order atomically with inventory validation and decrement
-            const { data, error: rpcError } = await supabase
-                .rpc('create_order_with_inventory_check', {
-                    p_user_id: user.id,
-                    p_total_amount: total,
-                    p_is_b2b_invoice_required: requireInvoice,
-                    p_shipping_address: finalShippingAddress,
-                    p_billing_address: effectiveBillingAddress,
-                    p_payment_method: paymentMethod,
-                    p_order_items: orderItems
-                })
-                .single()
+            // Create order through server API to avoid browser-side RPC hangs.
+            const orderResponse = await fetch('/api/checkout/create-order', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    total,
+                    requireInvoice,
+                    shippingAddress: finalShippingAddress,
+                    billingAddress: effectiveBillingAddress,
+                    paymentMethod,
+                    orderItems,
+                }),
+            })
 
-            if (rpcError) throw rpcError
+            const orderResult = await orderResponse.json()
 
-            // Check if order creation succeeded
-            if (!data.success) {
-                throw new Error(data.error_message || 'Failed to create order')
+            if (!orderResponse.ok || !orderResult?.success) {
+                throw new Error(orderResult?.error || 'Failed to create order')
             }
 
-            const orderId = data.order_id
-
-            // Auto-save addresses from checkout for future reuse.
-            try {
-                await saveAddressIfNew(
-                    supabase,
-                    user.id,
-                    finalShippingAddress,
-                    'shipping',
-                    'Checkout Shipping'
-                )
-
-                if (!addressesMatch(finalShippingAddress, effectiveBillingAddress)) {
-                    await saveAddressIfNew(
-                        supabase,
-                        user.id,
-                        effectiveBillingAddress,
-                        'billing',
-                        'Checkout Billing'
-                    )
-                }
-            } catch (addressSaveError) {
-                console.error('Address auto-save failed:', addressSaveError)
-            }
+            const orderId = orderResult.orderId as string
 
             // Show success message - set this BEFORE clearing cart to prevent flashing
             setOrderSuccess(true)
@@ -380,19 +369,49 @@ export default function CheckoutPage() {
 
         } catch (err: any) {
             console.error('Order creation error:', err)
-            // Provide user-friendly error messages
+
+            // Provide user-friendly error messages with Supabase details when available.
             let errorMsg = 'Failed to create order. Please try again.'
-            if (err.message && err.message.includes('Insufficient stock')) {
-                errorMsg = err.message + ' Please update your cart and try again.'
-            } else if (err.message && err.message.includes('Product not found')) {
+            const rawMessage = err?.message || ''
+            const code = err?.code ? ` [${err.code}]` : ''
+            const details = err?.details ? ` ${err.details}` : ''
+
+            if (rawMessage.includes('Insufficient stock')) {
+                errorMsg = rawMessage + ' Please update your cart and try again.'
+            } else if (rawMessage.includes('Product not found')) {
                 errorMsg = 'One or more products in your cart is no longer available. Please update your cart.'
-            } else if (err.message) {
-                errorMsg = err.message
+            } else if (rawMessage) {
+                errorMsg = `${rawMessage}${code}${details}`.trim()
             }
+
             setError(errorMsg)
-            setSubmitting(false)
+        } finally {
+            // Always unlock submit button unless we've already moved to success screen.
+            if (!orderSuccess) {
+                setSubmitting(false)
+            }
         }
-    }
+    }, [
+        useSavedShippingAddress,
+        shippingSavedAddresses,
+        selectedShippingAddressId,
+        user,
+        shippingAddress,
+        billingIsSameAsShipping,
+        useSavedBillingAddress,
+        billingSavedAddresses,
+        selectedBillingAddressId,
+        billingAddress,
+        items,
+        userRole,
+        requireInvoice,
+        paymentMethod,
+        total,
+        saveAddressIfNew,
+        clearCart,
+        router,
+        orderSuccess
+    ])
 
     if (loading) {
         return (
@@ -444,22 +463,20 @@ export default function CheckoutPage() {
                                             <button
                                                 type="button"
                                                 onClick={() => setUseSavedShippingAddress(true)}
-                                                className={`px-3 py-1.5 text-sm font-medium ${
-                                                    useSavedShippingAddress
-                                                        ? 'bg-gray-900 text-white'
-                                                        : 'bg-white text-gray-700'
-                                                }`}
+                                                className={`px-3 py-1.5 text-sm font-medium ${useSavedShippingAddress
+                                                    ? 'bg-gray-900 text-white'
+                                                    : 'bg-white text-gray-700'
+                                                    }`}
                                             >
                                                 Saved
                                             </button>
                                             <button
                                                 type="button"
                                                 onClick={() => setUseSavedShippingAddress(false)}
-                                                className={`px-3 py-1.5 text-sm font-medium ${
-                                                    !useSavedShippingAddress
-                                                        ? 'bg-gray-900 text-white'
-                                                        : 'bg-white text-gray-700'
-                                                }`}
+                                                className={`px-3 py-1.5 text-sm font-medium ${!useSavedShippingAddress
+                                                    ? 'bg-gray-900 text-white'
+                                                    : 'bg-white text-gray-700'
+                                                    }`}
                                             >
                                                 Add New
                                             </button>
@@ -472,11 +489,10 @@ export default function CheckoutPage() {
                                         {shippingSavedAddresses.map((address) => (
                                             <label
                                                 key={address.id}
-                                                className={`block p-4 border rounded-lg cursor-pointer transition ${
-                                                    selectedShippingAddressId === address.id
-                                                        ? 'border-green-500 bg-green-50'
-                                                        : 'border-gray-200 hover:border-gray-300'
-                                                }`}
+                                                className={`block p-4 border rounded-lg cursor-pointer transition ${selectedShippingAddressId === address.id
+                                                    ? 'border-green-500 bg-green-50'
+                                                    : 'border-gray-200 hover:border-gray-300'
+                                                    }`}
                                             >
                                                 <div className="flex items-start gap-3">
                                                     <input
@@ -636,22 +652,20 @@ export default function CheckoutPage() {
                                                     <button
                                                         type="button"
                                                         onClick={() => setUseSavedBillingAddress(true)}
-                                                        className={`px-3 py-1.5 text-sm font-medium ${
-                                                            useSavedBillingAddress
-                                                                ? 'bg-gray-900 text-white'
-                                                                : 'bg-white text-gray-700'
-                                                        }`}
+                                                        className={`px-3 py-1.5 text-sm font-medium ${useSavedBillingAddress
+                                                            ? 'bg-gray-900 text-white'
+                                                            : 'bg-white text-gray-700'
+                                                            }`}
                                                     >
                                                         Saved
                                                     </button>
                                                     <button
                                                         type="button"
                                                         onClick={() => setUseSavedBillingAddress(false)}
-                                                        className={`px-3 py-1.5 text-sm font-medium ${
-                                                            !useSavedBillingAddress
-                                                                ? 'bg-gray-900 text-white'
-                                                                : 'bg-white text-gray-700'
-                                                        }`}
+                                                        className={`px-3 py-1.5 text-sm font-medium ${!useSavedBillingAddress
+                                                            ? 'bg-gray-900 text-white'
+                                                            : 'bg-white text-gray-700'
+                                                            }`}
                                                     >
                                                         Add New
                                                     </button>
@@ -663,11 +677,10 @@ export default function CheckoutPage() {
                                                     {billingSavedAddresses.map((address) => (
                                                         <label
                                                             key={address.id}
-                                                            className={`block p-4 border rounded-lg cursor-pointer transition ${
-                                                                selectedBillingAddressId === address.id
-                                                                    ? 'border-green-500 bg-green-50'
-                                                                    : 'border-gray-200 hover:border-gray-300'
-                                                            }`}
+                                                            className={`block p-4 border rounded-lg cursor-pointer transition ${selectedBillingAddressId === address.id
+                                                                ? 'border-green-500 bg-green-50'
+                                                                : 'border-gray-200 hover:border-gray-300'
+                                                                }`}
                                                         >
                                                             <div className="flex items-start gap-3">
                                                                 <input
@@ -846,6 +859,7 @@ export default function CheckoutPage() {
                                             value="card"
                                             checked={paymentMethod === 'card'}
                                             onChange={() => setPaymentMethod('card')}
+                                            required={!paymentMethod}
                                             className="w-4 h-4 text-green-600 border-gray-300 focus:ring-green-500"
                                         />
                                         <span className="ml-3 text-gray-900 font-medium">Credit/Debit Card</span>
