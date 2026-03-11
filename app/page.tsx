@@ -1,9 +1,11 @@
 import { createClient } from '@/utils/supabase/server'
 import ProductCard from '@/components/ProductCard'
 import Link from 'next/link'
+import HeroCenterPanel from '@/components/HeroCenterPanel'
 
 export default async function Home() {
   const supabase = await createClient()
+
 
   // Fetch featured products
   const { data: products } = await supabase
@@ -18,84 +20,59 @@ export default async function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-gray-50">
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-green-600 via-green-700 to-green-800">
-        <div className="absolute inset-0 bg-black/10"></div>
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4xIj48cGF0aCBkPSJNMzYgMzRjMC0yLjIxIDEuNzktNCAzLjk5OVY0SDQyYzIuMjEgMCA0IDEuNzkgNCA0djJjMCAyLjIxLTEuNzkgNC00IDRoLTJ2MmMwIDIuMjEtMS43OSA0LTQgNGgtMnYtMmMwLTIuMjEgMS43OS00IDQtNHYtMnoiLz48L2c+PC9nPjwvc3ZnPg==')] opacity-20"></div>
-
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 sm:py-32">
-          <div className="text-center mb-16">
-            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-6 tracking-tight">
-              BM SP. Z O.O.
-            </h1>
-            <p className="text-xl sm:text-2xl md:text-3xl text-green-50 mb-4 font-light">
-              Your Trusted Partner for Quality Products
-            </p>
-            <p className="text-lg text-green-100 max-w-2xl mx-auto">
-              From household essentials to professional tools — wholesale and retail pricing available
-            </p>
-          </div>
-
-          {/* Dual Category Entry Points */}
-          <div className="grid md:grid-cols-2 gap-6 max-w-5xl mx-auto">
-            {/* Household Products */}
-            <Link
-              href="/shop?category=household"
-              className="group relative overflow-hidden rounded-2xl bg-white shadow-2xl hover:shadow-3xl transition-all duration-300 hover:-translate-y-1"
-            >
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-purple-500/20 group-hover:from-blue-500/30 group-hover:to-purple-500/30 transition-all"></div>
-              <div className="relative p-8 md:p-10">
-                <div className="text-6xl mb-6">🏠</div>
-                <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3">
-                  Household Products
+      <section className="bg-white">
+        <div className="grid min-h-[calc(100vh-4rem)] gap-px bg-[#050b25] lg:grid-cols-[1fr_1.08fr_1fr]">
+          <Link
+            href="/shop?category=household"
+            className="group relative overflow-hidden bg-slate-900"
+          >
+            <div className="hero-panel hero-panel-household">
+              <video
+                className="absolute inset-0 h-full w-full object-cover"
+                autoPlay
+                loop
+                muted
+                playsInline
+                preload="auto"
+                aria-hidden="true"
+              >
+                <source src="/household.mp4" type="video/mp4" />
+              </video>
+              <div className="hero-panel-overlay" />
+              <div className="hero-panel-copy">
+                <h2 className="hero-panel-heading">
+                  Household<br />Products
                 </h2>
-                <p className="text-gray-600 mb-6">
-                  Kitchen essentials, home organization, cleaning supplies, and everyday necessities
-                </p>
-                <div className="inline-flex items-center text-green-600 font-semibold group-hover:text-green-700">
-                  Explore Collection
-                  <svg className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                  </svg>
-                </div>
               </div>
-            </Link>
+            </div>
+          </Link>
 
-            {/* Tools & Equipment */}
-            <Link
-              href="/shop?category=tools"
-              className="group relative overflow-hidden rounded-2xl bg-white shadow-2xl hover:shadow-3xl transition-all duration-300 hover:-translate-y-1"
-            >
-              <div className="absolute inset-0 bg-gradient-to-br from-orange-500/20 to-red-500/20 group-hover:from-orange-500/30 group-hover:to-red-500/30 transition-all"></div>
-              <div className="relative p-8 md:p-10">
-                <div className="text-6xl mb-6">🔧</div>
-                <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3">
-                  Tools & Equipment
+          <HeroCenterPanel />
+
+          <Link
+            href="/shop?category=tools"
+            className="group relative overflow-hidden bg-slate-900"
+          >
+            <div className="hero-panel hero-panel-tools">
+              <video
+                className="absolute inset-0 h-full w-full object-cover"
+                autoPlay
+                loop
+                muted
+                playsInline
+                preload="auto"
+                aria-hidden="true"
+              >
+                <source src="/tools.mp4" type="video/mp4" />
+              </video>
+              <div className="hero-panel-overlay" />
+              <div className="hero-panel-copy">
+                <h2 className="hero-panel-heading">
+                  Tools<br />&amp;<br />Equipment
                 </h2>
-                <p className="text-gray-600 mb-6">
-                  Professional-grade power tools, hand tools, hardware, and construction equipment
-                </p>
-                <div className="inline-flex items-center text-green-600 font-semibold group-hover:text-green-700">
-                  Browse Tools
-                  <svg className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                  </svg>
-                </div>
               </div>
-            </Link>
-          </div>
-
-          {/* Quick Action Button */}
-          <div className="text-center mt-12">
-            <Link
-              href="/shop"
-              className="inline-flex items-center px-8 py-4 bg-white text-green-700 rounded-full font-bold text-lg shadow-xl hover:shadow-2xl hover:bg-green-50 transition-all duration-300 hover:scale-105"
-            >
-              View All Products
-              <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-              </svg>
-            </Link>
-          </div>
+            </div>
+          </Link>
         </div>
       </section>
 
