@@ -1,63 +1,80 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import type { Product, Category } from '@/types/database.types'
 import PriceDisplay from './PriceDisplay'
 import AddToCartButton from './AddToCartButton'
 
 interface ProductCardProps {
     product: Product & { category?: Category }
+    variant?: 'default' | 'featured'
 }
 
-export default function ProductCard({ product }: ProductCardProps) {
+export default function ProductCard({ product, variant = 'default' }: ProductCardProps) {
+    const isFeatured = variant === 'featured'
+    const imageUrl = product.image_urls?.[0]
+
     return (
-        <div className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow overflow-hidden">
-            <Link href={`/product/${product.slug}`}>
-                <div className="aspect-square bg-gray-200 relative">
-                    {product.image_urls && product.image_urls[0] ? (
-                        <img
-                            src={product.image_urls[0]}
+        <div className={isFeatured ? 'product-card product-card-featured' : 'product-card product-card-default'}>
+            <Link href={`/product/${product.slug}`} className={isFeatured ? 'product-card-image-link product-card-image-link-featured' : ''}>
+                <div className={isFeatured ? 'product-card-image-wrap product-card-image-wrap-featured' : 'aspect-square bg-gray-200 relative'}>
+                    {imageUrl ? (
+                        <Image
+                            src={imageUrl}
                             alt={product.title}
-                            className="w-full h-full object-cover"
+                            fill
+                            sizes={isFeatured ? '(max-width: 639px) 100vw, (max-width: 1023px) 50vw, 33vw' : '(max-width: 639px) 100vw, (max-width: 1023px) 50vw, 33vw'}
+                            className={isFeatured ? 'product-card-image' : 'w-full h-full object-cover'}
+                            loading="lazy"
+                            decoding="async"
                         />
                     ) : (
-                        <div className="flex items-center justify-center h-full">
+                        <div className={isFeatured ? 'product-card-empty-state' : 'flex items-center justify-center h-full'}>
                             <span className="text-gray-400">No image</span>
                         </div>
                     )}
                 </div>
             </Link>
-            <div className="p-4">
+            <div className={isFeatured ? 'product-card-body product-card-body-featured' : 'p-4'}>
                 {product.category && (
-                    <span className="text-xs text-gray-500 uppercase tracking-wide">
+                    <span className={isFeatured ? 'product-card-category product-card-category-featured' : 'text-xs text-gray-500 uppercase tracking-wide'}>
                         {product.category.name}
                     </span>
                 )}
-                <Link href={`/product/${product.slug}`}>
-                    <h3 className="mt-1 text-lg font-semibold text-gray-900 hover:text-green-600 line-clamp-2">
+                <Link href={`/product/${product.slug}`} className={isFeatured ? 'product-card-title-link product-card-title-link-featured' : ''}>
+                    <h3 className={isFeatured ? 'product-card-title product-card-title-featured' : 'mt-1 text-lg font-semibold text-gray-900 hover:text-green-600 line-clamp-2'}>
                         {product.title}
                     </h3>
                 </Link>
                 {product.brand && (
-                    <p className="text-sm text-gray-500 mt-1">{product.brand}</p>
+                    <p className={isFeatured ? 'product-card-brand product-card-brand-featured' : 'text-sm text-gray-500 mt-1'}>{product.brand}</p>
                 )}
-                <div className="mt-4">
+                <div className={isFeatured ? 'product-card-price-wrap' : 'mt-4'}>
                     <PriceDisplay
                         price_retail={Number(product.price_retail)}
                         price_wholesale={Number(product.price_wholesale)}
+                        variant={isFeatured ? 'featured' : 'default'}
                     />
                 </div>
-                <div className="mt-4">
-                    <span
-                        className={`text-sm ${product.inventory_count > 0 ? 'text-green-600' : 'text-red-600'
-                            }`}
-                    >
-                        {product.inventory_count > 0
-                            ? `In Stock (${product.inventory_count})`
-                            : 'Out of Stock'}
-                    </span>
+                <div className={isFeatured ? 'product-card-stock-wrap' : 'mt-4'}>
+                    {isFeatured ? (
+                        <span className={`product-card-stock ${product.inventory_count > 0 ? 'is-available' : 'is-unavailable'}`}>
+                            <span className="product-card-stock-dot" aria-hidden="true" />
+                            {product.inventory_count > 0 ? 'In Stock' : 'Out of Stock'}
+                        </span>
+                    ) : (
+                        <span
+                            className={`text-sm ${product.inventory_count > 0 ? 'text-green-600' : 'text-red-600'
+                                }`}
+                        >
+                            {product.inventory_count > 0
+                                ? `In Stock (${product.inventory_count})`
+                                : 'Out of Stock'}
+                        </span>
+                    )}
                 </div>
-                <div className="mt-4">
+                <div className={isFeatured ? 'product-card-cta-wrap' : 'mt-4'}>
                     <AddToCartButton product={product} />
                 </div>
             </div>

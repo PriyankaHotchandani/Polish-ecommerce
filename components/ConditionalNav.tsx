@@ -6,7 +6,11 @@ import { createClient } from '@/utils/supabase/client'
 import Link from 'next/link'
 import Navigation from './Navigation'
 
-export default function ConditionalNav() {
+interface ConditionalNavProps {
+    initialLocale: 'en' | 'pl'
+}
+
+export default function ConditionalNav({ initialLocale }: ConditionalNavProps) {
     const pathname = usePathname()
     const [isAdmin, setIsAdmin] = useState(false)
     const supabase = createClient()
@@ -51,7 +55,7 @@ export default function ConditionalNav() {
 
     return (
         <>
-            <Navigation />
+            <Navigation initialLocale={initialLocale} />
             {/* Floating Admin Panel Button */}
             {isAdmin && (
                 <Link

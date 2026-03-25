@@ -2,9 +2,23 @@ import { createClient } from '@/utils/supabase/server'
 import ProductCard from '@/components/ProductCard'
 import Link from 'next/link'
 import HeroCenterPanel from '@/components/HeroCenterPanel'
+import { cookies } from 'next/headers'
+import enMessages from '@/messages/en.json'
+import plMessages from '@/messages/pl.json'
+
+type Locale = 'en' | 'pl'
+
+const MESSAGES = {
+  en: enMessages,
+  pl: plMessages,
+} as const
 
 export default async function Home() {
   const supabase = await createClient()
+  const cookieStore = await cookies()
+  const locale: Locale = cookieStore.get('locale')?.value === 'pl' ? 'pl' : 'en'
+  const homeCopy = MESSAGES[locale].home
+  const heroCopy = MESSAGES[locale].home.hero
 
 
   // Fetch featured products
@@ -15,7 +29,7 @@ export default async function Home() {
             category:categories(*)
         `)
     .order('created_at', { ascending: false })
-    .limit(6)
+    .limit(9)
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-gray-50">
@@ -41,13 +55,18 @@ export default async function Home() {
               <div className="hero-panel-overlay" />
               <div className="hero-panel-copy">
                 <h2 className="hero-panel-heading">
-                  Household<br />Products
+                  {heroCopy.leftPanelHeading.split('\n').map((line) => (
+                    <span key={line}>
+                      {line}
+                      <br />
+                    </span>
+                  ))}
                 </h2>
               </div>
             </div>
           </Link>
 
-          <HeroCenterPanel />
+          <HeroCenterPanel locale={locale} />
 
           <Link
             href="/shop?category=tools"
@@ -68,7 +87,12 @@ export default async function Home() {
               <div className="hero-panel-overlay" />
               <div className="hero-panel-copy">
                 <h2 className="hero-panel-heading">
-                  Tools<br />&amp;<br />Equipment
+                  {heroCopy.rightPanelHeading.split('\n').map((line) => (
+                    <span key={line}>
+                      {line}
+                      <br />
+                    </span>
+                  ))}
                 </h2>
               </div>
             </div>
@@ -78,32 +102,35 @@ export default async function Home() {
 
       {/* Featured Products */}
       {products && products.length > 0 && (
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-              Featured Products
-            </h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Discover our latest arrivals and customer favorites
-            </p>
-          </div>
+        <section className="featured-products-section">
+          <div className="featured-products-shell">
+            <div className="featured-products-heading-wrap">
+              <span className="featured-products-kicker">Curated Collection</span>
+              <h2 className="featured-products-heading">{homeCopy.featured}</h2>
+              <p className="featured-products-subheading">
+                Discover standout essentials selected for quality, finish, and daily performance.
+              </p>
+            </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-            {products.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
+            <div className="featured-products-grid">
+              {products.map((product) => (
+                <div key={product.id} className="featured-product-frame">
+                  <ProductCard product={product} variant="featured" />
+                </div>
+              ))}
+            </div>
 
-          <div className="text-center">
-            <Link
-              href="/shop"
-              className="inline-flex items-center px-6 py-3 border-2 border-green-600 text-green-600 rounded-lg font-semibold hover:bg-green-600 hover:text-white transition-colors duration-300"
-            >
-              See Full Catalog
-              <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-              </svg>
-            </Link>
+            <div className="featured-products-cta-wrap">
+              <Link
+                href="/shop"
+                className="featured-products-cta"
+              >
+                Explore Full Catalog
+                <svg className="featured-products-cta-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
+              </Link>
+            </div>
           </div>
         </section>
       )}

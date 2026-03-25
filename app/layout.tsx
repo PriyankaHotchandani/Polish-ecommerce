@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Bebas_Neue } from "next/font/google";
+import { cookies } from "next/headers";
 import "./globals.css";
 import ConditionalNav from "@/components/ConditionalNav";
 import ProfileCompletenessPrompt from "@/components/ProfileCompletenessPrompt";
@@ -26,18 +27,21 @@ export const metadata: Metadata = {
   description: "Your trusted partner for household products and professional tools in Poland. Offering both retail and wholesale pricing.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookieStore = await cookies();
+  const locale = cookieStore.get('locale')?.value === 'pl' ? 'pl' : 'en';
+
   return (
-    <html lang="en">
+    <html lang={locale}>
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${bebasNeue.variable} antialiased`}
       >
         <Providers>
-          <ConditionalNav />
+          <ConditionalNav initialLocale={locale} />
           <ProfileCompletenessPrompt />
           {children}
         </Providers>

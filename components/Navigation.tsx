@@ -6,16 +6,35 @@ import { createClient } from '@/utils/supabase/client'
 import type { User } from '@supabase/supabase-js'
 import { useRouter } from 'next/navigation'
 import { useCart } from '@/contexts/CartContext'
+import enMessages from '@/messages/en.json'
+import plMessages from '@/messages/pl.json'
 
-export default function Navigation() {
+type Locale = 'en' | 'pl'
+
+interface NavigationProps {
+    initialLocale: Locale
+}
+
+const MESSAGES = {
+    en: enMessages,
+    pl: plMessages,
+} as const
+
+export default function Navigation({ initialLocale }: NavigationProps) {
     const [user, setUser] = useState<User | null>(null)
     const [displayName, setDisplayName] = useState('')
+    const [locale, setLocale] = useState<Locale>(initialLocale)
     const supabase = createClient()
     const router = useRouter()
     const { getItemCount } = useCart()
     const itemCount = getItemCount()
+    const messages = MESSAGES[locale]
 
     useEffect(() => {
+        const resolveLocale = (rawLocale?: string | null): Locale => {
+            return rawLocale?.toLowerCase() === 'pl' ? 'pl' : 'en'
+        }
+
         const resolveDisplayName = async (authUser: User | null) => {
             if (!authUser) {
                 setDisplayName('')
@@ -53,6 +72,22 @@ export default function Navigation() {
                     return
                 }
 
+                if (data.user) {
+                    const { data: profile } = await supabase
+                        .from('users')
+                        .select('locale')
+                        .eq('id', data.user.id)
+                        .single()
+
+                    if (profile?.locale) {
+                        const profileLocale = resolveLocale(profile.locale)
+                        setLocale(profileLocale)
+                        localStorage.setItem('locale', profileLocale)
+                        document.cookie = `locale=${profileLocale}; path=/; max-age=31536000; samesite=lax`
+                        document.documentElement.lang = profileLocale
+                    }
+                }
+
                 setUser(data.user)
                 await resolveDisplayName(data.user)
             } catch {
@@ -73,9 +108,33 @@ export default function Navigation() {
         return () => subscription.unsubscribe()
     }, [supabase])
 
+    useEffect(() => {
+        document.documentElement.lang = locale
+    }, [locale])
+
     const handleSignOut = async () => {
         await supabase.auth.signOut()
         router.push('/')
+        router.refresh()
+    }
+
+    const handleLocaleChange = async (nextLocale: Locale) => {
+        if (nextLocale === locale) {
+            return
+        }
+
+        setLocale(nextLocale)
+        localStorage.setItem('locale', nextLocale)
+        document.cookie = `locale=${nextLocale}; path=/; max-age=31536000; samesite=lax`
+        document.documentElement.lang = nextLocale
+
+        if (user) {
+            await supabase
+                .from('users')
+                .update({ locale: nextLocale })
+                .eq('id', user.id)
+        }
+
         router.refresh()
     }
 
@@ -89,18 +148,37 @@ export default function Navigation() {
                         BM SP. Z O.O.
                     </Link>
                     <div className="nav-links">
-                        <Link href="/shop" className="nav-link">Shop</Link>
-                        <Link href="/b2b" className="nav-link">B2B Portal</Link>
-                        <Link href="/about" className="nav-link">About</Link>
+                        <Link href="/shop" className="nav-link">{messages.nav.shop}</Link>
+                        <Link href="/b2b" className="nav-link">{messages.nav.b2b}</Link>
+                        <Link href="/about" className="nav-link">{messages.nav.about}</Link>
                     </div>
                 </div>
 
                 {/* Right: account links, cart, auth */}
                 <div className="nav-right">
+                    <div className="nav-lang-toggle" role="group" aria-label={messages.nav.languageSelector}>
+                        <button
+                            type="button"
+                            onClick={() => handleLocaleChange('en')}
+                            aria-pressed={locale === 'en'}
+                            className={`nav-lang-btn ${locale === 'en' ? 'is-active' : ''}`}
+                        >
+                            EN
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => handleLocaleChange('pl')}
+                            aria-pressed={locale === 'pl'}
+                            className={`nav-lang-btn ${locale === 'pl' ? 'is-active' : ''}`}
+                        >
+                            PL
+                        </button>
+                    </div>
+
                     {user && (
                         <>
-                            <Link href="/account" className="nav-link">Account</Link>
-                            <Link href="/orders" className="nav-link">Orders</Link>
+                            <Link href="/account" className="nav-link">{messages.nav.myAccount}</Link>
+                            <Link href="/orders" className="nav-link">{messages.nav.orders}</Link>
                         </>
                     )}
 
@@ -127,17 +205,17 @@ export default function Navigation() {
                     </Link>
 
                     {user ? (
-                        <div className="nav-right">
+                        <div className="nav-user-actions">
                             <span className="nav-user-name">{displayName || user.email}</span>
                             <button onClick={handleSignOut} className="nav-signout-btn">
-                                Sign Out
+                                {messages.auth.signOut}
                             </button>
                         </div>
                     ) : (
                         <div className="nav-auth">
-                            <Link href="/auth/login" className="nav-link">Login</Link>
+                            <Link href="/auth/login" className="nav-link">{messages.nav.login}</Link>
                             <Link href="/auth/signup" className="nav-signup-pill">
-                                Sign Up
+                                {messages.auth.signUp}
                             </Link>
                         </div>
                     )}

@@ -22,6 +22,8 @@
         "about": "About Us",
         "login": "Login",
         "logout": "Logout",
+        "orders": "Orders",
+        "languageSelector": "Language selector",
         "myAccount": "My Account",
         "cart": "Cart"
     },
@@ -141,7 +143,13 @@
             "title": "BM SP. Z O.O.",
             "subtitle": "Your Trusted Partner for Household Products & Professional Tools",
             "shopHousehold": "Shop Household",
-            "shopTools": "Shop Tools"
+            "shopTools": "Shop Tools",
+            "leftPanelHeading": "Household\nProducts",
+            "rightPanelHeading": "Tools\n& Equipment",
+            "centerKicker": "Curated supply house",
+            "centerHeadline": "Everything You Need",
+            "centerSubtext": "Quality supplies to build, fix, and live well.",
+            "centerCta": "Shop All Products"
         },
         "featured": "Featured Products",
         "newArrivals": "New Arrivals",

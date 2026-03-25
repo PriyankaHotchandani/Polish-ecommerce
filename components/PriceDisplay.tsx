@@ -6,14 +6,16 @@ import { createClient } from '@/utils/supabase/client'
 interface PriceDisplayProps {
     price_retail: number
     price_wholesale: number
+    variant?: 'default' | 'featured'
 }
 
 type UserRole = 'admin' | 'b2c_customer' | 'b2b_customer' | null
 
-export default function PriceDisplay({ price_retail, price_wholesale }: PriceDisplayProps) {
+export default function PriceDisplay({ price_retail, price_wholesale, variant = 'default' }: PriceDisplayProps) {
     const [userRole, setUserRole] = useState<UserRole>(null)
     const [isLoading, setIsLoading] = useState(true)
     const supabase = createClient()
+    const isFeatured = variant === 'featured'
 
     useEffect(() => {
         async function fetchUserRole() {
@@ -69,7 +71,7 @@ export default function PriceDisplay({ price_retail, price_wholesale }: PriceDis
     if (isLoading) {
         return (
             <div className="animate-pulse">
-                <div className="h-8 bg-gray-200 rounded w-24"></div>
+                <div className={`${isFeatured ? 'h-6 w-28' : 'h-8 w-24'} bg-gray-200 rounded`}></div>
             </div>
         )
     }
@@ -79,20 +81,20 @@ export default function PriceDisplay({ price_retail, price_wholesale }: PriceDis
         return (
             <div className="flex flex-col gap-2">
                 <div className="flex items-center gap-2">
-                    <span className="text-2xl font-bold text-green-600">
+                    <span className={`${isFeatured ? 'text-[1.12rem] leading-tight font-bold text-slate-900' : 'text-2xl font-bold text-green-600'}`}>
                         {formatPrice(price_wholesale)}
                     </span>
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${isFeatured ? 'bg-slate-100 text-slate-700' : 'bg-green-100 text-green-800'}`}>
                         Wholesale Price
                     </span>
                 </div>
                 <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-500 line-through">
+                    <span className={`${isFeatured ? 'text-xs text-slate-500' : 'text-sm text-gray-500'} line-through`}>
                         {formatPrice(price_retail)}
                     </span>
-                    <span className="text-xs text-gray-400">Retail</span>
+                    <span className={`${isFeatured ? 'text-xs text-slate-500' : 'text-xs text-gray-400'}`}>Retail</span>
                 </div>
-                <div className="text-xs text-green-600 font-medium">
+                <div className={`${isFeatured ? 'text-xs text-slate-600 font-medium' : 'text-xs text-green-600 font-medium'}`}>
                     You save {formatPrice(price_retail - price_wholesale)}
                 </div>
             </div>
@@ -102,8 +104,8 @@ export default function PriceDisplay({ price_retail, price_wholesale }: PriceDis
     // B2C Customer / Guest View - Show retail price only
     return (
         <div className="flex flex-col gap-1">
-            <span className="text-sm text-gray-600">Price</span>
-            <span className="text-2xl font-bold text-gray-900">
+            <span className={isFeatured ? 'text-[0.8rem] text-slate-500' : 'text-sm text-gray-600'}>Price</span>
+            <span className={isFeatured ? 'text-[1.12rem] leading-tight font-bold text-slate-900' : 'text-2xl font-bold text-gray-900'}>
                 {formatPrice(price_retail)}
             </span>
         </div>

@@ -2,10 +2,22 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import enMessages from '@/messages/en.json'
+import plMessages from '@/messages/pl.json'
 
-const subtext = 'Quality supplies to build, fix, and live well.'
+type Locale = 'en' | 'pl'
 
-export default function HeroCenterPanel() {
+interface HeroCenterPanelProps {
+    locale: Locale
+}
+
+const MESSAGES = {
+    en: enMessages,
+    pl: plMessages,
+} as const
+
+export default function HeroCenterPanel({ locale }: HeroCenterPanelProps) {
+    const copy = MESSAGES[locale].home.hero
     const [typedText, setTypedText] = useState('')
     const [isDeleting, setIsDeleting] = useState(false)
 
@@ -18,10 +30,10 @@ export default function HeroCenterPanel() {
             timeoutId = setTimeout(() => {
                 if (!deleting) {
                     currentIndex += 1
-                    setTypedText(subtext.slice(0, currentIndex))
+                    setTypedText(copy.centerSubtext.slice(0, currentIndex))
                     setIsDeleting(false)
 
-                    if (currentIndex === subtext.length) {
+                    if (currentIndex === copy.centerSubtext.length) {
                         deleting = true
                         tick()
                         return
@@ -32,7 +44,7 @@ export default function HeroCenterPanel() {
                 }
 
                 currentIndex -= 1
-                setTypedText(subtext.slice(0, currentIndex))
+                setTypedText(copy.centerSubtext.slice(0, currentIndex))
                 setIsDeleting(true)
 
                 if (currentIndex === 0) {
@@ -40,14 +52,13 @@ export default function HeroCenterPanel() {
                 }
 
                 tick()
-            }, deleting ? (currentIndex === subtext.length ? 1500 : 22) : (currentIndex === 0 ? 320 : 38))
+            }, deleting ? (currentIndex === copy.centerSubtext.length ? 1500 : 22) : (currentIndex === 0 ? 320 : 38))
         }
 
-        setTypedText('')
         tick()
 
         return () => clearTimeout(timeoutId)
-    }, [])
+    }, [copy.centerSubtext])
 
     return (
         <div className="hero-center-panel">
@@ -58,11 +69,11 @@ export default function HeroCenterPanel() {
 
             <div className="relative z-10 flex h-full flex-col items-center justify-center px-6 py-14 text-center text-white sm:px-8 sm:py-16">
                 <div className="hero-main-content">
-                    <p className="hero-brand-kicker">Curated supply house</p>
+                    <p className="hero-brand-kicker">{copy.centerKicker}</p>
                     <div className="hero-brand-name">BM SP. Z O.O.</div>
                     <div className="hero-center-divider" aria-hidden="true" />
 
-                    <h2 className="hero-headline">Everything You Need</h2>
+                    <h2 className="hero-headline">{copy.centerHeadline}</h2>
 
                     <p className="hero-tagline-copy hero-typed-copy" aria-live="polite">
                         {typedText}
@@ -70,7 +81,7 @@ export default function HeroCenterPanel() {
                     </p>
 
                     <Link href="/shop" className="hero-cta-btn">
-                        <span>Shop All Products</span>
+                        <span>{copy.centerCta}</span>
                         <span className="hero-cta-arrow" aria-hidden="true">→</span>
                     </Link>
                 </div>

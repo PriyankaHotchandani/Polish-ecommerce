@@ -22,6 +22,8 @@
         "about": "O nas",
         "login": "Zaloguj się",
         "logout": "Wyloguj się",
+        "orders": "Zamówienia",
+        "languageSelector": "Wybór języka",
         "myAccount": "Moje konto",
         "cart": "Koszyk"
     },
@@ -141,7 +143,13 @@
             "title": "BM SP. Z O.O.",
             "subtitle": "Twój zaufany partner w artykułach gospodarstwa domowego i profesjonalnych narzędziach",
             "shopHousehold": "Artykuły dla domu",
-            "shopTools": "Narzędzia"
+            "shopTools": "Narzędzia",
+            "leftPanelHeading": "Artykuły\nDomowe",
+            "rightPanelHeading": "Narzędzia\ni Sprzęt",
+            "centerKicker": "Starannie dobrany asortyment",
+            "centerHeadline": "Wszystko, Czego Potrzebujesz",
+            "centerSubtext": "Jakościowe produkty do domu, remontu i codziennego życia.",
+            "centerCta": "Kup Wszystkie Produkty"
         },
         "featured": "Produkty wyróżnione",
         "newArrivals": "Nowości",
