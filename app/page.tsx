@@ -136,56 +136,73 @@ export default async function Home() {
       )}
 
       {/* B2B Benefits Section */}
-      <section className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white py-16 sm:py-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <div className="inline-block px-4 py-2 bg-green-600 rounded-full text-sm font-semibold mb-4">
-              FOR BUSINESSES
+      <section className="relative overflow-hidden bg-[radial-gradient(circle_at_top_left,_#1f2d49_0%,_#111827_42%,_#070d1a_100%)] py-16 text-white sm:py-24">
+        <div className="pointer-events-none absolute -left-24 top-8 h-56 w-56 rounded-full bg-cyan-300/10 blur-3xl" />
+        <div className="pointer-events-none absolute -right-16 bottom-8 h-64 w-64 rounded-full bg-blue-200/10 blur-3xl" />
+
+        <div className="relative mx-auto grid max-w-7xl gap-10 px-4 sm:px-6 lg:grid-cols-[1.05fr_1fr] lg:items-center lg:gap-14 lg:px-8">
+          <div>
+            <div className="mb-6 inline-flex items-center rounded-full border border-white/20 bg-slate-950/30 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-cyan-100">
+              For Businesses
             </div>
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">
+            <h2 className="mb-5 max-w-xl text-3xl font-bold leading-tight text-white sm:text-4xl lg:text-[2.7rem]">
               Wholesale Pricing for B2B Customers
             </h2>
-            <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-              Register as a business customer to unlock exclusive wholesale rates and benefits
+            <p className="max-w-xl text-lg leading-relaxed text-slate-200">
+              Register as a business customer to unlock exclusive wholesale rates, streamlined invoicing, and priority logistics tailored for recurring procurement.
             </p>
-          </div>
 
-          <div className="grid md:grid-cols-3 gap-8 mb-12">
-            <div className="text-center p-8 bg-white/5 backdrop-blur rounded-xl border border-white/10 hover:bg-white/10 transition-all">
-              <div className="text-5xl mb-4">💰</div>
-              <h3 className="text-xl font-bold mb-3">Wholesale Pricing</h3>
-              <p className="text-gray-300">
-                Enjoy significant discounts on bulk orders with our competitive net pricing
-              </p>
-            </div>
-
-            <div className="text-center p-8 bg-white/5 backdrop-blur rounded-xl border border-white/10 hover:bg-white/10 transition-all">
-              <div className="text-5xl mb-4">📄</div>
-              <h3 className="text-xl font-bold mb-3">VAT Invoices</h3>
-              <p className="text-gray-300">
-                Automatic VAT invoice generation for all orders - download instantly from your order page
-              </p>
-            </div>
-
-            <div className="text-center p-8 bg-white/5 backdrop-blur rounded-xl border border-white/10 hover:bg-white/10 transition-all">
-              <div className="text-5xl mb-4">🚚</div>
-              <h3 className="text-xl font-bold mb-3">Flexible Delivery</h3>
-              <p className="text-gray-300">
-                Priority shipping options and special rates for large volume orders
-              </p>
+            <div className="mt-9">
+              <Link
+                href="/b2b"
+                className="inline-flex items-center rounded-full border border-white/80 bg-white px-8 py-4 text-base font-bold text-slate-900 shadow-[0_10px_40px_rgba(255,255,255,0.18)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-slate-100"
+              >
+                Learn More About B2B
+                <svg className="ml-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
+              </Link>
             </div>
           </div>
 
-          <div className="text-center">
-            <Link
-              href="/b2b"
-              className="inline-flex items-center px-8 py-4 bg-green-600 text-white rounded-full font-bold text-lg shadow-xl hover:bg-green-700 transition-all duration-300 hover:scale-105"
-            >
-              Learn More About B2B
-              <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-              </svg>
-            </Link>
+          <div className="grid gap-4 sm:gap-5">
+            <div className="rounded-2xl border border-white/12 bg-white/5 p-6 text-left backdrop-blur-sm transition duration-300 hover:bg-white/[0.08]">
+              <div className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-lg bg-cyan-300/12 text-cyan-200">
+                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 8h16M6 4h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Zm4 9h4m-6 4h8" />
+                </svg>
+              </div>
+              <h3 className="mb-2 text-xl font-semibold text-white">Wholesale Pricing</h3>
+              <p className="text-slate-300">
+                Enjoy significant discounts on bulk orders with transparent net pricing built for business scale.
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-white/12 bg-white/5 p-6 text-left backdrop-blur-sm transition duration-300 hover:bg-white/[0.08]">
+              <div className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-lg bg-cyan-300/12 text-cyan-200">
+                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M7 3h7l5 5v13a1 1 0 0 1-1 1H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M14 3v5h5M9 13h6M9 17h4" />
+                </svg>
+              </div>
+              <h3 className="mb-2 text-xl font-semibold text-white">VAT Invoices</h3>
+              <p className="text-slate-300">
+                Automatic VAT invoice generation for every order, ready to download instantly from your order page.
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-white/12 bg-white/5 p-6 text-left backdrop-blur-sm transition duration-300 hover:bg-white/[0.08]">
+              <div className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-lg bg-cyan-300/12 text-cyan-200">
+                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 7h11v8H3V7Zm11 3h3l3 3v2h-6v-5Z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M7 18.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Zm12 0a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Z" />
+                </svg>
+              </div>
+              <h3 className="mb-2 text-xl font-semibold text-white">Flexible Delivery</h3>
+              <p className="text-slate-300">
+                Priority shipping options and negotiated rates for large-volume orders and scheduled replenishment.
+              </p>
+            </div>
           </div>
         </div>
       </section>
