@@ -101,8 +101,8 @@ export default function ShopFilters({ categories, activeFiltersCount }: ShopFilt
                 <button
                     onClick={() => setIsOpen(true)}
                     className={`group inline-flex h-9 items-center gap-2 rounded-full border px-3.5 text-[0.93rem] font-medium transition-all ${hasActiveFilters
-                            ? 'border-[#163579]/20 bg-[#163579]/8 text-[#163579] hover:bg-[#163579]/12'
-                            : 'border-gray-200 bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        ? 'border-[#163579]/20 bg-[#163579]/8 text-[#163579] hover:bg-[#163579]/12'
+                        : 'border-gray-200 bg-gray-100 text-gray-700 hover:bg-gray-200'
                         }`}
                 >
                     <span className="relative inline-flex items-center justify-center">

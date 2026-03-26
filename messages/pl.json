@@ -279,7 +279,10 @@
     },
     "b2bPage": {
         "portalTitle": "Portal hurtowy B2B",
-        "loginPrompt": "Zaloguj się kontem biznesowym, aby uzyskać dostęp do cen hurtowych i funkcji premium",
+        "portalEyebrow": "Portal partnera",
+        "wholesaleGatewayTitle": "Dostęp do konta B2B.",
+        "loginPrompt": "Zaloguj się kontem biznesowym, aby uzyskać dostęp do cen hurtowych i funkcji premium.",
+        "partnerSignInHint": "Zaloguj się danymi partnera, aby przejść do cen hurtowych i narzędzi konta.",
         "benefitsTitle": "Korzyści B2B:",
         "benefits": {
             "wholesalePricing": "Ekskluzywne ceny hurtowe",
@@ -289,6 +292,8 @@
         },
         "logIn": "Zaloguj się",
         "createBusinessAccount": "Utwórz konto firmowe",
+        "applyPrompt": "Nie jesteś jeszcze partnerem hurtowym?",
+        "applyBusinessAccount": "Złóż wniosek o konto firmowe",
         "accessRestrictedTitle": "Dostęp ograniczony",
         "accessRestrictedDescription": "Ta sekcja jest dostępna wyłącznie dla klientów biznesowych z kontem B2B.",
         "accountTypeLabel": "Typ Twojego konta:",

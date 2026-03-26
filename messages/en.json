@@ -279,7 +279,10 @@
     },
     "b2bPage": {
         "portalTitle": "B2B Wholesale Portal",
-        "loginPrompt": "Please log in with a business account to access wholesale pricing and exclusive features",
+        "portalEyebrow": "Partner Portal",
+        "wholesaleGatewayTitle": "Access your B2B account.",
+        "loginPrompt": "Please log in with a business account to access wholesale pricing and exclusive features.",
+        "partnerSignInHint": "Sign in with your partner credentials to access wholesale pricing and account tools.",
         "benefitsTitle": "B2B Benefits:",
         "benefits": {
             "wholesalePricing": "Exclusive wholesale pricing",
@@ -289,6 +292,8 @@
         },
         "logIn": "Log In",
         "createBusinessAccount": "Create Business Account",
+        "applyPrompt": "Not a wholesale partner yet?",
+        "applyBusinessAccount": "Apply for a Business Account",
         "accessRestrictedTitle": "Access Restricted",
         "accessRestrictedDescription": "This area is only accessible to business customers with B2B accounts.",
         "accountTypeLabel": "Your account type:",

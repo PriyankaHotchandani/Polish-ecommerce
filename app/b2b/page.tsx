@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { cookies } from 'next/headers'
 import enMessages from '@/messages/en.json'
 import plMessages from '@/messages/pl.json'
+import B2BPortalLoginForm from '@/components/B2BPortalLoginForm'
 
 type Locale = 'en' | 'pl'
 
@@ -18,65 +19,62 @@ export default async function B2BPortalPage() {
     const copy = MESSAGES[locale].b2bPage as typeof enMessages.b2bPage
 
     const { data: { user }, error: authError } = await supabase.auth.getUser()
+    const gatewayBenefits = [
+        copy.benefits.wholesalePricing,
+        copy.benefits.bulkDiscounts,
+        copy.benefits.vatInvoices,
+        copy.benefits.accountManager,
+    ]
 
     console.log('B2B Portal - Auth user:', user?.id, user?.email)
     console.log('B2B Portal - Auth error:', authError)
 
     if (!user) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4">
-                <div className="max-w-md w-full">
-                    <div className="text-center mb-8">
-                        <h1 className="text-3xl font-bold text-gray-900 mb-4">
-                            {copy.portalTitle}
-                        </h1>
-                        <p className="text-gray-600">
-                            {copy.loginPrompt}
-                        </p>
-                    </div>
-                    <div className="bg-white rounded-lg shadow-md p-8">
-                        <h2 className="text-xl font-semibold mb-4">{copy.benefitsTitle}</h2>
-                        <ul className="space-y-3 mb-8">
-                            <li className="flex items-start">
-                                <svg className="h-6 w-6 text-green-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                </svg>
-                                <span className="text-gray-700">{copy.benefits.wholesalePricing}</span>
-                            </li>
-                            <li className="flex items-start">
-                                <svg className="h-6 w-6 text-green-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                </svg>
-                                <span className="text-gray-700">{copy.benefits.bulkDiscounts}</span>
-                            </li>
-                            <li className="flex items-start">
-                                <svg className="h-6 w-6 text-green-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                </svg>
-                                <span className="text-gray-700">{copy.benefits.vatInvoices}</span>
-                            </li>
-                            <li className="flex items-start">
-                                <svg className="h-6 w-6 text-green-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                </svg>
-                                <span className="text-gray-700">{copy.benefits.accountManager}</span>
-                            </li>
-                        </ul>
-                        <div className="space-y-3">
-                            <Link
-                                href="/auth/login"
-                                className="block w-full text-center bg-green-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-green-700 transition-colors"
-                            >
-                                {copy.logIn}
-                            </Link>
-                            <Link
-                                href="/auth/signup"
-                                className="block w-full text-center bg-white border-2 border-green-600 text-green-600 py-3 px-4 rounded-lg font-semibold hover:bg-green-50 transition-colors"
-                            >
-                                {copy.createBusinessAccount}
-                            </Link>
+            <div className="min-h-screen bg-white">
+                <div className="grid min-h-screen grid-cols-1 lg:grid-cols-2">
+                    <section className="relative overflow-hidden bg-[linear-gradient(160deg,#0b1d5b_0%,#091748_45%,#070f33_100%)] px-8 py-16 text-white sm:px-12 lg:px-16">
+                        <div className="pointer-events-none absolute -left-14 top-14 h-44 w-44 rounded-full bg-cyan-300/10 blur-3xl" />
+                        <div className="pointer-events-none absolute -right-16 bottom-10 h-52 w-52 rounded-full bg-blue-200/10 blur-3xl" />
+
+                        <div className="relative mx-auto flex h-full w-full max-w-xl flex-col justify-center">
+                            <p className="mb-5 text-xs font-semibold uppercase tracking-[0.28em] text-blue-100/70">{copy.portalEyebrow}</p>
+                            <h1 className="max-w-lg text-4xl font-bold leading-tight sm:text-5xl">
+                                {copy.wholesaleGatewayTitle}
+                            </h1>
+                            <p className="mt-5 max-w-lg text-base text-blue-100/85 sm:text-lg">
+                                {copy.loginPrompt}
+                            </p>
+
+                            <div className="mt-10 space-y-3">
+                                {gatewayBenefits.map((benefit, index) => (
+                                    <div
+                                        key={benefit}
+                                        className="b2b-feature-item"
+                                        style={{ ['--feature-delay' as string]: `${120 + index * 95}ms` }}
+                                    >
+                                        <span className="b2b-feature-icon" aria-hidden>
+                                            <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5">
+                                                <path d="M5 10L8.2 13.1L15 6.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                                            </svg>
+                                        </span>
+                                        <span className="b2b-feature-text">{benefit}</span>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
-                    </div>
+                    </section>
+
+                    <section className="flex items-center bg-white px-8 py-16 sm:px-12 lg:px-16">
+                        <div className="mx-auto w-full max-w-md">
+                            <h2 className="text-3xl font-bold text-slate-900 sm:text-[2.15rem]">{copy.logIn}</h2>
+                            <p className="mt-3 text-slate-600">{copy.partnerSignInHint}</p>
+
+                            <div className="mt-8">
+                                <B2BPortalLoginForm />
+                            </div>
+                        </div>
+                    </section>
                 </div>
             </div>
         )
