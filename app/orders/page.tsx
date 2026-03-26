@@ -1,32 +1,44 @@
 import { createClient } from '@/utils/supabase/server'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
+import { cookies } from 'next/headers'
+import enMessages from '@/messages/en.json'
+import plMessages from '@/messages/pl.json'
+
+type Locale = 'en' | 'pl'
 
 const statusColors = {
     pending: 'bg-yellow-100 text-yellow-800',
     processing: 'bg-blue-100 text-blue-800',
     shipped: 'bg-purple-100 text-purple-800',
-    delivered: 'bg-green-100 text-green-800'
+    delivered: 'bg-green-100 text-green-800',
 }
 
-const statusLabels = {
-    pending: 'Pending',
-    processing: 'Processing',
-    shipped: 'Shipped',
-    delivered: 'Delivered'
-}
+const MESSAGES = {
+    en: enMessages,
+    pl: plMessages,
+} as const
 
 export default async function OrdersPage() {
     const supabase = await createClient()
+    const cookieStore = await cookies()
+    const locale: Locale = cookieStore.get('locale')?.value === 'pl' ? 'pl' : 'en'
+    const messages = MESSAGES[locale]
+    const numberLocale = locale === 'pl' ? 'pl-PL' : 'en-US'
 
-    // Get current user
+    const statusLabels = {
+        pending: messages.order.pending,
+        processing: messages.order.processing,
+        shipped: messages.order.shipped,
+        delivered: messages.order.delivered,
+    }
+
     const { data: { user } } = await supabase.auth.getUser()
 
     if (!user) {
         redirect('/auth/login?redirect=/orders')
     }
 
-    // Fetch user's orders
     const { data: orders, error } = await supabase
         .from('orders')
         .select(`
@@ -47,10 +59,8 @@ export default async function OrdersPage() {
         <div className="min-h-screen bg-gray-50 py-12">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="mb-8">
-                    <h1 className="text-4xl font-bold text-gray-900">My Orders</h1>
-                    <p className="mt-2 text-gray-600">
-                        View and track your order history
-                    </p>
+                    <h1 className="text-4xl font-bold text-gray-900">{messages.order.myOrders}</h1>
+                    <p className="mt-2 text-gray-600">{messages.ordersPage.subtitle}</p>
                 </div>
 
                 {!orders || orders.length === 0 ? (
@@ -68,15 +78,13 @@ export default async function OrdersPage() {
                                 d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
                             />
                         </svg>
-                        <h3 className="text-xl font-semibold text-gray-900 mb-2">No orders yet</h3>
-                        <p className="text-gray-600 mb-6">
-                            You haven&apos;t placed any orders. Start shopping to see your orders here.
-                        </p>
+                        <h3 className="text-xl font-semibold text-gray-900 mb-2">{messages.ordersPage.emptyTitle}</h3>
+                        <p className="text-gray-600 mb-6">{messages.ordersPage.emptyHint}</p>
                         <Link
                             href="/shop"
                             className="inline-block bg-green-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-green-700 transition-colors"
                         >
-                            Start Shopping
+                            {messages.ordersPage.startShopping}
                         </Link>
                     </div>
                 ) : (
@@ -87,19 +95,19 @@ export default async function OrdersPage() {
 
                             return (
                                 <div key={order.id} className="bg-white rounded-lg shadow-sm overflow-hidden">
-                                    {/* Order Header */}
                                     <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
                                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                                             <div>
                                                 <p className="text-sm text-gray-600">
-                                                    Order placed: {new Date(order.created_at).toLocaleDateString('en-US', {
+                                                    {messages.ordersPage.orderPlacedLabel}{' '}
+                                                    {new Date(order.created_at).toLocaleDateString(numberLocale, {
                                                         year: 'numeric',
                                                         month: 'long',
-                                                        day: 'numeric'
+                                                        day: 'numeric',
                                                     })}
                                                 </p>
                                                 <p className="text-sm font-medium text-gray-900 mt-1">
-                                                    Order #{order.id.slice(0, 8).toUpperCase()}
+                                                    {messages.order.orderNumber}{order.id.slice(0, 8).toUpperCase()}
                                                 </p>
                                             </div>
                                             <div className="flex items-center gap-4">
@@ -110,13 +118,12 @@ export default async function OrdersPage() {
                                                     href={`/orders/${order.id}`}
                                                     className="text-green-600 hover:text-green-700 font-medium text-sm"
                                                 >
-                                                    View Details →
+                                                    {messages.order.viewDetails} {'>'}
                                                 </Link>
                                             </div>
                                         </div>
                                     </div>
 
-                                    {/* Order Items Preview */}
                                     <div className="px-6 py-4">
                                         <div className="flex gap-4 overflow-x-auto pb-2">
                                             {order.order_items.slice(0, 4).map((item: any) => (
@@ -130,7 +137,7 @@ export default async function OrdersPage() {
                                                             />
                                                         ) : (
                                                             <div className="flex items-center justify-center h-full">
-                                                                <span className="text-gray-400 text-xs">No image</span>
+                                                                <span className="text-gray-400 text-xs">{messages.cartPage.noImage}</span>
                                                             </div>
                                                         )}
                                                     </div>
@@ -148,17 +155,17 @@ export default async function OrdersPage() {
                                         <div className="flex justify-between items-center mt-4">
                                             <div>
                                                 <p className="text-sm text-gray-600">
-                                                    {totalItems} {totalItems === 1 ? 'item' : 'items'} • {itemCount} {itemCount === 1 ? 'product' : 'products'}
+                                                    {totalItems} {totalItems === 1 ? messages.cartPage.itemSingular : messages.cartPage.itemPlural} • {itemCount} {itemCount === 1 ? messages.ordersPage.productSingular : messages.ordersPage.productPlural}
                                                 </p>
                                                 {order.is_b2b_invoice_required && (
-                                                    <p className="text-xs text-blue-600 mt-1">📄 Invoice required</p>
+                                                    <p className="text-xs text-blue-600 mt-1">{messages.ordersPage.invoiceRequired}</p>
                                                 )}
                                             </div>
                                             <p className="text-xl font-bold text-gray-900">
-                                                {Number(order.total_amount).toLocaleString('en-US', {
+                                                {Number(order.total_amount).toLocaleString(numberLocale, {
                                                     style: 'currency',
                                                     currency: 'PLN',
-                                                    currencyDisplay: 'code'
+                                                    currencyDisplay: 'code',
                                                 }).replace('PLN', 'PLN ')}
                                             </p>
                                         </div>

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import Link from 'next/link'
+import { useLocaleMessages } from '@/contexts/LocaleContext'
 
 interface ShippingAddress {
     fullName: string
@@ -92,6 +93,8 @@ export default function CheckoutPage() {
     const [useSavedShippingAddress, setUseSavedShippingAddress] = useState(true)
     const [useSavedBillingAddress, setUseSavedBillingAddress] = useState(true)
     const supabase = useMemo(() => createClient(), [])
+    const { messages, locale } = useLocaleMessages()
+    const numberLocale = locale === 'pl' ? 'pl-PL' : 'en-US'
 
     const [shippingAddress, setShippingAddress] = useState<ShippingAddress>({
         fullName: '',
@@ -100,7 +103,7 @@ export default function CheckoutPage() {
         street: '',
         city: '',
         postalCode: '',
-        country: 'Poland'
+        country: messages.savedAddresses.defaultCountry
     })
 
     const [billingAddress, setBillingAddress] = useState<BillingAddress>({
@@ -110,7 +113,7 @@ export default function CheckoutPage() {
         street: '',
         city: '',
         postalCode: '',
-        country: 'Poland',
+        country: messages.savedAddresses.defaultCountry,
         companyName: '',
         nipNumber: ''
     })
@@ -282,7 +285,7 @@ export default function CheckoutPage() {
             const checkoutSupabase = createClient()
 
             if (!paymentMethod) {
-                throw new Error('Please select a payment method to continue.')
+                throw new Error(messages.checkout.errors.selectPayment)
             }
 
             const selectedShippingAddress = useSavedShippingAddress
@@ -290,7 +293,7 @@ export default function CheckoutPage() {
                 : null
 
             if (useSavedShippingAddress && !selectedShippingAddress) {
-                throw new Error('Please select a saved shipping address or add a new one.')
+                throw new Error(messages.checkout.errors.selectShippingAddress)
             }
 
             const finalShippingAddress: ShippingAddress = selectedShippingAddress
@@ -302,7 +305,7 @@ export default function CheckoutPage() {
                 : null
 
             if (!billingIsSameAsShipping && useSavedBillingAddress && !selectedBillingAddress) {
-                throw new Error('Please select a saved billing address or add a new one.')
+                throw new Error(messages.checkout.errors.selectBillingAddress)
             }
 
             const effectiveBillingAddress: BillingAddress = billingIsSameAsShipping
@@ -351,7 +354,7 @@ export default function CheckoutPage() {
             const orderResult = await orderResponse.json()
 
             if (!orderResponse.ok || !orderResult?.success) {
-                throw new Error(orderResult?.error || 'Failed to create order')
+                throw new Error(orderResult?.error || messages.checkout.errors.createOrder)
             }
 
             const orderId = orderResult.orderId as string
@@ -371,15 +374,15 @@ export default function CheckoutPage() {
             console.error('Order creation error:', err)
 
             // Provide user-friendly error messages with Supabase details when available.
-            let errorMsg = 'Failed to create order. Please try again.'
+            let errorMsg = messages.checkout.errors.createOrderRetry
             const rawMessage = err?.message || ''
             const code = err?.code ? ` [${err.code}]` : ''
             const details = err?.details ? ` ${err.details}` : ''
 
             if (rawMessage.includes('Insufficient stock')) {
-                errorMsg = rawMessage + ' Please update your cart and try again.'
+                errorMsg = `${rawMessage} ${messages.checkout.errors.updateCartAndRetry}`
             } else if (rawMessage.includes('Product not found')) {
-                errorMsg = 'One or more products in your cart is no longer available. Please update your cart.'
+                errorMsg = messages.checkout.errors.productUnavailable
             } else if (rawMessage) {
                 errorMsg = `${rawMessage}${code}${details}`.trim()
             }
@@ -435,8 +438,8 @@ export default function CheckoutPage() {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
                     </div>
-                    <h2 className="text-2xl font-bold text-gray-900 mb-2">Order Placed Successfully!</h2>
-                    <p className="text-gray-600">Redirecting to confirmation page...</p>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-2">{messages.checkout.successTitle}</h2>
+                    <p className="text-gray-600">{messages.checkout.redirecting}</p>
                     <div className="mt-4">
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto"></div>
                     </div>
@@ -468,7 +471,7 @@ export default function CheckoutPage() {
                                                     : 'bg-white text-gray-700'
                                                     }`}
                                             >
-                                                Saved
+                                                {messages.savedAddresses.saved}
                                             </button>
                                             <button
                                                 type="button"
@@ -478,7 +481,7 @@ export default function CheckoutPage() {
                                                     : 'bg-white text-gray-700'
                                                     }`}
                                             >
-                                                Add New
+                                                {messages.savedAddresses.addNew}
                                             </button>
                                         </div>
                                     )}
@@ -531,7 +534,7 @@ export default function CheckoutPage() {
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div className="md:col-span-2">
                                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                Full Name *
+                                                {messages.savedAddresses.fullName} *
                                             </label>
                                             <input
                                                 type="text"
@@ -544,7 +547,7 @@ export default function CheckoutPage() {
 
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                Email *
+                                                {messages.profile.email} *
                                             </label>
                                             <input
                                                 type="email"
@@ -557,7 +560,7 @@ export default function CheckoutPage() {
 
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                Phone *
+                                                {messages.profile.phone} *
                                             </label>
                                             <input
                                                 type="tel"
@@ -570,7 +573,7 @@ export default function CheckoutPage() {
 
                                         <div className="md:col-span-2">
                                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                Street Address *
+                                                {messages.savedAddresses.street} *
                                             </label>
                                             <input
                                                 type="text"
@@ -583,7 +586,7 @@ export default function CheckoutPage() {
 
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                City *
+                                                {messages.savedAddresses.city} *
                                             </label>
                                             <input
                                                 type="text"
@@ -596,7 +599,7 @@ export default function CheckoutPage() {
 
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                Postal Code *
+                                                {messages.savedAddresses.postalCode} *
                                             </label>
                                             <input
                                                 type="text"
@@ -609,17 +612,17 @@ export default function CheckoutPage() {
 
                                         <div className="md:col-span-2">
                                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                Country *
+                                                {messages.savedAddresses.country} *
                                             </label>
                                             <select
                                                 value={shippingAddress.country}
                                                 onChange={(e) => setShippingAddress({ ...shippingAddress, country: e.target.value })}
                                                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                                             >
-                                                <option value="Poland">Poland</option>
-                                                <option value="Germany">Germany</option>
-                                                <option value="Czech Republic">Czech Republic</option>
-                                                <option value="Slovakia">Slovakia</option>
+                                                <option value={messages.checkout.countries.poland}>{messages.checkout.countries.poland}</option>
+                                                <option value={messages.checkout.countries.germany}>{messages.checkout.countries.germany}</option>
+                                                <option value={messages.checkout.countries.czechRepublic}>{messages.checkout.countries.czechRepublic}</option>
+                                                <option value={messages.checkout.countries.slovakia}>{messages.checkout.countries.slovakia}</option>
                                             </select>
                                         </div>
                                     </div>
@@ -629,7 +632,7 @@ export default function CheckoutPage() {
                             {/* Billing Address */}
                             {userRole === 'b2b_customer' && (
                                 <div className="bg-white rounded-lg shadow-sm p-6">
-                                    <h2 className="text-xl font-bold text-gray-900 mb-6">Billing Address</h2>
+                                    <h2 className="text-xl font-bold text-gray-900 mb-6">{messages.checkout.billingAddress}</h2>
 
                                     <div className="mb-6">
                                         <label className="flex items-center">
@@ -640,7 +643,7 @@ export default function CheckoutPage() {
                                                 className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
                                             />
                                             <span className="ml-2 text-sm text-gray-700">
-                                                Same as shipping address
+                                                {messages.checkout.sameAsShipping}
                                             </span>
                                         </label>
                                     </div>
@@ -657,7 +660,7 @@ export default function CheckoutPage() {
                                                             : 'bg-white text-gray-700'
                                                             }`}
                                                     >
-                                                        Saved
+                                                        {messages.savedAddresses.saved}
                                                     </button>
                                                     <button
                                                         type="button"
@@ -667,7 +670,7 @@ export default function CheckoutPage() {
                                                             : 'bg-white text-gray-700'
                                                             }`}
                                                     >
-                                                        Add New
+                                                        {messages.savedAddresses.addNew}
                                                     </button>
                                                 </div>
                                             )}
@@ -701,7 +704,7 @@ export default function CheckoutPage() {
                                                                         {address.label}
                                                                         {address.is_default && (
                                                                             <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-800">
-                                                                                Default
+                                                                                {messages.savedAddresses.defaultLabel}
                                                                             </span>
                                                                         )}
                                                                     </p>
@@ -724,7 +727,7 @@ export default function CheckoutPage() {
                                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                     <div className="md:col-span-2">
                                                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                            Full Name *
+                                                            {messages.savedAddresses.fullName} *
                                                         </label>
                                                         <input
                                                             type="text"
@@ -739,7 +742,7 @@ export default function CheckoutPage() {
 
                                                     <div className="md:col-span-2">
                                                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                            Company Name *
+                                                            {messages.profile.company} *
                                                         </label>
                                                         <input
                                                             type="text"
@@ -754,7 +757,7 @@ export default function CheckoutPage() {
 
                                                     <div>
                                                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                            NIP Number *
+                                                            {messages.profile.nip} *
                                                         </label>
                                                         <input
                                                             type="text"
@@ -769,7 +772,7 @@ export default function CheckoutPage() {
 
                                                     <div>
                                                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                            Phone *
+                                                            {messages.profile.phone} *
                                                         </label>
                                                         <input
                                                             type="tel"
@@ -784,7 +787,7 @@ export default function CheckoutPage() {
 
                                                     <div className="md:col-span-2">
                                                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                            Street Address *
+                                                            {messages.savedAddresses.street} *
                                                         </label>
                                                         <input
                                                             type="text"
@@ -799,7 +802,7 @@ export default function CheckoutPage() {
 
                                                     <div>
                                                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                            City *
+                                                            {messages.savedAddresses.city} *
                                                         </label>
                                                         <input
                                                             type="text"
@@ -814,7 +817,7 @@ export default function CheckoutPage() {
 
                                                     <div>
                                                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                            Postal Code *
+                                                            {messages.savedAddresses.postalCode} *
                                                         </label>
                                                         <input
                                                             type="text"
@@ -840,7 +843,7 @@ export default function CheckoutPage() {
                                                 className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
                                             />
                                             <span className="ml-2 text-sm text-gray-700">
-                                                Require VAT invoice
+                                                {messages.checkout.requireInvoice}
                                             </span>
                                         </label>
                                     </div>
@@ -849,7 +852,7 @@ export default function CheckoutPage() {
 
                             {/* Payment Method */}
                             <div className="bg-white rounded-lg shadow-sm p-6">
-                                <h2 className="text-xl font-bold text-gray-900 mb-6">Payment Method</h2>
+                                <h2 className="text-xl font-bold text-gray-900 mb-6">{messages.invoice.paymentMethod}</h2>
 
                                 <div className="space-y-3">
                                     <label className="flex items-center p-4 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
@@ -862,7 +865,7 @@ export default function CheckoutPage() {
                                             required={!paymentMethod}
                                             className="w-4 h-4 text-green-600 border-gray-300 focus:ring-green-500"
                                         />
-                                        <span className="ml-3 text-gray-900 font-medium">Credit/Debit Card</span>
+                                        <span className="ml-3 text-gray-900 font-medium">{messages.checkout.payment.card}</span>
                                     </label>
 
                                     <label className="flex items-center p-4 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
@@ -874,7 +877,7 @@ export default function CheckoutPage() {
                                             onChange={() => setPaymentMethod('transfer')}
                                             className="w-4 h-4 text-green-600 border-gray-300 focus:ring-green-500"
                                         />
-                                        <span className="ml-3 text-gray-900 font-medium">Bank Transfer</span>
+                                        <span className="ml-3 text-gray-900 font-medium">{messages.checkout.payment.transfer}</span>
                                     </label>
 
                                     <label className="flex items-center p-4 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
@@ -886,12 +889,12 @@ export default function CheckoutPage() {
                                             onChange={() => setPaymentMethod('cash_on_delivery')}
                                             className="w-4 h-4 text-green-600 border-gray-300 focus:ring-green-500"
                                         />
-                                        <span className="ml-3 text-gray-900 font-medium">Cash on Delivery</span>
+                                        <span className="ml-3 text-gray-900 font-medium">{messages.checkout.payment.cod}</span>
                                     </label>
                                 </div>
 
                                 <p className="mt-4 text-sm text-gray-500">
-                                    Payment processing will be implemented in the next phase. Your order will be marked as pending.
+                                    {messages.checkout.paymentHint}
                                 </p>
                             </div>
                         </div>
@@ -899,7 +902,7 @@ export default function CheckoutPage() {
                         {/* Order Summary */}
                         <div className="lg:col-span-1">
                             <div className="bg-white rounded-lg shadow-sm p-6 sticky top-4">
-                                <h2 className="text-xl font-bold text-gray-900 mb-6">Order Summary</h2>
+                                <h2 className="text-xl font-bold text-gray-900 mb-6">{messages.checkout.orderSummary}</h2>
 
                                 {/* Items */}
                                 <div className="space-y-4 mb-6 max-h-60 overflow-y-auto">
@@ -920,7 +923,7 @@ export default function CheckoutPage() {
                                                         />
                                                     ) : (
                                                         <div className="flex items-center justify-center h-full">
-                                                            <span className="text-gray-400 text-xs">No image</span>
+                                                            <span className="text-gray-400 text-xs">{messages.cartPage.noImage}</span>
                                                         </div>
                                                     )}
                                                 </div>
@@ -928,9 +931,9 @@ export default function CheckoutPage() {
                                                     <p className="text-sm font-medium text-gray-900 truncate">
                                                         {item.product.title}
                                                     </p>
-                                                    <p className="text-xs text-gray-500">Qty: {item.quantity}</p>
+                                                    <p className="text-xs text-gray-500">{messages.cart.quantity}: {item.quantity}</p>
                                                     <p className="text-sm font-semibold text-gray-900 mt-1">
-                                                        {itemTotal.toLocaleString('en-US', {
+                                                        {itemTotal.toLocaleString(numberLocale, {
                                                             style: 'currency',
                                                             currency: 'PLN',
                                                             currencyDisplay: 'code'
@@ -945,9 +948,9 @@ export default function CheckoutPage() {
                                 {/* Totals */}
                                 <div className="border-t pt-4 space-y-2">
                                     <div className="flex justify-between text-gray-700">
-                                        <span>Subtotal</span>
+                                        <span>{messages.cart.subtotal}</span>
                                         <span>
-                                            {subtotal.toLocaleString('en-US', {
+                                            {subtotal.toLocaleString(numberLocale, {
                                                 style: 'currency',
                                                 currency: 'PLN',
                                                 currencyDisplay: 'code'
@@ -965,9 +968,9 @@ export default function CheckoutPage() {
                                         </span>
                                     </div>
                                     <div className="flex justify-between text-gray-700">
-                                        <span>Shipping</span>
+                                        <span>{messages.invoice.shipping}</span>
                                         <span>
-                                            {shippingCost === 0 ? 'FREE' : `${shippingCost.toLocaleString('en-US', {
+                                            {shippingCost === 0 ? messages.checkout.freeShippingLabel : `${shippingCost.toLocaleString(numberLocale, {
                                                 style: 'currency',
                                                 currency: 'PLN',
                                                 currencyDisplay: 'code'
@@ -975,9 +978,9 @@ export default function CheckoutPage() {
                                         </span>
                                     </div>
                                     <div className="border-t pt-2 flex justify-between text-lg font-bold text-gray-900">
-                                        <span>Total</span>
+                                        <span>{messages.cart.total}</span>
                                         <span>
-                                            {total.toLocaleString('en-US', {
+                                            {total.toLocaleString(numberLocale, {
                                                 style: 'currency',
                                                 currency: 'PLN',
                                                 currencyDisplay: 'code'
@@ -989,7 +992,7 @@ export default function CheckoutPage() {
                                 {userRole === 'b2b_customer' && (
                                     <div className="bg-green-50 border border-green-200 rounded-lg p-3 mt-4">
                                         <p className="text-sm text-green-800 font-medium">
-                                            🎉 Wholesale pricing applied
+                                            {messages.checkout.wholesaleApplied}
                                         </p>
                                     </div>
                                 )}
@@ -997,7 +1000,7 @@ export default function CheckoutPage() {
                                 {shippingCost === 0 && (
                                     <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-4">
                                         <p className="text-sm text-blue-800">
-                                            Free shipping on orders over 500 PLN
+                                            {messages.checkout.freeShippingHint}
                                         </p>
                                     </div>
                                 )}
@@ -1019,16 +1022,16 @@ export default function CheckoutPage() {
                                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                             </svg>
-                                            Processing Order...
+                                            {messages.checkout.processingOrder}
                                         </>
-                                    ) : 'Place Order'}
+                                    ) : messages.checkout.placeOrder}
                                 </button>
 
                                 <Link
                                     href="/cart"
                                     className="block w-full text-center text-gray-600 py-2 mt-3 hover:text-gray-900"
                                 >
-                                    ← Back to Cart
+                                    ← {messages.checkout.backToCart}
                                 </Link>
                             </div>
                         </div>

@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import type { SavedAddress, SavedAddressInsert } from '@/types/database.types'
+import { useLocaleMessages } from '@/contexts/LocaleContext'
 
 interface AddressFormData {
     label: string
@@ -37,6 +38,7 @@ export default function SavedAddresses({ userId }: { userId: string }) {
     })
     const [error, setError] = useState<string | null>(null)
     const supabase = useMemo(() => createClient(), [])
+    const { messages } = useLocaleMessages()
 
     useEffect(() => {
         loadAddresses()
@@ -56,7 +58,7 @@ export default function SavedAddresses({ userId }: { userId: string }) {
             setError(null)
         } catch (err) {
             console.error('Error loading addresses:', err)
-            setError('Failed to load addresses')
+            setError(messages.savedAddresses.errors.load)
         } finally {
             setLoading(false)
         }
@@ -98,7 +100,7 @@ export default function SavedAddresses({ userId }: { userId: string }) {
             await loadAddresses()
         } catch (err) {
             console.error('Error saving address:', err)
-            setError('Failed to save address')
+            setError(messages.savedAddresses.errors.save)
         } finally {
             setSubmitting(false)
         }
@@ -122,7 +124,7 @@ export default function SavedAddresses({ userId }: { userId: string }) {
     }
 
     const handleDelete = async (id: string) => {
-        if (!confirm('Are you sure you want to delete this address?')) return
+        if (!confirm(messages.savedAddresses.confirmDelete)) return
 
         try {
             const { error } = await supabase
@@ -134,7 +136,7 @@ export default function SavedAddresses({ userId }: { userId: string }) {
             await loadAddresses()
         } catch (err) {
             console.error('Error deleting address:', err)
-            setError('Failed to delete address')
+            setError(messages.savedAddresses.errors.delete)
         }
     }
 
@@ -147,7 +149,7 @@ export default function SavedAddresses({ userId }: { userId: string }) {
             street: '',
             city: '',
             postal_code: '',
-            country: 'Poland',
+            country: messages.savedAddresses.defaultCountry,
             phone: '',
             is_default: false,
         })
@@ -156,19 +158,19 @@ export default function SavedAddresses({ userId }: { userId: string }) {
     }
 
     if (loading) {
-        return <div className="text-gray-600">Loading addresses...</div>
+        return <div className="text-gray-600">{messages.savedAddresses.loading}</div>
     }
 
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-gray-900">Saved Addresses</h2>
+                <h2 className="text-xl font-semibold text-gray-900">{messages.savedAddresses.title}</h2>
                 {!showForm && (
                     <button
                         onClick={() => setShowForm(true)}
                         className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
                     >
-                        Add New Address
+                        {messages.savedAddresses.addNew}
                     </button>
                 )}
             </div>
@@ -183,27 +185,27 @@ export default function SavedAddresses({ userId }: { userId: string }) {
             {showForm && (
                 <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
                     <h3 className="text-lg font-semibold mb-4">
-                        {editingId ? 'Edit Address' : 'New Address'}
+                        {editingId ? messages.savedAddresses.editAddress : messages.savedAddresses.newAddress}
                     </h3>
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Address Label *
+                                    {messages.savedAddresses.addressLabel} *
                                 </label>
                                 <input
                                     type="text"
                                     required
                                     value={formData.label}
                                     onChange={(e) => setFormData({ ...formData, label: e.target.value })}
-                                    placeholder="e.g., Home, Office, Warehouse"
+                                    placeholder={messages.savedAddresses.labelPlaceholder}
                                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent"
                                 />
                             </div>
 
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Address Type *
+                                    {messages.savedAddresses.addressType} *
                                 </label>
                                 <select
                                     required
@@ -216,15 +218,15 @@ export default function SavedAddresses({ userId }: { userId: string }) {
                                     }
                                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent"
                                 >
-                                    <option value="both">Both (Shipping & Billing)</option>
-                                    <option value="shipping">Shipping Only</option>
-                                    <option value="billing">Billing Only</option>
+                                    <option value="both">{messages.savedAddresses.typeBoth}</option>
+                                    <option value="shipping">{messages.savedAddresses.typeShippingOnly}</option>
+                                    <option value="billing">{messages.savedAddresses.typeBillingOnly}</option>
                                 </select>
                             </div>
 
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Full Name *
+                                    {messages.savedAddresses.fullName} *
                                 </label>
                                 <input
                                     type="text"
@@ -237,7 +239,7 @@ export default function SavedAddresses({ userId }: { userId: string }) {
 
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Company Name (optional)
+                                    {messages.savedAddresses.companyOptional}
                                 </label>
                                 <input
                                     type="text"
@@ -249,7 +251,7 @@ export default function SavedAddresses({ userId }: { userId: string }) {
 
                             <div className="md:col-span-2">
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Street Address *
+                                    {messages.savedAddresses.street} *
                                 </label>
                                 <input
                                     type="text"
@@ -262,7 +264,7 @@ export default function SavedAddresses({ userId }: { userId: string }) {
 
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    City *
+                                    {messages.savedAddresses.city} *
                                 </label>
                                 <input
                                     type="text"
@@ -275,7 +277,7 @@ export default function SavedAddresses({ userId }: { userId: string }) {
 
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Postal Code *
+                                    {messages.savedAddresses.postalCode} *
                                 </label>
                                 <input
                                     type="text"
@@ -288,7 +290,7 @@ export default function SavedAddresses({ userId }: { userId: string }) {
 
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Country *
+                                    {messages.savedAddresses.country} *
                                 </label>
                                 <input
                                     type="text"
@@ -301,7 +303,7 @@ export default function SavedAddresses({ userId }: { userId: string }) {
 
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Phone *
+                                    {messages.savedAddresses.phone} *
                                 </label>
                                 <input
                                     type="tel"
@@ -322,7 +324,7 @@ export default function SavedAddresses({ userId }: { userId: string }) {
                                 className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
                             />
                             <label htmlFor="is_default" className="ml-2 text-sm text-gray-700">
-                                Set as default address for this type
+                                {messages.savedAddresses.setDefault}
                             </label>
                         </div>
 
@@ -333,8 +335,8 @@ export default function SavedAddresses({ userId }: { userId: string }) {
                                 className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {submitting
-                                    ? (editingId ? 'Updating...' : 'Saving...')
-                                    : (editingId ? 'Update Address' : 'Save Address')}
+                                    ? (editingId ? messages.savedAddresses.updating : messages.savedAddresses.saving)
+                                    : (editingId ? messages.savedAddresses.updateAddress : messages.savedAddresses.saveAddress)}
                             </button>
                             <button
                                 type="button"
@@ -345,7 +347,7 @@ export default function SavedAddresses({ userId }: { userId: string }) {
                                 disabled={submitting}
                                 className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                Cancel
+                                {messages.common.cancel}
                             </button>
                         </div>
                     </form>
@@ -356,7 +358,7 @@ export default function SavedAddresses({ userId }: { userId: string }) {
             <div className="space-y-4">
                 {addresses.length === 0 ? (
                     <p className="text-gray-500 text-center py-8">
-                        No saved addresses yet. Add one to make checkout faster!
+                        {messages.savedAddresses.empty}
                     </p>
                 ) : (
                     addresses.map((address) => (
@@ -370,15 +372,15 @@ export default function SavedAddresses({ userId }: { userId: string }) {
                                         <h3 className="font-semibold text-gray-900">{address.label}</h3>
                                         {address.is_default && (
                                             <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full font-medium">
-                                                Default
+                                                {messages.savedAddresses.defaultLabel}
                                             </span>
                                         )}
                                         <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
                                             {address.address_type === 'both'
-                                                ? 'Shipping & Billing'
+                                                ? messages.savedAddresses.typeChipBoth
                                                 : address.address_type === 'shipping'
-                                                    ? 'Shipping'
-                                                    : 'Billing'}
+                                                    ? messages.savedAddresses.typeChipShipping
+                                                    : messages.savedAddresses.typeChipBilling}
                                         </span>
                                     </div>
                                     <div className="text-sm text-gray-600 space-y-1">
@@ -396,13 +398,13 @@ export default function SavedAddresses({ userId }: { userId: string }) {
                                         onClick={() => handleEdit(address)}
                                         className="px-3 py-1 text-sm text-blue-600 hover:bg-blue-50 rounded transition-colors"
                                     >
-                                        Edit
+                                        {messages.common.edit}
                                     </button>
                                     <button
                                         onClick={() => handleDelete(address.id)}
                                         className="px-3 py-1 text-sm text-red-600 hover:bg-red-50 rounded transition-colors"
                                     >
-                                        Delete
+                                        {messages.common.delete}
                                     </button>
                                 </div>
                             </div>

@@ -1,7 +1,8 @@
 'use client'
 
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useState, useTransition } from 'react'
+import { useEffect, useRef, useState, useTransition } from 'react'
+import { useLocaleMessages } from '@/contexts/LocaleContext'
 
 interface Category {
     id: string
@@ -19,14 +20,48 @@ export default function ShopFilters({ categories, activeFiltersCount }: ShopFilt
     const searchParams = useSearchParams()
     const [isOpen, setIsOpen] = useState(false)
     const [isPending, startTransition] = useTransition()
+    const { messages } = useLocaleMessages()
 
-    // Get current values from URL
     const currentSearch = searchParams.get('search') || ''
     const currentCategory = searchParams.get('category') || ''
     const currentMinPrice = searchParams.get('minPrice') || ''
     const currentMaxPrice = searchParams.get('maxPrice') || ''
     const currentInStock = searchParams.get('inStock') === 'true'
     const currentSort = searchParams.get('sort') || 'newest'
+    const [openMenu, setOpenMenu] = useState<'category' | 'sort' | null>(null)
+    const [selectedCategory, setSelectedCategory] = useState(currentCategory)
+    const [selectedSort, setSelectedSort] = useState(currentSort)
+    const dropdownShellRef = useRef<HTMLFormElement | null>(null)
+    const hasActiveFilters = activeFiltersCount > 0
+
+    const sortOptions = [
+        { value: 'newest', label: messages.shop.sortByNewest },
+        { value: 'price-asc', label: messages.shop.sortByPriceLow },
+        { value: 'price-desc', label: messages.shop.sortByPriceHigh },
+        { value: 'name-asc', label: messages.shop.sortByName },
+        { value: 'name-desc', label: messages.shopFilters.sortByNameDesc },
+    ]
+
+    const selectedCategoryLabel = selectedCategory
+        ? (categories.find((category) => category.slug === selectedCategory)?.name || messages.shop.allProducts)
+        : messages.shop.allProducts
+    const selectedSortLabel = sortOptions.find((option) => option.value === selectedSort)?.label || messages.shop.sortByNewest
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (dropdownShellRef.current && !dropdownShellRef.current.contains(event.target as Node)) {
+                setOpenMenu(null)
+            }
+        }
+
+        if (openMenu) {
+            document.addEventListener('mousedown', handleClickOutside)
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside)
+        }
+    }, [openMenu])
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
@@ -54,6 +89,7 @@ export default function ShopFilters({ categories, activeFiltersCount }: ShopFilt
 
     const handleClearAll = () => {
         setIsOpen(false)
+        setOpenMenu(null)
         startTransition(() => {
             router.push('/shop')
         })
@@ -61,54 +97,52 @@ export default function ShopFilters({ categories, activeFiltersCount }: ShopFilt
 
     return (
         <>
-            {/* Filter Button */}
-            <div className="flex items-center gap-3 sm:justify-end">
+            <div className="flex items-center sm:justify-end">
                 <button
                     onClick={() => setIsOpen(true)}
-                    className="flex items-center gap-2 px-6 py-3 bg-white text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition-colors shadow-sm border border-gray-300"
+                    className={`group inline-flex h-9 items-center gap-2 rounded-full border px-3.5 text-[0.93rem] font-medium transition-all ${hasActiveFilters
+                            ? 'border-[#163579]/20 bg-[#163579]/8 text-[#163579] hover:bg-[#163579]/12'
+                            : 'border-gray-200 bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
                 >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-                    </svg>
-                    Filters
-                    {activeFiltersCount > 0 && (
-                        <span className="px-2.5 py-0.5 bg-green-600 text-white text-sm font-bold rounded-full">
-                            {activeFiltersCount}
-                        </span>
-                    )}
+                    <span className="relative inline-flex items-center justify-center">
+                        <svg
+                            className={`h-[1.05rem] w-[1.05rem] ${hasActiveFilters ? 'text-[#163579]' : 'text-gray-700'}`}
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
+                            />
+                        </svg>
+                        {hasActiveFilters && (
+                            <span className="absolute -right-1.5 -top-1.5 h-2.5 w-2.5 rounded-full bg-[#163579]" aria-hidden="true" />
+                        )}
+                    </span>
+                    <span>{messages.common.filter}</span>
                 </button>
-
-                {activeFiltersCount > 0 && (
-                    <button
-                        onClick={handleClearAll}
-                        disabled={isPending}
-                        className="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg font-semibold hover:bg-gray-200 transition-colors disabled:opacity-50"
-                    >
-                        Clear All
-                    </button>
-                )}
             </div>
 
-            {/* Modal Overlay */}
             {isOpen && (
                 <div className="fixed inset-0 z-50 overflow-hidden">
-                    {/* Backdrop */}
                     <div
-                        className="absolute inset-0 bg-white/45 backdrop-blur-[1px] transition-opacity"
+                        className="absolute inset-0 bg-slate-950/55 backdrop-blur-sm transition-opacity"
                         onClick={() => setIsOpen(false)}
                     />
 
-                    {/* Modal Panel */}
-                    <div className="absolute inset-y-0 right-0 max-w-full flex">
-                        <div className="w-screen max-w-md">
-                            <div className="h-full flex flex-col bg-white shadow-xl">
-                                {/* Header */}
-                                <div className="px-6 py-6 bg-green-600 text-white">
+                    <div className="absolute inset-y-0 right-0 flex max-w-full">
+                        <div className="w-screen max-w-[440px]">
+                            <div className="relative flex h-full flex-col border-l border-slate-200 bg-white shadow-2xl">
+                                <div className="border-b border-slate-200 bg-white px-5 py-4 text-slate-900">
                                     <div className="flex items-center justify-between">
-                                        <h2 className="text-2xl font-bold">Filter Products</h2>
+                                        <h2 className="text-[1.28rem] font-semibold tracking-tight">{messages.shopFilters.filterProducts}</h2>
                                         <button
                                             onClick={() => setIsOpen(false)}
-                                            className="p-2 hover:bg-green-700 rounded-lg transition-colors"
+                                            className="rounded-lg p-1.5 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900"
                                         >
                                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -117,111 +151,177 @@ export default function ShopFilters({ categories, activeFiltersCount }: ShopFilt
                                     </div>
                                 </div>
 
-                                {/* Filter Form */}
-                                <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto">
-                                    <div className="px-6 py-6 space-y-6">
-                                        {/* Category Filter */}
-                                        <div>
-                                            <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-2">
-                                                Category
-                                            </label>
-                                            <select
-                                                id="category"
-                                                name="category"
-                                                defaultValue={currentCategory}
-                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                <form ref={dropdownShellRef} onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-5 pb-24 pt-4">
+                                    <input type="hidden" name="category" value={selectedCategory} />
+                                    <input type="hidden" name="sort" value={selectedSort} />
+
+                                    <div className="border-b border-gray-100 pb-4">
+                                        <label htmlFor="category" className="mb-2 block text-xs font-semibold uppercase tracking-wider text-gray-500">
+                                            {messages.shop.categories}
+                                        </label>
+                                        <div className="relative">
+                                            <button
+                                                type="button"
+                                                onClick={() => setOpenMenu(openMenu === 'category' ? null : 'category')}
+                                                className="flex w-full items-center justify-between rounded-lg border border-gray-200 bg-white px-3.5 py-2.5 text-left text-slate-900 transition hover:border-slate-300"
                                             >
-                                                <option value="">All Categories</option>
-                                                {categories.map((cat) => (
-                                                    <option key={cat.id} value={cat.slug}>
-                                                        {cat.name}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        </div>
+                                                <span>{selectedCategoryLabel}</span>
+                                                <svg
+                                                    className={`h-4 w-4 text-slate-400 transition-transform ${openMenu === 'category' ? 'rotate-180' : ''}`}
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    viewBox="0 0 24 24"
+                                                    aria-hidden="true"
+                                                >
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                                </svg>
+                                            </button>
 
-                                        {/* Price Range */}
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                Price Range (PLN)
-                                            </label>
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div>
-                                                    <input
-                                                        type="number"
-                                                        name="minPrice"
-                                                        defaultValue={currentMinPrice}
-                                                        placeholder="Min"
-                                                        min="0"
-                                                        step="0.01"
-                                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                                                    />
+                                            {openMenu === 'category' && (
+                                                <div className="absolute z-30 mt-2 w-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-[0_14px_30px_rgba(15,23,42,0.12)]">
+                                                    <div className="max-h-56 overflow-auto py-1.5">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setSelectedCategory('')
+                                                                setOpenMenu(null)
+                                                            }}
+                                                            className={`flex w-full items-center justify-between px-3.5 py-2.5 text-left text-sm transition ${selectedCategory === '' ? 'bg-[#163579]/8 text-[#163579]' : 'text-slate-700 hover:bg-slate-50'}`}
+                                                        >
+                                                            <span>{messages.shop.allProducts}</span>
+                                                            {selectedCategory === '' && <span aria-hidden="true">•</span>}
+                                                        </button>
+                                                        {categories.map((cat) => (
+                                                            <button
+                                                                key={cat.id}
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    setSelectedCategory(cat.slug)
+                                                                    setOpenMenu(null)
+                                                                }}
+                                                                className={`flex w-full items-center justify-between px-3.5 py-2.5 text-left text-sm transition ${selectedCategory === cat.slug ? 'bg-[#163579]/8 text-[#163579]' : 'text-slate-700 hover:bg-slate-50'}`}
+                                                            >
+                                                                <span>{cat.name}</span>
+                                                                {selectedCategory === cat.slug && <span aria-hidden="true">•</span>}
+                                                            </button>
+                                                        ))}
+                                                    </div>
                                                 </div>
-                                                <div>
-                                                    <input
-                                                        type="number"
-                                                        name="maxPrice"
-                                                        defaultValue={currentMaxPrice}
-                                                        placeholder="Max"
-                                                        min="0"
-                                                        step="0.01"
-                                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                                                    />
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* Sort */}
-                                        <div>
-                                            <label htmlFor="sort" className="block text-sm font-medium text-gray-700 mb-2">
-                                                Sort By
-                                            </label>
-                                            <select
-                                                id="sort"
-                                                name="sort"
-                                                defaultValue={currentSort}
-                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                                            >
-                                                <option value="newest">Newest First</option>
-                                                <option value="price-asc">Price: Low to High</option>
-                                                <option value="price-desc">Price: High to Low</option>
-                                                <option value="name-asc">Name: A to Z</option>
-                                                <option value="name-desc">Name: Z to A</option>
-                                            </select>
-                                        </div>
-
-                                        {/* In Stock Toggle */}
-                                        <div>
-                                            <label className="flex items-center space-x-3 p-4 border border-gray-300 rounded-lg hover:bg-gray-50 cursor-pointer">
-                                                <input
-                                                    type="checkbox"
-                                                    name="inStock"
-                                                    value="true"
-                                                    defaultChecked={currentInStock}
-                                                    className="w-5 h-5 text-green-600 border-gray-300 rounded focus:ring-green-500"
-                                                />
-                                                <span className="text-sm font-medium text-gray-700">Show In-Stock Items Only</span>
-                                            </label>
+                                            )}
                                         </div>
                                     </div>
 
-                                    {/* Footer Buttons */}
-                                    <div className="border-t border-gray-200 px-6 py-4 bg-gray-50">
-                                        <div className="flex gap-3">
+                                    <div className="border-b border-gray-100 py-4">
+                                        <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-gray-500">
+                                            {messages.shop.priceRange}
+                                        </label>
+                                        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+                                            <div className="flex items-center rounded-lg border border-gray-200 bg-white px-3">
+                                                <span className="pr-2 text-sm font-medium text-gray-400">PLN</span>
+                                                <input
+                                                    type="number"
+                                                    name="minPrice"
+                                                    defaultValue={currentMinPrice}
+                                                    placeholder={messages.shopFilters.min}
+                                                    min="0"
+                                                    step="0.01"
+                                                    className="w-full py-2.5 text-slate-900 outline-none placeholder:text-gray-400"
+                                                />
+                                            </div>
+                                            <span className="px-1 text-gray-300" aria-hidden="true">-</span>
+                                            <div className="flex items-center rounded-lg border border-gray-200 bg-white px-3">
+                                                <span className="pr-2 text-sm font-medium text-gray-400">PLN</span>
+                                                <input
+                                                    type="number"
+                                                    name="maxPrice"
+                                                    defaultValue={currentMaxPrice}
+                                                    placeholder={messages.shopFilters.max}
+                                                    min="0"
+                                                    step="0.01"
+                                                    className="w-full py-2.5 text-slate-900 outline-none placeholder:text-gray-400"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="border-b border-gray-100 py-4">
+                                        <span className="mb-2 block text-xs font-semibold uppercase tracking-wider text-gray-500">
+                                            {messages.common.sort}
+                                        </span>
+                                        <div className="relative">
+                                            <button
+                                                type="button"
+                                                onClick={() => setOpenMenu(openMenu === 'sort' ? null : 'sort')}
+                                                className="flex w-full items-center justify-between rounded-lg border border-gray-200 bg-white px-3.5 py-2.5 text-left text-slate-900 transition hover:border-slate-300"
+                                            >
+                                                <span>{selectedSortLabel}</span>
+                                                <svg
+                                                    className={`h-4 w-4 text-slate-400 transition-transform ${openMenu === 'sort' ? 'rotate-180' : ''}`}
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    viewBox="0 0 24 24"
+                                                    aria-hidden="true"
+                                                >
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                                </svg>
+                                            </button>
+
+                                            {openMenu === 'sort' && (
+                                                <div className="absolute z-30 mt-2 w-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-[0_14px_30px_rgba(15,23,42,0.12)]">
+                                                    <div className="max-h-56 overflow-auto py-1.5">
+                                                        {sortOptions.map((option) => (
+                                                            <button
+                                                                key={option.value}
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    setSelectedSort(option.value)
+                                                                    setOpenMenu(null)
+                                                                }}
+                                                                className={`flex w-full items-center justify-between px-3.5 py-2.5 text-left text-sm transition ${selectedSort === option.value ? 'bg-[#163579]/8 text-[#163579]' : 'text-slate-700 hover:bg-slate-50'}`}
+                                                            >
+                                                                <span>{option.label}</span>
+                                                                {selectedSort === option.value && <span aria-hidden="true">•</span>}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <div className="py-4">
+                                        <span className="mb-2 block text-xs font-semibold uppercase tracking-wider text-gray-500">
+                                            {messages.common.filter}
+                                        </span>
+                                        <label className="flex cursor-pointer items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-3">
+                                            <span className="text-sm font-medium text-gray-700">{messages.shopFilters.inStockOnly}</span>
+                                            <input
+                                                type="checkbox"
+                                                name="inStock"
+                                                value="true"
+                                                defaultChecked={currentInStock}
+                                                className="peer sr-only"
+                                            />
+                                            <span className="relative inline-flex h-6 w-11 items-center rounded-full bg-gray-300 transition-colors after:absolute after:left-[2px] after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-transform peer-checked:bg-[#163579] peer-checked:after:translate-x-5" />
+                                        </label>
+                                    </div>
+
+                                    <div className="absolute bottom-0 left-0 w-full border-t border-gray-100 bg-white p-3.5">
+                                        <div className="grid grid-cols-10 gap-3">
                                             <button
                                                 type="submit"
                                                 disabled={isPending}
-                                                className="flex-1 px-6 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors shadow-sm disabled:opacity-50"
+                                                className="col-span-7 rounded-lg bg-[#163579] px-4 py-2.5 text-[0.92rem] font-semibold text-white transition-colors hover:bg-[#122d67] disabled:opacity-50"
                                             >
-                                                {isPending ? 'Applying...' : 'Apply Filters'}
+                                                {isPending ? messages.shopFilters.applying : messages.shopFilters.applyFilters}
                                             </button>
                                             <button
                                                 type="button"
                                                 onClick={handleClearAll}
                                                 disabled={isPending}
-                                                className="px-6 py-3 bg-white text-gray-700 rounded-lg font-semibold hover:bg-gray-100 transition-colors border border-gray-300 disabled:opacity-50"
+                                                className="col-span-3 bg-transparent px-1.5 py-2.5 text-[0.92rem] font-semibold text-gray-700 underline-offset-4 transition-colors hover:underline disabled:opacity-50"
                                             >
-                                                Reset
+                                                {messages.shopFilters.reset}
                                             </button>
                                         </div>
                                     </div>

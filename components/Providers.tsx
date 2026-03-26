@@ -2,11 +2,14 @@
 
 import { CartProvider } from '@/contexts/CartContext'
 import { ToastProvider } from '@/components/admin/Toast'
+import { LocaleProvider, type Locale } from '@/contexts/LocaleContext'
 
-export function Providers({ children }: { children: React.ReactNode }) {
+export function Providers({ children, initialLocale }: { children: React.ReactNode, initialLocale: Locale }) {
     return (
-        <ToastProvider>
-            <CartProvider>{children}</CartProvider>
-        </ToastProvider>
+        <LocaleProvider initialLocale={initialLocale}>
+            <ToastProvider>
+                <CartProvider>{children}</CartProvider>
+            </ToastProvider>
+        </LocaleProvider>
     )
 }

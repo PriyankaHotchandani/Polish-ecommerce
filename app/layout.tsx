@@ -5,6 +5,7 @@ import "./globals.css";
 import ConditionalNav from "@/components/ConditionalNav";
 import ProfileCompletenessPrompt from "@/components/ProfileCompletenessPrompt";
 import { Providers } from "@/components/Providers";
+import type { Locale } from "@/contexts/LocaleContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,14 +34,14 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const cookieStore = await cookies();
-  const locale = cookieStore.get('locale')?.value === 'pl' ? 'pl' : 'en';
+  const locale: Locale = cookieStore.get('locale')?.value === 'pl' ? 'pl' : 'en';
 
   return (
     <html lang={locale}>
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${bebasNeue.variable} antialiased`}
       >
-        <Providers>
+        <Providers initialLocale={locale}>
           <ConditionalNav initialLocale={locale} />
           <ProfileCompletenessPrompt />
           {children}

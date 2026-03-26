@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback } from 'react'
 import { useCart } from '@/contexts/CartContext'
 import type { Product } from '@/types/database.types'
+import { useLocaleMessages } from '@/contexts/LocaleContext'
 
 interface AddToCartButtonProps {
     product: Product
@@ -18,6 +19,7 @@ export default function AddToCartButton({
     disabled = false,
 }: AddToCartButtonProps) {
     const { addItem } = useCart()
+    const { messages } = useLocaleMessages()
     const [quantity, setQuantity] = useState(1)
     const [isAdding, setIsAdding] = useState(false)
     const isAddingRef = useRef(false)
@@ -113,12 +115,12 @@ export default function AddToCartButton({
                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                         </svg>
-                        Added!
+                        {messages.cartPage.added}
                     </span>
                 ) : isOutOfStock ? (
-                    'Out of Stock'
+                    messages.product.outOfStock
                 ) : (
-                    'Add to Cart'
+                    messages.product.addToCart
                 )}
             </button>
         </div>

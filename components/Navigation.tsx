@@ -6,29 +6,26 @@ import { createClient } from '@/utils/supabase/client'
 import type { User } from '@supabase/supabase-js'
 import { useRouter } from 'next/navigation'
 import { useCart } from '@/contexts/CartContext'
-import enMessages from '@/messages/en.json'
-import plMessages from '@/messages/pl.json'
-
-type Locale = 'en' | 'pl'
+import { useLocaleMessages, type Locale } from '@/contexts/LocaleContext'
 
 interface NavigationProps {
     initialLocale: Locale
 }
 
-const MESSAGES = {
-    en: enMessages,
-    pl: plMessages,
-} as const
-
 export default function Navigation({ initialLocale }: NavigationProps) {
     const [user, setUser] = useState<User | null>(null)
     const [displayName, setDisplayName] = useState('')
-    const [locale, setLocale] = useState<Locale>(initialLocale)
+    const { locale, setLocale, messages } = useLocaleMessages()
     const supabase = createClient()
     const router = useRouter()
     const { getItemCount } = useCart()
     const itemCount = getItemCount()
-    const messages = MESSAGES[locale]
+
+    useEffect(() => {
+        if (initialLocale !== locale) {
+            setLocale(initialLocale)
+        }
+    }, [initialLocale, locale, setLocale])
 
     useEffect(() => {
         const resolveLocale = (rawLocale?: string | null): Locale => {
@@ -82,9 +79,6 @@ export default function Navigation({ initialLocale }: NavigationProps) {
                     if (profile?.locale) {
                         const profileLocale = resolveLocale(profile.locale)
                         setLocale(profileLocale)
-                        localStorage.setItem('locale', profileLocale)
-                        document.cookie = `locale=${profileLocale}; path=/; max-age=31536000; samesite=lax`
-                        document.documentElement.lang = profileLocale
                     }
                 }
 
@@ -108,10 +102,6 @@ export default function Navigation({ initialLocale }: NavigationProps) {
         return () => subscription.unsubscribe()
     }, [supabase])
 
-    useEffect(() => {
-        document.documentElement.lang = locale
-    }, [locale])
-
     const handleSignOut = async () => {
         await supabase.auth.signOut()
         router.push('/')
@@ -124,9 +114,6 @@ export default function Navigation({ initialLocale }: NavigationProps) {
         }
 
         setLocale(nextLocale)
-        localStorage.setItem('locale', nextLocale)
-        document.cookie = `locale=${nextLocale}; path=/; max-age=31536000; samesite=lax`
-        document.documentElement.lang = nextLocale
 
         if (user) {
             await supabase

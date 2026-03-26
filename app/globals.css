@@ -39,6 +39,30 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+@keyframes shopCardReveal {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.shop-card-reveal {
+  opacity: 0;
+  animation: shopCardReveal 520ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shop-card-reveal {
+    opacity: 1;
+    animation: none;
+  }
+}
+
 .hero-panel {
   position: relative;
   display: flex;
@@ -190,7 +214,7 @@ body {
 }
 
 .hero-headline {
-  max-width: 24rem;
+  max-width: 27rem;
   font-family: var(--font-geist-sans), "Inter", "Roboto", "Helvetica Neue", Arial, sans-serif;
   font-size: clamp(2.5rem, 4vw, 4.2rem);
   font-weight: 800;
@@ -198,6 +222,7 @@ body {
   letter-spacing: -0.05em;
   color: rgba(249, 251, 255, 0.99);
   text-wrap: balance;
+  text-align: center;
 }
 
 .hero-tagline-copy {
@@ -369,11 +394,13 @@ body {
 
 .featured-products-subheading {
   margin: 0;
-  max-width: 40rem;
+  max-width: 100%;
   font-size: clamp(1rem, 1.5vw, 1.12rem);
   line-height: 1.66;
   color: var(--featured-subheading);
-  text-wrap: balance;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .featured-products-grid {

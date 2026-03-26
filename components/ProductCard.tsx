@@ -5,6 +5,12 @@ import Image from 'next/image'
 import type { Product, Category } from '@/types/database.types'
 import PriceDisplay from './PriceDisplay'
 import AddToCartButton from './AddToCartButton'
+import { useLocaleMessages } from '@/contexts/LocaleContext'
+import {
+    getLocalizedBrandName,
+    getLocalizedCategoryName,
+    getLocalizedProductTitle,
+} from '@/utils/productLocalization'
 
 interface ProductCardProps {
     product: Product & { category?: Category }
@@ -14,6 +20,12 @@ interface ProductCardProps {
 export default function ProductCard({ product, variant = 'default' }: ProductCardProps) {
     const isFeatured = variant === 'featured'
     const imageUrl = product.image_urls?.[0]
+    const { messages, locale } = useLocaleMessages()
+    const localizedTitle = getLocalizedProductTitle(product.title, product.slug, locale)
+    const localizedCategoryName = product.category
+        ? getLocalizedCategoryName(product.category.name, product.category.slug, locale)
+        : null
+    const localizedBrandName = getLocalizedBrandName(product.brand, locale)
 
     return (
         <div className={isFeatured ? 'product-card product-card-featured' : 'product-card product-card-default'}>
@@ -22,7 +34,7 @@ export default function ProductCard({ product, variant = 'default' }: ProductCar
                     {imageUrl ? (
                         <Image
                             src={imageUrl}
-                            alt={product.title}
+                            alt={localizedTitle}
                             fill
                             sizes={isFeatured ? '(max-width: 639px) 100vw, (max-width: 1023px) 50vw, 33vw' : '(max-width: 639px) 100vw, (max-width: 1023px) 50vw, 33vw'}
                             className={isFeatured ? 'product-card-image' : 'w-full h-full object-cover'}
@@ -31,7 +43,7 @@ export default function ProductCard({ product, variant = 'default' }: ProductCar
                         />
                     ) : (
                         <div className={isFeatured ? 'product-card-empty-state' : 'flex items-center justify-center h-full'}>
-                            <span className="text-gray-400">No image</span>
+                            <span className="text-gray-400">{messages.cartPage.noImage}</span>
                         </div>
                     )}
                 </div>
@@ -39,16 +51,16 @@ export default function ProductCard({ product, variant = 'default' }: ProductCar
             <div className={isFeatured ? 'product-card-body product-card-body-featured' : 'p-4'}>
                 {product.category && (
                     <span className={isFeatured ? 'product-card-category product-card-category-featured' : 'text-xs text-gray-500 uppercase tracking-wide'}>
-                        {product.category.name}
+                        {localizedCategoryName}
                     </span>
                 )}
                 <Link href={`/product/${product.slug}`} className={isFeatured ? 'product-card-title-link product-card-title-link-featured' : ''}>
                     <h3 className={isFeatured ? 'product-card-title product-card-title-featured' : 'mt-1 text-lg font-semibold text-gray-900 hover:text-green-600 line-clamp-2'}>
-                        {product.title}
+                        {localizedTitle}
                     </h3>
                 </Link>
-                {product.brand && (
-                    <p className={isFeatured ? 'product-card-brand product-card-brand-featured' : 'text-sm text-gray-500 mt-1'}>{product.brand}</p>
+                {localizedBrandName && (
+                    <p className={isFeatured ? 'product-card-brand product-card-brand-featured' : 'text-sm text-gray-500 mt-1'}>{localizedBrandName}</p>
                 )}
                 <div className={isFeatured ? 'product-card-price-wrap' : 'mt-4'}>
                     <PriceDisplay
@@ -61,7 +73,7 @@ export default function ProductCard({ product, variant = 'default' }: ProductCar
                     {isFeatured ? (
                         <span className={`product-card-stock ${product.inventory_count > 0 ? 'is-available' : 'is-unavailable'}`}>
                             <span className="product-card-stock-dot" aria-hidden="true" />
-                            {product.inventory_count > 0 ? 'In Stock' : 'Out of Stock'}
+                            {product.inventory_count > 0 ? messages.product.inStock : messages.product.outOfStock}
                         </span>
                     ) : (
                         <span
@@ -69,8 +81,8 @@ export default function ProductCard({ product, variant = 'default' }: ProductCar
                                 }`}
                         >
                             {product.inventory_count > 0
-                                ? `In Stock (${product.inventory_count})`
-                                : 'Out of Stock'}
+                                ? `${messages.product.inStock} (${product.inventory_count})`
+                                : messages.product.outOfStock}
                         </span>
                     )}
                 </div>

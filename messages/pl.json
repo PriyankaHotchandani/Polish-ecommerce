@@ -38,6 +38,7 @@
         "inStock": "Dostępny",
         "sku": "SKU",
         "brand": "Marka",
+        "available": "dostępnych",
         "category": "Kategoria",
         "specifications": "Specyfikacja",
         "description": "Opis",
@@ -54,7 +55,13 @@
         "sortByPriceLow": "Cena: od najniższej",
         "sortByPriceHigh": "Cena: od najwyższej",
         "sortByName": "Nazwa: A-Z",
+        "description": "Przeglądaj pełny katalog artykułów gospodarstwa domowego i profesjonalnych narzędzi",
+        "searchPlaceholder": "Szukaj po nazwie, marce lub SKU...",
+        "searchButton": "Szukaj",
+        "none": "Brak",
+        "productsFoundLabel": "znalezionych produktów",
         "noProducts": "Nie znaleziono produktów",
+        "noProductsHint": "Spróbuj zmienić filtry lub frazę wyszukiwania",
         "productsFound": "Znaleziono {count} produktów"
     },
     "auth": {
@@ -72,8 +79,24 @@
         "businessCustomer": "Klient biznesowy (B2B)",
         "companyName": "Nazwa firmy",
         "nipNumber": "Numer NIP",
+        "nipOptional": "Numer NIP (opcjonalnie)",
         "welcomeBack": "Witaj ponownie!",
-        "createAccount": "Utwórz konto"
+        "createAccount": "Utwórz konto",
+        "createAccountButton": "Utwórz konto",
+        "createAccountLink": "załóż nowe konto",
+        "companyPlaceholder": "Twoja Firma Sp. z o.o.",
+        "forPersonalShopping": "Do zakupów prywatnych",
+        "orPrefix": "Lub",
+        "signInTitle": "Zaloguj się do swojego konta",
+        "signingIn": "Logowanie...",
+        "creatingAccount": "Tworzenie konta...",
+        "wholesalePricingAndBulk": "Ceny hurtowe i zamówienia zbiorcze"
+    },
+    "authErrors": {
+        "unexpected": "Wystąpił nieoczekiwany błąd",
+        "passwordMismatch": "Hasła nie są takie same",
+        "passwordMinLength": "Hasło musi mieć co najmniej 6 znaków",
+        "companyRequired": "Nazwa firmy jest wymagana dla kont biznesowych"
     },
     "b2b": {
         "portal": "Portal hurtowy",
@@ -151,7 +174,43 @@
             "centerSubtext": "Jakościowe produkty do domu, remontu i codziennego życia.",
             "centerCta": "Kup Wszystkie Produkty"
         },
+        "featuredKicker": "Starannie wybrana kolekcja",
         "featured": "Produkty wyróżnione",
+        "featuredSubheading": "Poznaj wyjątkowe produkty wybrane pod kątem jakości, wykończenia i codziennej funkcjonalności.",
+        "featuredCta": "Zobacz pełen katalog",
+        "b2b": {
+            "badge": "Dla firm",
+            "heading": "Ceny hurtowe dla klientów B2B",
+            "subtext": "Zarejestruj się jako klient biznesowy, aby odblokować ekskluzywne ceny hurtowe, uproszczone fakturowanie i priorytetową logistykę dla cyklicznych zamówień.",
+            "cta": "Dowiedz się więcej o B2B",
+            "cards": {
+                "wholesale": {
+                    "title": "Ceny hurtowe",
+                    "description": "Korzystaj z atrakcyjnych rabatów przy zamówieniach zbiorczych dzięki przejrzystym cenom netto dla biznesu."
+                },
+                "vat": {
+                    "title": "Faktury VAT",
+                    "description": "Automatyczne generowanie faktur VAT dla każdego zamówienia z natychmiastowym pobraniem na stronie zamówienia."
+                },
+                "delivery": {
+                    "title": "Elastyczna dostawa",
+                    "description": "Priorytetowe opcje wysyłki i negocjowane stawki dla zamówień wielowolumenowych oraz cyklicznego zatowarowania."
+                }
+            }
+        },
+        "trustIndicators": {
+            "products": "Produktów",
+            "onlineShopping": "Zakupy online",
+            "fastValue": "Szybka",
+            "shipping": "Wysyłka",
+            "satisfaction": "Satysfakcja"
+        },
+        "finalCta": {
+            "heading": "Rozpocznij zakupy z BM SP. Z O.O.",
+            "subtext": "Załóż konto, aby uzyskać pełny dostęp do katalogu, szybką realizację i niezawodne wsparcie.",
+            "primaryButton": "Zarejestruj się",
+            "secondaryButton": "Przeglądaj produkty"
+        },
         "newArrivals": "Nowości",
         "popularCategories": "Popularne kategorie"
     },
@@ -190,5 +249,217 @@
             "cash_on_delivery": "Za pobraniem",
             "notSpecified": "Nie określono"
         }
+    },
+    "aboutPage": {
+        "title": "O BM SP. Z O.O.",
+        "storyTitle": "Nasza historia",
+        "storyParagraph1": "BM SP. Z O.O. to czołowa polska firma detaliczno-hurtowa specjalizująca się w artykułach gospodarstwa domowego, narzędziach i wyposażeniu. Od lat obsługujemy zarówno klientów indywidualnych, jak i biznesowych, oferując wysoką jakość i konkurencyjne ceny.",
+        "storyParagraph2": "Naszą misją jest zapewnienie płynnych zakupów, niezależnie od tego, czy urządzasz dom, czy wyposażasz firmę w profesjonalne narzędzia.",
+        "missionTitle": "Nasza misja",
+        "missionParagraph": "Być najbardziej zaufanym partnerem w zakresie artykułów gospodarstwa domowego i profesjonalnych narzędzi w Polsce, dostarczając wyjątkową wartość dzięki jakości, konkurencyjnym cenom i doskonałej obsłudze klientów detalicznych oraz hurtowych.",
+        "offerTitle": "Co oferujemy",
+        "offer": {
+            "householdTitle": "Artykuły gospodarstwa domowego",
+            "householdDescription": "Od akcesoriów kuchennych po środki czystości - oferujemy szeroki wybór produktów do codziennego użytku.",
+            "toolsTitle": "Profesjonalne narzędzia",
+            "toolsDescription": "Wysokiej jakości narzędzia ręczne, elektronarzędzia i wyposażenie dla profesjonalistów i majsterkowiczów.",
+            "b2cTitle": "Sprzedaż detaliczna B2C",
+            "b2cDescription": "Konkurencyjne ceny detaliczne z VAT dla klientów indywidualnych kupujących do domu.",
+            "b2bTitle": "Hurt B2B",
+            "b2bDescription": "Ekskluzywne ceny hurtowe i możliwość zamówień zbiorczych dla firm i wykonawców."
+        },
+        "whyChooseTitle": "Dlaczego my",
+        "bullets": [
+            "Szeroki katalog produktów z tysiącami pozycji dostępnych od ręki",
+            "Konkurencyjne ceny dla klientów detalicznych i hurtowych",
+            "Szybka wysyłka i niezawodna dostawa na terenie całej Polski",
+            "Dedykowany zespół wsparcia gotowy pomóc w realizacji zamówień",
+            "Gwarancja jakości na wszystkie produkty"
+        ]
+    },
+    "b2bPage": {
+        "portalTitle": "Portal hurtowy B2B",
+        "loginPrompt": "Zaloguj się kontem biznesowym, aby uzyskać dostęp do cen hurtowych i funkcji premium",
+        "benefitsTitle": "Korzyści B2B:",
+        "benefits": {
+            "wholesalePricing": "Ekskluzywne ceny hurtowe",
+            "bulkDiscounts": "Rabaty dla zamówień zbiorczych",
+            "vatInvoices": "Automatyczne faktury VAT",
+            "accountManager": "Dedykowany opiekun klienta"
+        },
+        "logIn": "Zaloguj się",
+        "createBusinessAccount": "Utwórz konto firmowe",
+        "accessRestrictedTitle": "Dostęp ograniczony",
+        "accessRestrictedDescription": "Ta sekcja jest dostępna wyłącznie dla klientów biznesowych z kontem B2B.",
+        "accountTypeLabel": "Typ Twojego konta:",
+        "profileNotFound": "Nie znaleziono profilu użytkownika. Wyloguj się i zaloguj ponownie.",
+        "continueShopping": "Kontynuuj zakupy",
+        "welcomeBack": "Witamy ponownie,",
+        "active": "Aktywne",
+        "wholesaleCardDescription": "Masz dostęp do ekskluzywnych cen hurtowych we wszystkich produktach",
+        "quickActionsTitle": "Szybkie akcje",
+        "browseProductsArrow": "Przeglądaj produkty ->",
+        "accountDetailsTitle": "Szczegóły konta",
+        "emailLabel": "Email:",
+        "companyLabel": "Firma:",
+        "startShoppingTitle": "Rozpocznij zakupy w cenach hurtowych",
+        "startShoppingDescription": "Wszystkie produkty w katalogu są już dostępne w cenach hurtowych. Przejdź do sklepu i rozpocznij zakupy.",
+        "browseCatalog": "Przeglądaj katalog produktów"
+    },
+    "cartPage": {
+        "loading": "Ładowanie koszyka...",
+        "emptyHint": "Dodaj produkty do koszyka, aby zobaczyć je tutaj",
+        "itemSingular": "produkt",
+        "itemPlural": "produkty",
+        "clearCart": "Wyczyść koszyk",
+        "noImage": "Brak zdjęcia",
+        "each": "za szt.",
+        "wholesalePricing": "Cena hurtowa",
+        "orderSummary": "Podsumowanie zamówienia",
+        "wholesaleBanner": "Korzystasz z cen hurtowych",
+        "added": "Dodano!"
+    },
+    "profileForm": {
+        "saving": "Zapisywanie..."
+    },
+    "savedAddresses": {
+        "title": "Zapisane adresy",
+        "saved": "Zapisane",
+        "loading": "Ładowanie adresów...",
+        "addNew": "Dodaj nowy adres",
+        "newAddress": "Nowy adres",
+        "editAddress": "Edytuj adres",
+        "addressLabel": "Etykieta adresu",
+        "labelPlaceholder": "np. Dom, Biuro, Magazyn",
+        "addressType": "Typ adresu",
+        "fullName": "Imię i nazwisko",
+        "companyOptional": "Nazwa firmy (opcjonalnie)",
+        "street": "Ulica i numer",
+        "city": "Miasto",
+        "postalCode": "Kod pocztowy",
+        "country": "Kraj",
+        "phone": "Telefon",
+        "setDefault": "Ustaw jako domyślny adres dla tego typu",
+        "saving": "Zapisywanie...",
+        "updating": "Aktualizowanie...",
+        "saveAddress": "Zapisz adres",
+        "updateAddress": "Zaktualizuj adres",
+        "empty": "Brak zapisanych adresów. Dodaj adres, aby przyspieszyć checkout!",
+        "defaultLabel": "Domyślny",
+        "typeBoth": "Oba (dostawa i faktura)",
+        "typeShippingOnly": "Tylko dostawa",
+        "typeBillingOnly": "Tylko faktura",
+        "typeChipBoth": "Dostawa i faktura",
+        "typeChipShipping": "Dostawa",
+        "typeChipBilling": "Faktura",
+        "confirmDelete": "Czy na pewno chcesz usunąć ten adres?",
+        "defaultCountry": "Polska",
+        "errors": {
+            "load": "Nie udało się załadować adresów",
+            "save": "Nie udało się zapisać adresu",
+            "delete": "Nie udało się usunąć adresu"
+        }
+    },
+    "checkout": {
+        "title": "Kasa",
+        "successTitle": "Zamówienie złożone pomyślnie!",
+        "redirecting": "Przekierowanie do strony potwierdzenia...",
+        "billingAddress": "Adres rozliczeniowy",
+        "sameAsShipping": "Taki sam jak adres dostawy",
+        "requireInvoice": "Wymagaj faktury VAT",
+        "orderSummary": "Podsumowanie zamówienia",
+        "freeShippingLabel": "GRATIS",
+        "wholesaleApplied": "Zastosowano cenę hurtową",
+        "freeShippingHint": "Darmowa dostawa dla zamówień powyżej 500 PLN",
+        "processingOrder": "Przetwarzanie zamówienia...",
+        "placeOrder": "Złóż zamówienie",
+        "backToCart": "Powrót do koszyka",
+        "payment": {
+            "card": "Karta kredytowa/debetowa",
+            "transfer": "Przelew bankowy",
+            "cod": "Płatność przy odbiorze"
+        },
+        "paymentHint": "Obsługa płatności zostanie wdrożona w kolejnym etapie. Zamówienie zostanie oznaczone jako oczekujące.",
+        "countries": {
+            "poland": "Polska",
+            "germany": "Niemcy",
+            "czechRepublic": "Czechy",
+            "slovakia": "Słowacja"
+        },
+        "errors": {
+            "selectPayment": "Wybierz metodę płatności, aby kontynuować.",
+            "selectShippingAddress": "Wybierz zapisany adres dostawy lub dodaj nowy.",
+            "selectBillingAddress": "Wybierz zapisany adres rozliczeniowy lub dodaj nowy.",
+            "createOrder": "Nie udało się utworzyć zamówienia",
+            "createOrderRetry": "Nie udało się utworzyć zamówienia. Spróbuj ponownie.",
+            "updateCartAndRetry": "Zaktualizuj koszyk i spróbuj ponownie.",
+            "productUnavailable": "Jeden lub więcej produktów w koszyku nie jest już dostępny. Zaktualizuj koszyk."
+        }
+    },
+    "accountPage": {
+        "profileLoadRetry": "Spróbuj ponownie za chwilę."
+    },
+    "ordersPage": {
+        "subtitle": "Przeglądaj i śledź historię swoich zamówień",
+        "emptyTitle": "Brak zamówień",
+        "emptyHint": "Nie masz jeszcze zamówień. Rozpocznij zakupy, aby zobaczyć je tutaj.",
+        "startShopping": "Rozpocznij zakupy",
+        "orderPlacedLabel": "Złożono:",
+        "productSingular": "produkt",
+        "productPlural": "produkty",
+        "invoiceRequired": "Wymagana faktura",
+        "viewAllOrders": "Zobacz wszystkie zamówienia"
+    },
+    "orderDetail": {
+        "notFoundTitle": "Nie znaleziono zamówienia",
+        "notFoundHint": "Nie mogliśmy znaleźć tego zamówienia. Mogło zostać usunięte lub nie masz uprawnień do podglądu.",
+        "backToOrders": "Powrót do zamówień",
+        "placedOn": "Złożono",
+        "orderStatus": "Status zamówienia",
+        "stepPlacedTitle": "Zamówienie złożone",
+        "stepPlacedSubtitle": "Twoje zamówienie zostało przyjęte",
+        "stepProcessingSubtitle": "Przygotowujemy Twoje zamówienie",
+        "stepShippedSubtitle": "Twoje zamówienie jest w drodze",
+        "stepDeliveredSubtitle": "Twoje zamówienie zostało dostarczone",
+        "orderItems": "Pozycje zamówienia",
+        "deliveryPayment": "Dostawa i płatność",
+        "shippingAddress": "Adres dostawy",
+        "billingAddress": "Adres rozliczeniowy",
+        "paymentStatus": "Status płatności",
+        "paymentCompleted": "Zakończona",
+        "paymentFailed": "Nieudana",
+        "paymentRefunded": "Zwrócona",
+        "invoiceTitle": "Faktura",
+        "invoiceHint": "Kliknij \"Wygeneruj fakturę\", aby utworzyć i pobrać fakturę VAT.",
+        "invoiceRequiredBanner": "Faktura B2B - wymagana do dokumentacji firmowej",
+        "contactSupport": "Skontaktuj się z pomocą"
+    },
+    "orderConfirmation": {
+        "title": "Zamówienie potwierdzone!",
+        "subtitle": "Dziękujemy za zamówienie. Otrzymaliśmy je i wkrótce rozpoczniemy realizację.",
+        "orderNumberLabel": "Numer zamówienia",
+        "orderDetailsTitle": "Szczegóły zamówienia",
+        "invoiceNotice": "Faktura VAT zostanie wygenerowana i wysłana na Twój email w ciągu 24 godzin.",
+        "nextTitle": "Co dalej?",
+        "nextSteps": [
+            "Wkrótce otrzymasz email z potwierdzeniem zamówienia.",
+            "Poinformujemy Cię, gdy zamówienie zostanie wysłane.",
+            "Status zamówienia możesz śledzić na swoim koncie."
+        ]
+    },
+    "gallery": {
+        "noImageAvailable": "Brak dostępnego zdjęcia",
+        "previousImage": "Poprzednie zdjęcie",
+        "nextImage": "Następne zdjęcie"
+    },
+    "shopFilters": {
+        "filterProducts": "Filtruj produkty",
+        "min": "Min",
+        "max": "Maks",
+        "sortByNameDesc": "Nazwa: Z-A",
+        "inStockOnly": "Pokaż tylko dostępne produkty",
+        "applying": "Stosowanie...",
+        "applyFilters": "Zastosuj filtry",
+        "reset": "Resetuj"
     }
 }

@@ -4,11 +4,14 @@ import { useCart } from '@/contexts/CartContext'
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import { createClient } from '@/utils/supabase/client'
+import { useLocaleMessages } from '@/contexts/LocaleContext'
 
 export default function CartPage() {
     const { items, updateQuantity, removeItem, clearCart, getItemCount, getSubtotal } = useCart()
     const [userRole, setUserRole] = useState<'b2c_customer' | 'b2b_customer' | null>(null)
     const [loading, setLoading] = useState(true)
+    const { messages, locale } = useLocaleMessages()
+    const numberLocale = locale === 'pl' ? 'pl-PL' : 'en-US'
 
     useEffect(() => {
         async function fetchUserRole() {
@@ -40,7 +43,7 @@ export default function CartPage() {
     if (loading) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <p className="text-gray-600">Loading cart...</p>
+                <p className="text-gray-600">{messages.cartPage.loading}</p>
             </div>
         )
     }
@@ -49,7 +52,7 @@ export default function CartPage() {
         return (
             <div className="min-h-screen bg-gray-50">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-                    <h1 className="text-3xl font-bold text-gray-900 mb-8">Shopping Cart</h1>
+                    <h1 className="text-3xl font-bold text-gray-900 mb-8">{messages.cart.title}</h1>
                     <div className="bg-white rounded-lg shadow-sm p-12 text-center">
                         <svg
                             className="mx-auto h-16 w-16 text-gray-400 mb-4"
@@ -64,13 +67,13 @@ export default function CartPage() {
                                 d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
                             />
                         </svg>
-                        <h2 className="text-xl font-semibold text-gray-900 mb-2">Your cart is empty</h2>
-                        <p className="text-gray-600 mb-6">Add items to your cart to see them here</p>
+                        <h2 className="text-xl font-semibold text-gray-900 mb-2">{messages.cart.empty}</h2>
+                        <p className="text-gray-600 mb-6">{messages.cartPage.emptyHint}</p>
                         <Link
                             href="/shop"
                             className="inline-block bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors"
                         >
-                            Continue Shopping
+                            {messages.cart.continueShopping}
                         </Link>
                     </div>
                 </div>
@@ -83,13 +86,13 @@ export default function CartPage() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
                 <div className="flex justify-between items-center mb-8">
                     <h1 className="text-3xl font-bold text-gray-900">
-                        Shopping Cart ({getItemCount()} {getItemCount() === 1 ? 'item' : 'items'})
+                        {messages.cart.title} ({getItemCount()} {getItemCount() === 1 ? messages.cartPage.itemSingular : messages.cartPage.itemPlural})
                     </h1>
                     <button
                         onClick={clearCart}
                         className="text-red-600 hover:text-red-700 text-sm font-medium"
                     >
-                        Clear Cart
+                        {messages.cartPage.clearCart}
                     </button>
                 </div>
 
@@ -116,7 +119,7 @@ export default function CartPage() {
                                                 />
                                             ) : (
                                                 <div className="flex items-center justify-center h-full">
-                                                    <span className="text-gray-400 text-xs">No image</span>
+                                                    <span className="text-gray-400 text-xs">{messages.cartPage.noImage}</span>
                                                 </div>
                                             )}
                                         </div>
@@ -133,14 +136,14 @@ export default function CartPage() {
                                                     {item.product.title}
                                                 </Link>
                                                 {item.product.brand && (
-                                                    <p className="text-sm text-gray-600">by {item.product.brand}</p>
+                                                    <p className="text-sm text-gray-600">{messages.product.brand}: {item.product.brand}</p>
                                                 )}
                                             </div>
                                             <button
                                                 onClick={() => removeItem(item.product.id)}
                                                 className="text-red-600 hover:text-red-700 text-sm"
                                             >
-                                                Remove
+                                                {messages.cart.remove}
                                             </button>
                                         </div>
 
@@ -167,22 +170,22 @@ export default function CartPage() {
                                             {/* Price */}
                                             <div className="text-right">
                                                 <p className="text-lg font-bold text-gray-900">
-                                                    {itemTotal.toLocaleString('en-US', {
+                                                    {itemTotal.toLocaleString(numberLocale, {
                                                         style: 'currency',
                                                         currency: 'PLN',
                                                         currencyDisplay: 'code'
                                                     }).replace('PLN', 'PLN ')}
                                                 </p>
                                                 <p className="text-sm text-gray-600">
-                                                    {Number(price).toLocaleString('en-US', {
+                                                    {Number(price).toLocaleString(numberLocale, {
                                                         style: 'currency',
                                                         currency: 'PLN',
                                                         currencyDisplay: 'code'
-                                                    }).replace('PLN', 'PLN ')} each
+                                                    }).replace('PLN', 'PLN ')} {messages.cartPage.each}
                                                 </p>
                                                 {userRole === 'b2b_customer' && Number(item.product.price_retail) > Number(item.product.price_wholesale) && (
                                                     <p className="text-xs text-green-600">
-                                                        Wholesale pricing
+                                                        {messages.cartPage.wholesalePricing}
                                                     </p>
                                                 )}
                                             </div>
@@ -196,13 +199,13 @@ export default function CartPage() {
                     {/* Order Summary */}
                     <div className="lg:col-span-1">
                         <div className="bg-white rounded-lg shadow-sm p-6 sticky top-4">
-                            <h2 className="text-xl font-bold text-gray-900 mb-6">Order Summary</h2>
+                            <h2 className="text-xl font-bold text-gray-900 mb-6">{messages.cartPage.orderSummary}</h2>
 
                             <div className="space-y-3 mb-6">
                                 <div className="flex justify-between text-gray-700">
-                                    <span>Subtotal</span>
+                                    <span>{messages.cart.subtotal}</span>
                                     <span>
-                                        {subtotal.toLocaleString('en-US', {
+                                        {subtotal.toLocaleString(numberLocale, {
                                             style: 'currency',
                                             currency: 'PLN',
                                             currencyDisplay: 'code'
@@ -212,7 +215,7 @@ export default function CartPage() {
                                 <div className="flex justify-between text-gray-700">
                                     <span>VAT (23%)</span>
                                     <span>
-                                        {vat.toLocaleString('en-US', {
+                                        {vat.toLocaleString(numberLocale, {
                                             style: 'currency',
                                             currency: 'PLN',
                                             currencyDisplay: 'code'
@@ -220,9 +223,9 @@ export default function CartPage() {
                                     </span>
                                 </div>
                                 <div className="border-t pt-3 flex justify-between text-lg font-bold text-gray-900">
-                                    <span>Total</span>
+                                    <span>{messages.cart.total}</span>
                                     <span>
-                                        {total.toLocaleString('en-US', {
+                                        {total.toLocaleString(numberLocale, {
                                             style: 'currency',
                                             currency: 'PLN',
                                             currencyDisplay: 'code'
@@ -234,7 +237,7 @@ export default function CartPage() {
                             {userRole === 'b2b_customer' && (
                                 <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-6">
                                     <p className="text-sm text-green-800 font-medium">
-                                        🎉 You&apos;re receiving wholesale pricing
+                                        {messages.cartPage.wholesaleBanner}
                                     </p>
                                 </div>
                             )}
@@ -243,14 +246,14 @@ export default function CartPage() {
                                 href="/checkout"
                                 className="block w-full bg-green-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-green-700 transition-colors mb-3 text-center"
                             >
-                                Proceed to Checkout
+                                {messages.cart.checkout}
                             </Link>
 
                             <Link
                                 href="/shop"
                                 className="block w-full text-center bg-gray-100 text-gray-700 py-3 px-6 rounded-lg font-medium hover:bg-gray-200 transition-colors"
                             >
-                                Continue Shopping
+                                {messages.cart.continueShopping}
                             </Link>
                         </div>
                     </div>

@@ -3,9 +3,22 @@ import { createClient } from '@/utils/supabase/server'
 import Link from 'next/link'
 import ProfileForm from '@/components/ProfileForm'
 import SavedAddresses from '@/components/SavedAddresses'
+import { cookies } from 'next/headers'
+import enMessages from '@/messages/en.json'
+import plMessages from '@/messages/pl.json'
+
+type Locale = 'en' | 'pl'
+
+const MESSAGES = {
+    en: enMessages,
+    pl: plMessages,
+} as const
 
 export default async function AccountPage() {
     const supabase = await createClient()
+    const cookieStore = await cookies()
+    const locale: Locale = cookieStore.get('locale')?.value === 'pl' ? 'pl' : 'en'
+    const copy = MESSAGES[locale].account as typeof enMessages.account
 
     // Check if user is authenticated
     let authUser: Awaited<ReturnType<typeof supabase.auth.getUser>>['data']['user'] = null
@@ -62,12 +75,12 @@ export default async function AccountPage() {
                 <div className="max-w-4xl mx-auto px-4 py-12">
                     <div className="text-center">
                         <p className="text-gray-600 text-lg">Could not load your account profile</p>
-                        <p className="text-sm text-gray-500 mt-2">Please try again in a moment.</p>
+                        <p className="text-sm text-gray-500 mt-2">{MESSAGES[locale].accountPage.profileLoadRetry}</p>
                         <Link
                             href="/"
                             className="text-green-600 hover:text-green-700 mt-4 inline-block font-medium"
                         >
-                            ← Back to Home
+                            ← {MESSAGES[locale].common.backToHome}
                         </Link>
                     </div>
                 </div>
@@ -81,8 +94,8 @@ export default async function AccountPage() {
         <div className="max-w-4xl mx-auto px-4 py-12">
             {/* Header */}
             <div className="mb-8">
-                <h1 className="text-3xl font-bold text-gray-900">My Account</h1>
-                <p className="text-gray-600 mt-2">Manage your profile and account settings</p>
+                <h1 className="text-3xl font-bold text-gray-900">{copy.title}</h1>
+                <p className="text-gray-600 mt-2">{copy.subtitle}</p>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -106,17 +119,17 @@ export default async function AccountPage() {
 
                             <div className="pt-4 border-t border-gray-200">
                                 <p className="text-xs text-gray-500 uppercase tracking-wide mb-2">
-                                    Account Type
+                                    {copy.accountType}
                                 </p>
                                 <p className="text-sm font-semibold text-gray-900 mb-4">
-                                    {profile.role === 'b2b_customer' ? 'Business (B2B)' : 'Retail (B2C)'}
+                                    {profile.role === 'b2b_customer' ? copy.business : copy.retail}
                                 </p>
                             </div>
 
                             {profile.role === 'b2b_customer' && profile.company_name && (
                                 <div className="pt-4 border-t border-gray-200">
                                     <p className="text-xs text-gray-500 uppercase tracking-wide mb-2">
-                                        Company
+                                        {MESSAGES[locale].profile.company}
                                     </p>
                                     <p className="text-sm font-semibold text-gray-900">
                                         {profile.company_name}
@@ -126,10 +139,10 @@ export default async function AccountPage() {
 
                             <div className="pt-4 border-t border-gray-200 mt-4">
                                 <p className="text-xs text-gray-500 uppercase tracking-wide mb-2">
-                                    Member Since
+                                    {copy.memberSince}
                                 </p>
                                 <p className="text-sm text-gray-900">
-                                    {new Date(profile.created_at).toLocaleDateString('en-US', {
+                                    {new Date(profile.created_at).toLocaleDateString(locale === 'pl' ? 'pl-PL' : 'en-US', {
                                         year: 'numeric',
                                         month: 'long',
                                     })}
@@ -141,20 +154,20 @@ export default async function AccountPage() {
                     {/* Quick links */}
                     <div className="bg-white rounded-lg shadow-sm p-6 mt-6">
                         <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-4">
-                            Quick Links
+                            {copy.quickLinks}
                         </h3>
                         <div className="space-y-2">
                             <Link
                                 href="/orders"
                                 className="block text-sm text-green-600 hover:text-green-700 font-medium"
                             >
-                                → View Orders
+                                → {copy.viewOrders}
                             </Link>
                             <Link
                                 href="/shop"
                                 className="block text-sm text-green-600 hover:text-green-700 font-medium"
                             >
-                                → Continue Shopping
+                                → {copy.continueShopping}
                             </Link>
                         </div>
                     </div>

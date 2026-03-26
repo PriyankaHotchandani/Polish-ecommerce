@@ -2,6 +2,7 @@ import { createClient } from '@/utils/supabase/server'
 import ProductCard from '@/components/ProductCard'
 import Link from 'next/link'
 import HeroCenterPanel from '@/components/HeroCenterPanel'
+import TrustIndicators from '@/components/TrustIndicators'
 import { cookies } from 'next/headers'
 import enMessages from '@/messages/en.json'
 import plMessages from '@/messages/pl.json'
@@ -17,8 +18,8 @@ export default async function Home() {
   const supabase = await createClient()
   const cookieStore = await cookies()
   const locale: Locale = cookieStore.get('locale')?.value === 'pl' ? 'pl' : 'en'
-  const homeCopy = MESSAGES[locale].home
-  const heroCopy = MESSAGES[locale].home.hero
+  const homeCopy = MESSAGES[locale].home as typeof enMessages.home
+  const heroCopy = homeCopy.hero
 
 
   // Fetch featured products
@@ -105,10 +106,10 @@ export default async function Home() {
         <section className="featured-products-section">
           <div className="featured-products-shell">
             <div className="featured-products-heading-wrap">
-              <span className="featured-products-kicker">Curated Collection</span>
+              <span className="featured-products-kicker">{homeCopy.featuredKicker}</span>
               <h2 className="featured-products-heading">{homeCopy.featured}</h2>
               <p className="featured-products-subheading">
-                Discover standout essentials selected for quality, finish, and daily performance.
+                {homeCopy.featuredSubheading}
               </p>
             </div>
 
@@ -125,7 +126,7 @@ export default async function Home() {
                 href="/shop"
                 className="featured-products-cta"
               >
-                Explore Full Catalog
+                {homeCopy.featuredCta}
                 <svg className="featured-products-cta-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                 </svg>
@@ -143,13 +144,13 @@ export default async function Home() {
         <div className="relative mx-auto grid max-w-7xl gap-10 px-4 sm:px-6 lg:grid-cols-[1.05fr_1fr] lg:items-center lg:gap-14 lg:px-8">
           <div>
             <div className="mb-6 inline-flex items-center rounded-full border border-white/20 bg-slate-950/30 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-cyan-100">
-              For Businesses
+              {homeCopy.b2b.badge}
             </div>
             <h2 className="mb-5 max-w-xl text-3xl font-bold leading-tight text-white sm:text-4xl lg:text-[2.7rem]">
-              Wholesale Pricing for B2B Customers
+              {homeCopy.b2b.heading}
             </h2>
             <p className="max-w-xl text-lg leading-relaxed text-slate-200">
-              Register as a business customer to unlock exclusive wholesale rates, streamlined invoicing, and priority logistics tailored for recurring procurement.
+              {homeCopy.b2b.subtext}
             </p>
 
             <div className="mt-9">
@@ -157,7 +158,7 @@ export default async function Home() {
                 href="/b2b"
                 className="inline-flex items-center rounded-full border border-white/80 bg-white px-8 py-4 text-base font-bold text-slate-900 shadow-[0_10px_40px_rgba(255,255,255,0.18)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-slate-100"
               >
-                Learn More About B2B
+                {homeCopy.b2b.cta}
                 <svg className="ml-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                 </svg>
@@ -172,9 +173,9 @@ export default async function Home() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M4 8h16M6 4h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Zm4 9h4m-6 4h8" />
                 </svg>
               </div>
-              <h3 className="mb-2 text-xl font-semibold text-white">Wholesale Pricing</h3>
+              <h3 className="mb-2 text-xl font-semibold text-white">{homeCopy.b2b.cards.wholesale.title}</h3>
               <p className="text-slate-300">
-                Enjoy significant discounts on bulk orders with transparent net pricing built for business scale.
+                {homeCopy.b2b.cards.wholesale.description}
               </p>
             </div>
 
@@ -185,9 +186,9 @@ export default async function Home() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M14 3v5h5M9 13h6M9 17h4" />
                 </svg>
               </div>
-              <h3 className="mb-2 text-xl font-semibold text-white">VAT Invoices</h3>
+              <h3 className="mb-2 text-xl font-semibold text-white">{homeCopy.b2b.cards.vat.title}</h3>
               <p className="text-slate-300">
-                Automatic VAT invoice generation for every order, ready to download instantly from your order page.
+                {homeCopy.b2b.cards.vat.description}
               </p>
             </div>
 
@@ -198,9 +199,9 @@ export default async function Home() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M7 18.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Zm12 0a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Z" />
                 </svg>
               </div>
-              <h3 className="mb-2 text-xl font-semibold text-white">Flexible Delivery</h3>
+              <h3 className="mb-2 text-xl font-semibold text-white">{homeCopy.b2b.cards.delivery.title}</h3>
               <p className="text-slate-300">
-                Priority shipping options and negotiated rates for large-volume orders and scheduled replenishment.
+                {homeCopy.b2b.cards.delivery.description}
               </p>
             </div>
           </div>
@@ -208,49 +209,44 @@ export default async function Home() {
       </section>
 
       {/* Trust Indicators */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-          <div className="text-center">
-            <div className="text-4xl font-bold text-green-600 mb-2">500+</div>
-            <p className="text-gray-600 font-medium">Products</p>
-          </div>
-          <div className="text-center">
-            <div className="text-4xl font-bold text-green-600 mb-2">24/7</div>
-            <p className="text-gray-600 font-medium">Online Shopping</p>
-          </div>
-          <div className="text-center">
-            <div className="text-4xl font-bold text-green-600 mb-2">Fast</div>
-            <p className="text-gray-600 font-medium">Shipping</p>
-          </div>
-          <div className="text-center">
-            <div className="text-4xl font-bold text-green-600 mb-2">100%</div>
-            <p className="text-gray-600 font-medium">Satisfaction</p>
-          </div>
-        </div>
-      </section>
+      <TrustIndicators
+        stats={[
+          { value: '500+', label: homeCopy.trustIndicators.products },
+          { value: '24/7', label: homeCopy.trustIndicators.onlineShopping },
+          { value: homeCopy.trustIndicators.fastValue, label: homeCopy.trustIndicators.shipping },
+          { value: '100%', label: homeCopy.trustIndicators.satisfaction },
+        ]}
+      />
 
       {/* Final CTA */}
-      <section className="bg-green-50 py-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-            Ready to Get Started?
-          </h2>
-          <p className="text-lg text-gray-600 mb-8">
-            Create an account today and start shopping with confidence
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              href="/auth/signup"
-              className="inline-flex items-center justify-center px-8 py-4 bg-green-600 text-white rounded-lg font-bold text-lg shadow-lg hover:bg-green-700 transition-all duration-300 hover:shadow-xl"
-            >
-              Sign Up Now
-            </Link>
-            <Link
-              href="/shop"
-              className="inline-flex items-center justify-center px-8 py-4 bg-white text-green-600 border-2 border-green-600 rounded-lg font-bold text-lg hover:bg-green-50 transition-all duration-300"
-            >
-              Browse Products
-            </Link>
+      <section className="pb-20 pt-6 sm:pb-24">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="relative overflow-hidden rounded-[2rem] border border-slate-800/40 bg-[linear-gradient(140deg,_#0f1b3d_0%,_#0b1634_52%,_#08102a_100%)] px-6 py-14 text-center shadow-[0_28px_70px_rgba(15,23,42,0.34)] sm:px-10 lg:px-14">
+            <div className="pointer-events-none absolute -left-12 bottom-0 h-44 w-44 rounded-full bg-cyan-300/10 blur-3xl" />
+            <div className="pointer-events-none absolute -right-12 top-0 h-48 w-48 rounded-full bg-blue-200/10 blur-3xl" />
+
+            <div className="relative">
+              <h2 className="mb-4 text-3xl font-bold text-white sm:text-4xl">
+                {homeCopy.finalCta.heading}
+              </h2>
+              <p className="mx-auto mb-9 max-w-2xl text-lg text-slate-200">
+                {homeCopy.finalCta.subtext}
+              </p>
+              <div className="flex flex-col justify-center gap-4 sm:flex-row">
+                <Link
+                  href="/auth/signup"
+                  className="inline-flex items-center justify-center rounded-full border border-white/80 bg-white px-8 py-4 text-lg font-bold text-slate-900 shadow-[0_16px_35px_rgba(255,255,255,0.22)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-slate-100"
+                >
+                  {homeCopy.finalCta.primaryButton}
+                </Link>
+                <Link
+                  href="/shop"
+                  className="inline-flex items-center justify-center rounded-full border border-white/20 px-8 py-4 text-lg font-semibold text-white transition-all duration-300 hover:bg-white/10"
+                >
+                  {homeCopy.finalCta.secondaryButton}
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
       </section>

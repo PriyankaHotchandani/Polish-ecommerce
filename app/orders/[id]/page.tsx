@@ -1,7 +1,10 @@
 import { createClient } from '@/utils/supabase/server'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
+import { cookies } from 'next/headers'
 import InvoiceButton from '@/components/InvoiceButton'
+import enMessages from '@/messages/en.json'
+import plMessages from '@/messages/pl.json'
 
 type Address = {
     fullName?: string
@@ -15,54 +18,63 @@ type Address = {
     nipNumber?: string
 }
 
-const paymentMethodLabels: Record<string, string> = {
-    card: 'Card',
-    transfer: 'Bank Transfer',
-    cash_on_delivery: 'Cash on Delivery'
-}
+type Locale = 'en' | 'pl'
 
-const paymentStatusLabels: Record<string, string> = {
-    pending: 'Pending',
-    processing: 'Processing',
-    completed: 'Completed',
-    failed: 'Failed',
-    refunded: 'Refunded'
-}
+const MESSAGES = {
+    en: enMessages,
+    pl: plMessages,
+} as const
+
+const paymentMethodLabels = {
+    card: 'card',
+    transfer: 'transfer',
+    cash_on_delivery: 'cash_on_delivery',
+} as const
 
 const paymentStatusColors: Record<string, string> = {
     pending: 'bg-yellow-100 text-yellow-800',
     processing: 'bg-blue-100 text-blue-800',
     completed: 'bg-green-100 text-green-800',
     failed: 'bg-red-100 text-red-800',
-    refunded: 'bg-gray-100 text-gray-800'
+    refunded: 'bg-gray-100 text-gray-800',
 }
 
 const statusColors = {
     pending: 'bg-yellow-100 text-yellow-800',
     processing: 'bg-blue-100 text-blue-800',
     shipped: 'bg-purple-100 text-purple-800',
-    delivered: 'bg-green-100 text-green-800'
-}
-
-const statusLabels = {
-    pending: 'Pending',
-    processing: 'Processing',
-    shipped: 'Shipped',
-    delivered: 'Delivered'
+    delivered: 'bg-green-100 text-green-800',
 }
 
 export default async function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const supabase = await createClient()
     const { id } = await params
+    const cookieStore = await cookies()
+    const locale: Locale = cookieStore.get('locale')?.value === 'pl' ? 'pl' : 'en'
+    const messages = MESSAGES[locale]
+    const numberLocale = locale === 'pl' ? 'pl-PL' : 'en-US'
 
-    // Get current user
+    const paymentStatusLabels = {
+        pending: messages.order.pending,
+        processing: messages.order.processing,
+        completed: messages.orderDetail.paymentCompleted,
+        failed: messages.orderDetail.paymentFailed,
+        refunded: messages.orderDetail.paymentRefunded,
+    }
+
+    const statusLabels = {
+        pending: messages.order.pending,
+        processing: messages.order.processing,
+        shipped: messages.order.shipped,
+        delivered: messages.order.delivered,
+    }
+
     const { data: { user } } = await supabase.auth.getUser()
 
     if (!user) {
         redirect('/auth/login')
     }
 
-    // Fetch order with items
     const { data: order, error } = await supabase
         .from('orders')
         .select(`
@@ -80,15 +92,13 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
                 <div className="bg-white rounded-lg shadow-sm p-8 max-w-md text-center">
-                    <h1 className="text-2xl font-bold text-red-600 mb-4">Order Not Found</h1>
-                    <p className="text-gray-600 mb-6">
-                        We couldn&apos;t find this order. It may have been deleted or you don&apos;t have permission to view it.
-                    </p>
+                    <h1 className="text-2xl font-bold text-red-600 mb-4">{messages.orderDetail.notFoundTitle}</h1>
+                    <p className="text-gray-600 mb-6">{messages.orderDetail.notFoundHint}</p>
                     <Link
                         href="/orders"
                         className="inline-block bg-green-600 text-white py-2 px-6 rounded-lg font-semibold hover:bg-green-700"
                     >
-                        View All Orders
+                        {messages.ordersPage.viewAllOrders}
                     </Link>
                 </div>
             </div>
@@ -104,12 +114,12 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                 <div className="text-sm text-gray-700 space-y-1">
                     {address.fullName && <p>{address.fullName}</p>}
                     {address.companyName && <p>{address.companyName}</p>}
-                    {address.nipNumber && <p>NIP: {address.nipNumber}</p>}
+                    {address.nipNumber && <p>{messages.invoice.nip}: {address.nipNumber}</p>}
                     {address.street && <p>{address.street}</p>}
                     {(address.postalCode || address.city) && <p>{address.postalCode} {address.city}</p>}
                     {address.country && <p>{address.country}</p>}
-                    {address.phone && <p>Phone: {address.phone}</p>}
-                    {address.email && <p>Email: {address.email}</p>}
+                    {address.phone && <p>{messages.profile.phone}: {address.phone}</p>}
+                    {address.email && <p>{messages.profile.email}: {address.email}</p>}
                 </div>
             </div>
         )
@@ -118,7 +128,6 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
     return (
         <div className="min-h-screen bg-gray-50 py-12">
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-                {/* Back Button */}
                 <Link
                     href="/orders"
                     className="inline-flex items-center text-gray-600 hover:text-gray-900 mb-6"
@@ -126,23 +135,23 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                     <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                     </svg>
-                    Back to Orders
+                    {messages.orderDetail.backToOrders}
                 </Link>
 
-                {/* Order Header */}
                 <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
                         <div>
                             <h1 className="text-3xl font-bold text-gray-900">
-                                Order #{order.id.slice(0, 8).toUpperCase()}
+                                {messages.order.orderNumber}{order.id.slice(0, 8).toUpperCase()}
                             </h1>
                             <p className="text-gray-600 mt-1">
-                                Placed on {new Date(order.created_at).toLocaleDateString('en-US', {
+                                {messages.orderDetail.placedOn}{' '}
+                                {new Date(order.created_at).toLocaleDateString(numberLocale, {
                                     year: 'numeric',
                                     month: 'long',
                                     day: 'numeric',
                                     hour: '2-digit',
-                                    minute: '2-digit'
+                                    minute: '2-digit',
                                 })}
                             </p>
                         </div>
@@ -151,79 +160,40 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                         </span>
                     </div>
 
-                    {/* Order Status Timeline */}
                     <div className="border-t pt-6">
-                        <h2 className="text-lg font-semibold text-gray-900 mb-4">Order Status</h2>
+                        <h2 className="text-lg font-semibold text-gray-900 mb-4">{messages.orderDetail.orderStatus}</h2>
                         <div className="relative">
                             <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-200"></div>
                             <div className="space-y-6">
-                                <div className="relative flex items-start">
-                                    <div className={`flex items-center justify-center w-8 h-8 rounded-full ${order.status === 'pending' || order.status === 'processing' || order.status === 'shipped' || order.status === 'delivered' ? 'bg-green-500' : 'bg-gray-300'} z-10`}>
-                                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                        </svg>
+                                {[
+                                    { key: 'placed', active: true, title: messages.orderDetail.stepPlacedTitle, subtitle: messages.orderDetail.stepPlacedSubtitle },
+                                    { key: 'processing', active: ['processing', 'shipped', 'delivered'].includes(order.status), title: messages.order.processing, subtitle: messages.orderDetail.stepProcessingSubtitle },
+                                    { key: 'shipped', active: ['shipped', 'delivered'].includes(order.status), title: messages.order.shipped, subtitle: messages.orderDetail.stepShippedSubtitle },
+                                    { key: 'delivered', active: order.status === 'delivered', title: messages.order.delivered, subtitle: messages.orderDetail.stepDeliveredSubtitle },
+                                ].map((step) => (
+                                    <div key={step.key} className="relative flex items-start">
+                                        <div className={`flex items-center justify-center w-8 h-8 rounded-full ${step.active ? 'bg-green-500' : 'bg-gray-300'} z-10`}>
+                                            {step.active ? (
+                                                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                </svg>
+                                            ) : (
+                                                <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
+                                            )}
+                                        </div>
+                                        <div className="ml-4">
+                                            <p className="font-medium text-gray-900">{step.title}</p>
+                                            <p className="text-sm text-gray-600">{step.subtitle}</p>
+                                        </div>
                                     </div>
-                                    <div className="ml-4">
-                                        <p className="font-medium text-gray-900">Order Placed</p>
-                                        <p className="text-sm text-gray-600">Your order has been received</p>
-                                    </div>
-                                </div>
-
-                                <div className="relative flex items-start">
-                                    <div className={`flex items-center justify-center w-8 h-8 rounded-full ${order.status === 'processing' || order.status === 'shipped' || order.status === 'delivered' ? 'bg-green-500' : 'bg-gray-300'} z-10`}>
-                                        {order.status === 'processing' || order.status === 'shipped' || order.status === 'delivered' ? (
-                                            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                            </svg>
-                                        ) : (
-                                            <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
-                                        )}
-                                    </div>
-                                    <div className="ml-4">
-                                        <p className="font-medium text-gray-900">Processing</p>
-                                        <p className="text-sm text-gray-600">We&apos;re preparing your order</p>
-                                    </div>
-                                </div>
-
-                                <div className="relative flex items-start">
-                                    <div className={`flex items-center justify-center w-8 h-8 rounded-full ${order.status === 'shipped' || order.status === 'delivered' ? 'bg-green-500' : 'bg-gray-300'} z-10`}>
-                                        {order.status === 'shipped' || order.status === 'delivered' ? (
-                                            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                            </svg>
-                                        ) : (
-                                            <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
-                                        )}
-                                    </div>
-                                    <div className="ml-4">
-                                        <p className="font-medium text-gray-900">Shipped</p>
-                                        <p className="text-sm text-gray-600">Your order is on the way</p>
-                                    </div>
-                                </div>
-
-                                <div className="relative flex items-start">
-                                    <div className={`flex items-center justify-center w-8 h-8 rounded-full ${order.status === 'delivered' ? 'bg-green-500' : 'bg-gray-300'} z-10`}>
-                                        {order.status === 'delivered' ? (
-                                            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                            </svg>
-                                        ) : (
-                                            <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
-                                        )}
-                                    </div>
-                                    <div className="ml-4">
-                                        <p className="font-medium text-gray-900">Delivered</p>
-                                        <p className="text-sm text-gray-600">Your order has been delivered</p>
-                                    </div>
-                                </div>
+                                ))}
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {/* Order Items */}
                 <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-                    <h2 className="text-xl font-bold text-gray-900 mb-6">Order Items</h2>
+                    <h2 className="text-xl font-bold text-gray-900 mb-6">{messages.orderDetail.orderItems}</h2>
 
                     <div className="space-y-4">
                         {order.order_items.map((item: any) => (
@@ -238,7 +208,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                                             />
                                         ) : (
                                             <div className="flex items-center justify-center h-full">
-                                                <span className="text-gray-400 text-xs">No image</span>
+                                                <span className="text-gray-400 text-xs">{messages.cartPage.noImage}</span>
                                             </div>
                                         )}
                                     </div>
@@ -250,21 +220,21 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                                     {item.product.brand && (
                                         <p className="text-sm text-gray-600">{item.product.brand}</p>
                                     )}
-                                    <p className="text-sm text-gray-600 mt-1">Quantity: {item.quantity}</p>
+                                    <p className="text-sm text-gray-600 mt-1">{messages.cart.quantity}: {item.quantity}</p>
                                     <p className="text-sm text-gray-600">
-                                        {Number(item.price_at_purchase).toLocaleString('en-US', {
+                                        {Number(item.price_at_purchase).toLocaleString(numberLocale, {
                                             style: 'currency',
                                             currency: 'PLN',
-                                            currencyDisplay: 'code'
-                                        }).replace('PLN', 'PLN ')} each
+                                            currencyDisplay: 'code',
+                                        }).replace('PLN', 'PLN ')} {messages.cartPage.each}
                                     </p>
                                 </div>
                                 <div className="text-right">
                                     <p className="font-bold text-gray-900">
-                                        {(Number(item.price_at_purchase) * item.quantity).toLocaleString('en-US', {
+                                        {(Number(item.price_at_purchase) * item.quantity).toLocaleString(numberLocale, {
                                             style: 'currency',
                                             currency: 'PLN',
-                                            currencyDisplay: 'code'
+                                            currencyDisplay: 'code',
                                         }).replace('PLN', 'PLN ')}
                                     </p>
                                 </div>
@@ -274,12 +244,12 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
 
                     <div className="border-t pt-4 mt-6">
                         <div className="flex justify-between text-lg font-bold text-gray-900">
-                            <span>Total</span>
+                            <span>{messages.order.total}</span>
                             <span>
-                                {Number(order.total_amount).toLocaleString('en-US', {
+                                {Number(order.total_amount).toLocaleString(numberLocale, {
                                     style: 'currency',
                                     currency: 'PLN',
-                                    currencyDisplay: 'code'
+                                    currencyDisplay: 'code',
                                 }).replace('PLN', 'PLN ')}
                             </span>
                         </div>
@@ -288,61 +258,59 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
 
                 {(order.shipping_address || order.billing_address || order.payment_method) && (
                     <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-                        <h2 className="text-xl font-bold text-gray-900 mb-4">Delivery & Payment</h2>
+                        <h2 className="text-xl font-bold text-gray-900 mb-4">{messages.orderDetail.deliveryPayment}</h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {renderAddressBlock('Shipping Address', order.shipping_address as Address | null)}
-                            {renderAddressBlock('Billing Address', order.billing_address as Address | null)}
+                            {renderAddressBlock(messages.orderDetail.shippingAddress, order.shipping_address as Address | null)}
+                            {renderAddressBlock(messages.orderDetail.billingAddress, order.billing_address as Address | null)}
                         </div>
                         {order.payment_method && (
                             <p className="mt-4 text-sm text-gray-700">
-                                <span className="font-semibold text-gray-900">Payment Method:</span>{' '}
-                                {paymentMethodLabels[order.payment_method] || order.payment_method}
+                                <span className="font-semibold text-gray-900">{messages.invoice.paymentMethod}:</span>{' '}
+                                {messages.invoice.paymentMethods[paymentMethodLabels[order.payment_method as keyof typeof paymentMethodLabels] || 'notSpecified']}
                             </p>
                         )}
                         <div className="mt-2">
-                            <span className="text-sm font-semibold text-gray-900">Payment Status:</span>{' '}
-                            <span className={`ml-2 px-3 py-1 text-xs font-semibold rounded-full ${paymentStatusColors[order.payment_status || 'pending']
-                                }`}>
-                                {paymentStatusLabels[order.payment_status || 'pending']}
-                            </span>
+                            <span className="text-sm font-semibold text-gray-900">{messages.orderDetail.paymentStatus}:</span>{' '}
+                            {(() => {
+                                const paymentStatusKey = (order.payment_status || 'pending') as keyof typeof paymentStatusLabels
+                                return (
+                                    <span className={`ml-2 px-3 py-1 text-xs font-semibold rounded-full ${paymentStatusColors[order.payment_status || 'pending']}`}>
+                                        {paymentStatusLabels[paymentStatusKey]}
+                                    </span>
+                                )
+                            })()}
                         </div>
                     </div>
                 )}
 
-                {/* Invoice */}
                 <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-                    <h2 className="text-xl font-bold text-gray-900 mb-4">Invoice</h2>
+                    <h2 className="text-xl font-bold text-gray-900 mb-4">{messages.orderDetail.invoiceTitle}</h2>
                     <InvoiceButton
                         orderId={order.id}
                         existingInvoiceUrl={order.invoice_url}
                         existingInvoiceNumber={order.invoice_number}
                     />
                     {!order.invoice_url && (
-                        <p className="text-sm text-gray-600 mt-3">
-                            Click &quot;Generate Invoice&quot; to create and download your VAT invoice.
-                        </p>
+                        <p className="text-sm text-gray-600 mt-3">{messages.orderDetail.invoiceHint}</p>
                     )}
                     {order.is_b2b_invoice_required && (
                         <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-3">
-                            <p className="text-sm text-blue-800 font-medium">
-                                📄 B2B Invoice - Required for your business records
-                            </p>
+                            <p className="text-sm text-blue-800 font-medium">{messages.orderDetail.invoiceRequiredBanner}</p>
                         </div>
                     )}
                 </div>
 
-                {/* Actions */}
                 <div className="flex flex-col sm:flex-row gap-4">
                     <Link
                         href="/shop"
                         className="flex-1 bg-green-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-green-700 transition-colors text-center"
                     >
-                        Continue Shopping
+                        {messages.cart.continueShopping}
                     </Link>
                     <button
                         className="flex-1 bg-gray-200 text-gray-900 py-3 px-6 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
                     >
-                        Contact Support
+                        {messages.orderDetail.contactSupport}
                     </button>
                 </div>
             </div>

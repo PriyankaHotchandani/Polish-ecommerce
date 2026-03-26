@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/utils/supabase/client'
 import Link from 'next/link'
 import type { UserRole } from '@/types/database.types'
+import { useLocaleMessages } from '@/contexts/LocaleContext'
 
 export default function SignupPage() {
     const [email, setEmail] = useState('')
@@ -17,6 +18,7 @@ export default function SignupPage() {
     const [loading, setLoading] = useState(false)
     const router = useRouter()
     const supabase = createClient()
+    const { messages } = useLocaleMessages()
 
     const handleSignup = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -24,17 +26,17 @@ export default function SignupPage() {
 
         // Validation
         if (password !== confirmPassword) {
-            setError('Passwords do not match')
+            setError(messages.authErrors.passwordMismatch)
             return
         }
 
         if (password.length < 6) {
-            setError('Password must be at least 6 characters')
+            setError(messages.authErrors.passwordMinLength)
             return
         }
 
         if (role === 'b2b_customer' && !companyName) {
-            setError('Company name is required for business accounts')
+            setError(messages.authErrors.companyRequired)
             return
         }
 
@@ -66,7 +68,7 @@ export default function SignupPage() {
             }
         } catch (err) {
             console.error('Signup error:', err)
-            setError('An unexpected error occurred')
+            setError(messages.authErrors.unexpected)
         } finally {
             setLoading(false)
         }
@@ -77,12 +79,12 @@ export default function SignupPage() {
             <div className="max-w-md w-full space-y-8">
                 <div>
                     <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-                        Create your account
+                        {messages.auth.createAccount}
                     </h2>
                     <p className="mt-2 text-center text-sm text-gray-600">
-                        Already have an account?{' '}
+                        {messages.auth.hasAccount}{' '}
                         <Link href="/auth/login" className="font-medium text-green-600 hover:text-green-500">
-                            Sign in
+                            {messages.auth.signIn}
                         </Link>
                     </p>
                 </div>
@@ -96,7 +98,7 @@ export default function SignupPage() {
                     {/* Account Type Selection */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Account Type
+                            {messages.auth.accountType}
                         </label>
                         <div className="space-y-2">
                             <label className="flex items-center p-4 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
@@ -110,10 +112,10 @@ export default function SignupPage() {
                                 />
                                 <div className="ml-3">
                                     <span className="block text-sm font-medium text-gray-900">
-                                        Retail Customer (B2C)
+                                        {messages.auth.retailCustomer}
                                     </span>
                                     <span className="block text-xs text-gray-500">
-                                        For personal shopping
+                                        {messages.auth.forPersonalShopping}
                                     </span>
                                 </div>
                             </label>
@@ -128,10 +130,10 @@ export default function SignupPage() {
                                 />
                                 <div className="ml-3">
                                     <span className="block text-sm font-medium text-gray-900">
-                                        Business Customer (B2B)
+                                        {messages.auth.businessCustomer}
                                     </span>
                                     <span className="block text-xs text-gray-500">
-                                        Wholesale pricing & bulk orders
+                                        {messages.auth.wholesalePricingAndBulk}
                                     </span>
                                 </div>
                             </label>
@@ -143,21 +145,21 @@ export default function SignupPage() {
                         <div className="space-y-4">
                             <div>
                                 <label htmlFor="company-name" className="block text-sm font-medium text-gray-700">
-                                    Company Name *
+                                    {messages.auth.companyName} *
                                 </label>
                                 <input
                                     id="company-name"
                                     type="text"
                                     required
                                     className="mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
-                                    placeholder="Your Company Ltd."
+                                    placeholder={messages.auth.companyPlaceholder}
                                     value={companyName}
                                     onChange={(e) => setCompanyName(e.target.value)}
                                 />
                             </div>
                             <div>
                                 <label htmlFor="nip-number" className="block text-sm font-medium text-gray-700">
-                                    NIP Number (Optional)
+                                    {messages.auth.nipOptional}
                                 </label>
                                 <input
                                     id="nip-number"
@@ -175,7 +177,7 @@ export default function SignupPage() {
                     <div className="space-y-4">
                         <div>
                             <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                                Email address *
+                                {messages.auth.email} *
                             </label>
                             <input
                                 id="email"
@@ -190,7 +192,7 @@ export default function SignupPage() {
                         </div>
                         <div>
                             <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                                Password *
+                                {messages.auth.password} *
                             </label>
                             <input
                                 id="password"
@@ -205,7 +207,7 @@ export default function SignupPage() {
                         </div>
                         <div>
                             <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700">
-                                Confirm Password *
+                                {messages.auth.confirmPassword} *
                             </label>
                             <input
                                 id="confirm-password"
@@ -226,7 +228,7 @@ export default function SignupPage() {
                             disabled={loading}
                             className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            {loading ? 'Creating account...' : 'Create account'}
+                            {loading ? messages.auth.creatingAccount : messages.auth.createAccountButton}
                         </button>
                     </div>
                 </form>

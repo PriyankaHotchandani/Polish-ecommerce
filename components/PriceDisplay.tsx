@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/utils/supabase/client'
+import { useLocaleMessages } from '@/contexts/LocaleContext'
 
 interface PriceDisplayProps {
     price_retail: number
@@ -16,6 +17,7 @@ export default function PriceDisplay({ price_retail, price_wholesale, variant = 
     const [isLoading, setIsLoading] = useState(true)
     const supabase = createClient()
     const isFeatured = variant === 'featured'
+    const { messages, locale } = useLocaleMessages()
 
     useEffect(() => {
         async function fetchUserRole() {
@@ -60,7 +62,7 @@ export default function PriceDisplay({ price_retail, price_wholesale, variant = 
     }, [supabase])
 
     const formatPrice = (price: number) => {
-        return new Intl.NumberFormat('en-US', {
+        return new Intl.NumberFormat(locale === 'pl' ? 'pl-PL' : 'en-US', {
             style: 'currency',
             currency: 'PLN',
             currencyDisplay: 'code',
@@ -85,17 +87,17 @@ export default function PriceDisplay({ price_retail, price_wholesale, variant = 
                         {formatPrice(price_wholesale)}
                     </span>
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${isFeatured ? 'bg-slate-100 text-slate-700' : 'bg-green-100 text-green-800'}`}>
-                        Wholesale Price
+                        {messages.product.wholesalePrice}
                     </span>
                 </div>
                 <div className="flex items-center gap-2">
                     <span className={`${isFeatured ? 'text-xs text-slate-500' : 'text-sm text-gray-500'} line-through`}>
                         {formatPrice(price_retail)}
                     </span>
-                    <span className={`${isFeatured ? 'text-xs text-slate-500' : 'text-xs text-gray-400'}`}>Retail</span>
+                    <span className={`${isFeatured ? 'text-xs text-slate-500' : 'text-xs text-gray-400'}`}>{messages.product.retail}</span>
                 </div>
                 <div className={`${isFeatured ? 'text-xs text-slate-600 font-medium' : 'text-xs text-green-600 font-medium'}`}>
-                    You save {formatPrice(price_retail - price_wholesale)}
+                    {messages.product.youSave} {formatPrice(price_retail - price_wholesale)}
                 </div>
             </div>
         )
@@ -104,7 +106,7 @@ export default function PriceDisplay({ price_retail, price_wholesale, variant = 
     // B2C Customer / Guest View - Show retail price only
     return (
         <div className="flex flex-col gap-1">
-            <span className={isFeatured ? 'text-[0.8rem] text-slate-500' : 'text-sm text-gray-600'}>Price</span>
+            <span className={isFeatured ? 'text-[0.8rem] text-slate-500' : 'text-sm text-gray-600'}>{messages.product.price}</span>
             <span className={isFeatured ? 'text-[1.12rem] leading-tight font-bold text-slate-900' : 'text-2xl font-bold text-gray-900'}>
                 {formatPrice(price_retail)}
             </span>

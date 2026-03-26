@@ -5,6 +5,7 @@ import { createClient } from '@/utils/supabase/client'
 import type { User as UserType } from '@/types/database.types'
 import { useToast } from '@/components/admin/Toast'
 import { useRouter } from 'next/navigation'
+import { useLocaleMessages } from '@/contexts/LocaleContext'
 
 interface ProfileFormProps {
     user: UserType
@@ -15,6 +16,7 @@ export default function ProfileForm({ user, onSaved }: ProfileFormProps) {
     const [isEditing, setIsEditing] = useState(false)
     const [loading, setLoading] = useState(false)
     const router = useRouter()
+    const { messages } = useLocaleMessages()
 
     const [formData, setFormData] = useState({
         first_name: user.first_name || '',
@@ -70,7 +72,7 @@ export default function ProfileForm({ user, onSaved }: ProfileFormProps) {
                 })
             }, 0)
 
-            addToast('Profile updated successfully', 'success')
+            addToast(messages.profile.profileUpdated, 'success')
             setIsEditing(false)
 
             // Call optional callback
@@ -85,7 +87,7 @@ export default function ProfileForm({ user, onSaved }: ProfileFormProps) {
 
         } catch (err: any) {
             console.error('Profile update error:', err)
-            addToast(err.message || 'An error occurred', 'error')
+            addToast(err.message || messages.common.error, 'error')
         } finally {
             setLoading(false)
         }
@@ -95,13 +97,13 @@ export default function ProfileForm({ user, onSaved }: ProfileFormProps) {
         <>
             <div className="bg-white rounded-lg shadow-sm p-6">
                 <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-xl font-bold text-gray-900">Personal Information</h2>
+                    <h2 className="text-xl font-bold text-gray-900">{messages.profile.personalInfo}</h2>
                     {!isEditing && (
                         <button
                             onClick={() => setIsEditing(true)}
                             className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors"
                         >
-                            Edit Profile
+                            {messages.profile.editProfile}
                         </button>
                     )}
                 </div>
@@ -111,7 +113,7 @@ export default function ProfileForm({ user, onSaved }: ProfileFormProps) {
                         <div className="grid grid-cols-2 gap-6">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    First Name
+                                    {messages.profile.firstName}
                                 </label>
                                 <input
                                     type="text"
@@ -123,7 +125,7 @@ export default function ProfileForm({ user, onSaved }: ProfileFormProps) {
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Last Name
+                                    {messages.profile.lastName}
                                 </label>
                                 <input
                                     type="text"
@@ -137,7 +139,7 @@ export default function ProfileForm({ user, onSaved }: ProfileFormProps) {
 
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Email
+                                {messages.profile.email}
                             </label>
                             <input
                                 type="email"
@@ -145,12 +147,12 @@ export default function ProfileForm({ user, onSaved }: ProfileFormProps) {
                                 disabled
                                 className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-600 cursor-not-allowed"
                             />
-                            <p className="text-xs text-gray-500 mt-1">Email cannot be changed here</p>
+                            <p className="text-xs text-gray-500 mt-1">{messages.profile.emailNote}</p>
                         </div>
 
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Phone
+                                {messages.profile.phone}
                             </label>
                             <input
                                 type="tel"
@@ -165,7 +167,7 @@ export default function ProfileForm({ user, onSaved }: ProfileFormProps) {
                             <>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Company Name
+                                        {messages.profile.company}
                                     </label>
                                     <input
                                         type="text"
@@ -178,7 +180,7 @@ export default function ProfileForm({ user, onSaved }: ProfileFormProps) {
 
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        NIP Number (Polish Tax ID)
+                                        {messages.profile.nip}
                                     </label>
                                     <input
                                         type="text"
@@ -197,7 +199,7 @@ export default function ProfileForm({ user, onSaved }: ProfileFormProps) {
                                 disabled={loading}
                                 className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                {loading ? 'Saving...' : 'Save Changes'}
+                                {loading ? messages.profileForm.saving : messages.profile.saveChanges}
                             </button>
                             <button
                                 type="button"
@@ -213,7 +215,7 @@ export default function ProfileForm({ user, onSaved }: ProfileFormProps) {
                                 }}
                                 className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
                             >
-                                Cancel
+                                {messages.profile.cancel}
                             </button>
                         </div>
                     </form>
@@ -221,13 +223,13 @@ export default function ProfileForm({ user, onSaved }: ProfileFormProps) {
                     <div className="space-y-4">
                         <div className="grid grid-cols-2 gap-6">
                             <div>
-                                <p className="text-sm text-gray-600 mb-1">First Name</p>
+                                <p className="text-sm text-gray-600 mb-1">{messages.profile.firstName}</p>
                                 <p className="text-base font-medium text-gray-900">
                                     {formData.first_name || '—'}
                                 </p>
                             </div>
                             <div>
-                                <p className="text-sm text-gray-600 mb-1">Last Name</p>
+                                <p className="text-sm text-gray-600 mb-1">{messages.profile.lastName}</p>
                                 <p className="text-base font-medium text-gray-900">
                                     {formData.last_name || '—'}
                                 </p>
@@ -235,12 +237,12 @@ export default function ProfileForm({ user, onSaved }: ProfileFormProps) {
                         </div>
 
                         <div>
-                            <p className="text-sm text-gray-600 mb-1">Email</p>
+                            <p className="text-sm text-gray-600 mb-1">{messages.profile.email}</p>
                             <p className="text-base font-medium text-gray-900">{user.email || '—'}</p>
                         </div>
 
                         <div>
-                            <p className="text-sm text-gray-600 mb-1">Phone</p>
+                            <p className="text-sm text-gray-600 mb-1">{messages.profile.phone}</p>
                             <p className="text-base font-medium text-gray-900">
                                 {formData.phone || '—'}
                             </p>
@@ -249,14 +251,14 @@ export default function ProfileForm({ user, onSaved }: ProfileFormProps) {
                         {user.role === 'b2b_customer' && (
                             <>
                                 <div>
-                                    <p className="text-sm text-gray-600 mb-1">Company Name</p>
+                                    <p className="text-sm text-gray-600 mb-1">{messages.profile.company}</p>
                                     <p className="text-base font-medium text-gray-900">
                                         {formData.company_name || '—'}
                                     </p>
                                 </div>
 
                                 <div>
-                                    <p className="text-sm text-gray-600 mb-1">NIP Number</p>
+                                    <p className="text-sm text-gray-600 mb-1">{messages.profile.nip}</p>
                                     <p className="text-base font-medium text-gray-900">
                                         {formData.nip_number || '—'}
                                     </p>

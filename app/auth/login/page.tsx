@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/utils/supabase/client'
 import Link from 'next/link'
+import { useLocaleMessages } from '@/contexts/LocaleContext'
 
 export default function LoginPage() {
     const [email, setEmail] = useState('')
@@ -12,6 +13,7 @@ export default function LoginPage() {
     const [loading, setLoading] = useState(false)
     const router = useRouter()
     const supabase = createClient()
+    const { messages } = useLocaleMessages()
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -43,7 +45,7 @@ export default function LoginPage() {
                 router.refresh()
             }
         } catch (err) {
-            setError('An unexpected error occurred')
+            setError(messages.authErrors.unexpected)
         } finally {
             setLoading(false)
         }
@@ -54,12 +56,12 @@ export default function LoginPage() {
             <div className="max-w-md w-full space-y-8">
                 <div>
                     <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-                        Sign in to your account
+                        {messages.auth.signInTitle}
                     </h2>
                     <p className="mt-2 text-center text-sm text-gray-600">
-                        Or{' '}
+                        {messages.auth.orPrefix}{' '}
                         <Link href="/auth/signup" className="font-medium text-green-600 hover:text-green-500">
-                            create a new account
+                            {messages.auth.createAccountLink}
                         </Link>
                     </p>
                 </div>
@@ -72,7 +74,7 @@ export default function LoginPage() {
                     <div className="rounded-md shadow-sm -space-y-px">
                         <div>
                             <label htmlFor="email-address" className="sr-only">
-                                Email address
+                                {messages.auth.email}
                             </label>
                             <input
                                 id="email-address"
@@ -81,14 +83,14 @@ export default function LoginPage() {
                                 autoComplete="email"
                                 required
                                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm"
-                                placeholder="Email address"
+                                placeholder={messages.auth.email}
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                             />
                         </div>
                         <div>
                             <label htmlFor="password" className="sr-only">
-                                Password
+                                {messages.auth.password}
                             </label>
                             <input
                                 id="password"
@@ -97,7 +99,7 @@ export default function LoginPage() {
                                 autoComplete="current-password"
                                 required
                                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm"
-                                placeholder="Password"
+                                placeholder={messages.auth.password}
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                             />
@@ -107,7 +109,7 @@ export default function LoginPage() {
                     <div className="flex items-center justify-between">
                         <div className="text-sm">
                             <a href="#" className="font-medium text-green-600 hover:text-green-500">
-                                Forgot your password?
+                                {messages.auth.forgotPassword}
                             </a>
                         </div>
                     </div>
@@ -118,7 +120,7 @@ export default function LoginPage() {
                             disabled={loading}
                             className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            {loading ? 'Signing in...' : 'Sign in'}
+                            {loading ? messages.auth.signingIn : messages.auth.signIn}
                         </button>
                     </div>
                 </form>
