@@ -39,6 +39,31 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+@keyframes localeContentFade {
+  0% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  40% {
+    opacity: 0.86;
+    transform: translateY(1px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+body.locale-switching {
+  animation: localeContentFade 320ms ease;
+}
+
+body.locale-switching * {
+  transition: color 220ms ease, background-color 220ms ease, border-color 220ms ease, opacity 220ms ease;
+}
+
 @keyframes shopCardReveal {
   from {
     opacity: 0;
@@ -57,6 +82,14 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  body.locale-switching {
+    animation: none;
+  }
+
+  body.locale-switching * {
+    transition: none;
+  }
+
   .shop-card-reveal {
     opacity: 1;
     animation: none;

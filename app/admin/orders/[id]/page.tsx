@@ -140,10 +140,10 @@ export default async function AdminOrderDetailPage({
             <div className="mb-8 flex items-center justify-between">
                 <div>
                     <Link
-                        href="/admin/orders"
+                        href="/admin"
                         className="text-[#163579] hover:text-[#102a63] text-sm font-semibold mb-2 inline-block"
                     >
-                        ← Back to Orders
+                        ← Back to Dashboard
                     </Link>
                     <h1 className="text-3xl font-bold text-gray-900">
                         Order Details

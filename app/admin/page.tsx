@@ -1,5 +1,6 @@
 import { createClient } from '@/utils/supabase/server'
 import AdminMetricsGrid from '@/components/admin/AdminMetricsGrid'
+import Link from 'next/link'
 
 export default async function AdminDashboard() {
     const supabase = await createClient()
@@ -84,6 +85,22 @@ export default async function AdminDashboard() {
                     </a>
                 </div>
             </div>
+
+            <Link
+                href="/"
+                className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-full bg-[#163579] px-6 py-3 font-semibold text-white shadow-lg transition-all hover:scale-105 hover:bg-[#122d67]"
+            >
+                <svg
+                    className="h-5 w-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                >
+                    <path d="M3 12h18M3 12l4-4M3 12l4 4" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
+                </svg>
+                View Store
+            </Link>
         </div>
     )
 }

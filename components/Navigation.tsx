@@ -22,12 +22,6 @@ export default function Navigation({ initialLocale }: NavigationProps) {
     const itemCount = getItemCount()
 
     useEffect(() => {
-        if (initialLocale !== locale) {
-            setLocale(initialLocale)
-        }
-    }, [initialLocale, locale, setLocale])
-
-    useEffect(() => {
         const resolveLocale = (rawLocale?: string | null): Locale => {
             return rawLocale?.toLowerCase() === 'pl' ? 'pl' : 'en'
         }

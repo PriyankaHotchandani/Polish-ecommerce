@@ -18,6 +18,7 @@ export default function ProfileCompletenessPrompt() {
     const [visible, setVisible] = useState(false)
     const [dismissed, setDismissed] = useState(false)
     const [userId, setUserId] = useState<string | null>(null)
+    const [isAdminUser, setIsAdminUser] = useState(false)
     const supabase = useMemo(() => createClient(), [])
 
     useEffect(() => {
@@ -29,12 +30,14 @@ export default function ProfileCompletenessPrompt() {
 
                 if (!mounted || error || !data.user) {
                     setUserId(null)
+                    setIsAdminUser(false)
                     setDismissed(false)
                     setVisible(false)
                     return
                 }
 
                 setUserId(data.user.id)
+                const authRole = data.user.user_metadata?.role
 
                 // Check if user has dismissed the prompt
                 const dismissedKey = `profile_prompt_dismissed_v2_${data.user.id}`
@@ -49,6 +52,15 @@ export default function ProfileCompletenessPrompt() {
                 if (!mounted) {
                     return
                 }
+
+                if (authRole === 'admin' || profile?.role === 'admin') {
+                    setIsAdminUser(true)
+                    setDismissed(false)
+                    setVisible(false)
+                    return
+                }
+
+                setIsAdminUser(false)
 
                 if (!profile) {
                     setDismissed(false)
@@ -84,6 +96,7 @@ export default function ProfileCompletenessPrompt() {
             } catch (err) {
                 if (mounted) {
                     setUserId(null)
+                    setIsAdminUser(false)
                     setDismissed(false)
                     setVisible(false)
                 }
@@ -101,6 +114,7 @@ export default function ProfileCompletenessPrompt() {
 
             if (!session?.user) {
                 setUserId(null)
+                setIsAdminUser(false)
                 setDismissed(false)
                 setVisible(false)
                 return
@@ -115,7 +129,7 @@ export default function ProfileCompletenessPrompt() {
         }
     }, [supabase])
 
-    if (pathname.startsWith('/admin')) {
+    if (pathname.startsWith('/admin') || isAdminUser) {
         return null
     }
 

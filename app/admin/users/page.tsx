@@ -1,5 +1,6 @@
 import { createClient } from '@/utils/supabase/server'
 import Link from 'next/link'
+import UserActionsMenu from '@/components/admin/UserActionsMenu'
 
 export default async function AdminUsersPage({
     searchParams,
@@ -42,6 +43,32 @@ export default async function AdminUsersPage({
     const b2bUsers = users?.filter(u => u.role === 'b2b_customer').length || 0
     const adminUsers = users?.filter(u => u.role === 'admin').length || 0
 
+    const getRolePillClass = (role: string) => {
+        if (role === 'admin') return 'bg-slate-800 text-white'
+        if (role === 'b2b_customer') return 'bg-blue-100 text-blue-800'
+        return 'bg-gray-100 text-gray-700'
+    }
+
+    const getRoleLabel = (role: string) => {
+        if (role === 'admin') return 'Admin'
+        if (role === 'b2b_customer') return 'B2B Customer'
+        return 'B2C Customer'
+    }
+
+    const getDisplayName = (user: any) => {
+        const joinedName = [user.first_name, user.last_name].filter(Boolean).join(' ').trim()
+        if (joinedName) return joinedName
+        if (user.company_name) return user.company_name
+        return user.email?.split('@')[0] || 'User'
+    }
+
+    const getInitials = (name: string) => {
+        const parts = name.split(' ').filter(Boolean)
+        if (parts.length === 0) return 'US'
+        if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
+        return `${parts[0][0]}${parts[1][0]}`.toUpperCase()
+    }
+
     return (
         <div>
             {/* Header */}
@@ -58,15 +85,15 @@ export default async function AdminUsersPage({
                 </div>
                 <div className="bg-white rounded-lg shadow-sm p-6">
                     <p className="text-sm text-gray-600">B2C Customers</p>
-                    <p className="text-2xl font-bold text-blue-600">{b2cUsers}</p>
+                    <p className="text-2xl font-bold text-gray-900">{b2cUsers}</p>
                 </div>
                 <div className="bg-white rounded-lg shadow-sm p-6">
                     <p className="text-sm text-gray-600">B2B Customers</p>
-                    <p className="text-2xl font-bold text-purple-600">{b2bUsers}</p>
+                    <p className="text-2xl font-bold text-gray-900">{b2bUsers}</p>
                 </div>
                 <div className="bg-white rounded-lg shadow-sm p-6">
                     <p className="text-sm text-gray-600">Administrators</p>
-                    <p className="text-2xl font-bold text-green-600">{adminUsers}</p>
+                    <p className="text-2xl font-bold text-gray-900">{adminUsers}</p>
                 </div>
             </div>
 
@@ -79,24 +106,24 @@ export default async function AdminUsersPage({
                             name="search"
                             defaultValue={search}
                             placeholder="Search by email, name, or company..."
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#163579]/20 focus:border-[#163579]"
                         />
                     </div>
                     <div>
                         <select
                             name="role"
                             defaultValue={roleFilter}
-                            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#163579]/20 focus:border-[#163579]"
                         >
                             <option value="all">All Roles</option>
-                            <option value="b2c_customer">B2C</option>
-                            <option value="b2b_customer">B2B</option>
+                            <option value="b2c_customer">B2C Customer</option>
+                            <option value="b2b_customer">B2B Customer</option>
                             <option value="admin">Admin</option>
                         </select>
                     </div>
                     <button
                         type="submit"
-                        className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
+                        className="px-6 py-2 bg-[#163579] text-white rounded-lg hover:bg-[#122d67] transition-colors font-semibold"
                     >
                         Search
                     </button>
@@ -139,7 +166,7 @@ export default async function AdminUsersPage({
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                                         Joined
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
                                         Actions
                                     </th>
                                 </tr>
@@ -148,27 +175,25 @@ export default async function AdminUsersPage({
                                 {users.map((user: any) => (
                                     <tr key={user.id} className="hover:bg-gray-50">
                                         <td className="px-6 py-4">
-                                            <div>
-                                                <div className="text-sm font-medium text-gray-900">
-                                                    {user.first_name} {user.last_name}
+                                            <div className="flex items-center gap-3">
+                                                <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-xs font-semibold text-gray-700">
+                                                    {getInitials(getDisplayName(user))}
+                                                </span>
+                                                <div>
+                                                    <div className="text-sm font-semibold text-gray-900">
+                                                        {getDisplayName(user)}
+                                                    </div>
+                                                    <div className="text-sm text-gray-500">{user.email}</div>
                                                 </div>
-                                                <div className="text-sm text-gray-500">{user.email}</div>
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <span
-                                                className={`px-3 py-1 inline-flex text-xs font-semibold rounded-full ${user.role === 'admin'
-                                                    ? 'bg-green-100 text-green-800'
-                                                    : user.role === 'b2b_customer'
-                                                        ? 'bg-purple-100 text-purple-800'
-                                                        : 'bg-blue-100 text-blue-800'
-                                                    }`}
-                                            >
-                                                {user.role.toUpperCase()}
+                                            <span className={`px-3 py-1 inline-flex text-xs font-semibold rounded-full ${getRolePillClass(user.role)}`}>
+                                                {getRoleLabel(user.role)}
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 text-sm text-gray-900">
-                                            {user.company_name || '—'}
+                                            {user.company_name || <span className="text-gray-400">N/A</span>}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <span className="text-sm font-medium text-gray-900">
@@ -182,13 +207,8 @@ export default async function AdminUsersPage({
                                                 day: 'numeric'
                                             })}
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm">
-                                            <Link
-                                                href={`/admin/users/${user.id}`}
-                                                className="text-green-600 hover:text-green-900 font-medium"
-                                            >
-                                                View Details
-                                            </Link>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-right">
+                                            <UserActionsMenu userId={user.id} userEmail={user.email} />
                                         </td>
                                     </tr>
                                 ))}

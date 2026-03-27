@@ -1,10 +1,11 @@
 'use client'
 
 import { usePathname } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import Link from 'next/link'
 import Navigation from './Navigation'
+import { useLocaleMessages } from '@/contexts/LocaleContext'
 
 interface ConditionalNavProps {
     initialLocale: 'en' | 'pl'
@@ -13,22 +14,28 @@ interface ConditionalNavProps {
 export default function ConditionalNav({ initialLocale }: ConditionalNavProps) {
     const pathname = usePathname()
     const [isAdmin, setIsAdmin] = useState(false)
-    const supabase = createClient()
+    const supabase = useMemo(() => createClient(), [])
+    const { locale } = useLocaleMessages()
 
     useEffect(() => {
+        let isMounted = true
+
         async function checkAdmin() {
             try {
                 const { data, error } = await supabase.auth.getUser()
 
                 if (error) {
-                    await supabase.auth.signOut()
-                    setIsAdmin(false)
+                    if (isMounted) {
+                        setIsAdmin(false)
+                    }
                     return
                 }
 
                 const user = data.user
                 if (!user) {
-                    setIsAdmin(false)
+                    if (isMounted) {
+                        setIsAdmin(false)
+                    }
                     return
                 }
 
@@ -38,14 +45,26 @@ export default function ConditionalNav({ initialLocale }: ConditionalNavProps) {
                     .eq('id', user.id)
                     .single()
 
-                setIsAdmin(userData?.role === 'admin')
+                if (isMounted) {
+                    setIsAdmin(userData?.role === 'admin')
+                }
             } catch {
-                await supabase.auth.signOut()
-                setIsAdmin(false)
+                if (isMounted) {
+                    setIsAdmin(false)
+                }
             }
         }
 
         checkAdmin()
+
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
+            checkAdmin()
+        })
+
+        return () => {
+            isMounted = false
+            subscription.unsubscribe()
+        }
     }, [supabase])
 
     // Don't show regular navigation on admin routes
@@ -60,7 +79,7 @@ export default function ConditionalNav({ initialLocale }: ConditionalNavProps) {
             {isAdmin && (
                 <Link
                     href="/admin"
-                    className="fixed bottom-6 right-6 z-50 px-6 py-3 bg-green-600 text-white rounded-full shadow-lg hover:bg-green-700 transition-all hover:scale-105 flex items-center gap-2 font-semibold"
+                    className="fixed bottom-6 right-6 z-50 px-6 py-3 bg-[#163579] text-white rounded-full shadow-lg hover:bg-[#122d67] transition-all hover:scale-105 flex items-center gap-2 font-semibold"
                 >
                     <svg
                         className="w-5 h-5"
@@ -81,7 +100,7 @@ export default function ConditionalNav({ initialLocale }: ConditionalNavProps) {
                             d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
                         />
                     </svg>
-                    Admin Panel
+                    {locale === 'pl' ? 'Panel admina' : 'Admin Panel'}
                 </Link>
             )}
         </>

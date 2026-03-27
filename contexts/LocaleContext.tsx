@@ -29,10 +29,26 @@ function getCookieLocale(): Locale | null {
     return raw === 'pl' ? 'pl' : raw === 'en' ? 'en' : null
 }
 
+function runLocaleTransitionEffect() {
+    if (typeof window === 'undefined') return
+    const body = document.body
+    if (!body) return
+
+    body.classList.remove('locale-switching')
+    // Force reflow so rapid toggles can restart the animation reliably.
+    void body.offsetWidth
+    body.classList.add('locale-switching')
+
+    window.setTimeout(() => {
+        body.classList.remove('locale-switching')
+    }, 320)
+}
+
 export function LocaleProvider({ initialLocale, children }: { initialLocale: Locale, children: React.ReactNode }) {
     const [locale, setLocaleState] = useState<Locale>(initialLocale)
 
     const setLocale = useCallback((nextLocale: Locale) => {
+        runLocaleTransitionEffect()
         setLocaleState(nextLocale)
 
         if (typeof window !== 'undefined') {
@@ -60,6 +76,7 @@ export function LocaleProvider({ initialLocale, children }: { initialLocale: Loc
             const eventLocale = (event as CustomEvent<Locale> | undefined)?.detail
             const cookieLocale = getCookieLocale()
             const nextLocale: Locale = eventLocale === 'pl' || cookieLocale === 'pl' ? 'pl' : 'en'
+            runLocaleTransitionEffect()
             setLocaleState(nextLocale)
             document.documentElement.lang = nextLocale
         }
