@@ -27,6 +27,48 @@
         "myAccount": "Moje konto",
         "cart": "Koszyk"
     },
+    "footer": {
+        "newsletter": {
+            "heading": "Otrzymuj branżowe insighty i ekskluzywne oferty hurtowe.",
+            "placeholder": "Wpisz swój adres e-mail firmowy",
+            "button": "Subskrybuj"
+        },
+        "brand": {
+            "description": "Wspieramy rozwój sprzedaży detalicznej i hurtowej dzięki jakościowym artykułom domowym i profesjonalnym narzędziom. Stawiamy na niezawodność, wartość i długoterminowe partnerstwa biznesowe."
+        },
+        "shopping": {
+            "title": "Zakupy",
+            "household": "Artykuły domowe",
+            "tools": "Narzędzia profesjonalne",
+            "newArrivals": "Nowości",
+            "specialOffers": "Oferty specjalne"
+        },
+        "partner": {
+            "title": "Portal Partnera",
+            "applyAccount": "Załóż konto firmowe",
+            "login": "Logowanie partnera",
+            "bulkOrdering": "Zamówienia hurtowe",
+            "volumeDiscounts": "Rabaty wolumenowe"
+        },
+        "customer": {
+            "title": "Obsługa klienta",
+            "contact": "Kontakt",
+            "shipping": "Polityka wysyłki",
+            "returns": "Zwroty",
+            "about": "O nas"
+        },
+        "bottom": {
+            "copyright": "© 2026 BM SP. Z O.O. Wszelkie prawa zastrzeżone.",
+            "privacy": "Polityka prywatności",
+            "terms": "Regulamin",
+            "payments": [
+                "Visa",
+                "Mastercard",
+                "BLIK",
+                "PayPal"
+            ]
+        }
+    },
     "product": {
         "price": "Cena",
         "wholesalePrice": "Cena hurtowa",
@@ -68,35 +110,72 @@
         "signIn": "Zaloguj się",
         "signUp": "Zarejestruj się",
         "signOut": "Wyloguj się",
-        "email": "Email",
+        "email": "E-mail",
         "password": "Hasło",
         "confirmPassword": "Potwierdź hasło",
         "forgotPassword": "Zapomniałeś hasła?",
         "noAccount": "Nie masz konta?",
         "hasAccount": "Masz już konto?",
         "accountType": "Typ konta",
-        "retailCustomer": "Klient detaliczny (B2C)",
-        "businessCustomer": "Klient biznesowy (B2B)",
+        "retailCustomer": "Klient detaliczny",
+        "businessCustomer": "Klient biznesowy",
+        "firstName": "Imię",
+        "lastName": "Nazwisko",
         "companyName": "Nazwa firmy",
         "nipNumber": "Numer NIP",
         "nipOptional": "Numer NIP (opcjonalnie)",
+        "industryType": "Branża",
+        "industryOptional": "Opcjonalnie",
+        "industryConstruction": "Budownictwo",
+        "industryRetailer": "Sprzedaż detaliczna",
+        "industryPlumber": "Hydraulika",
+        "industryOther": "Inna",
         "welcomeBack": "Witaj ponownie!",
         "createAccount": "Utwórz konto",
         "createAccountButton": "Utwórz konto",
         "createAccountLink": "załóż nowe konto",
         "companyPlaceholder": "Twoja Firma Sp. z o.o.",
+        "emailPlaceholder": "twoj@email.pl",
         "forPersonalShopping": "Do zakupów prywatnych",
         "orPrefix": "Lub",
         "signInTitle": "Zaloguj się do swojego konta",
         "signingIn": "Logowanie...",
         "creatingAccount": "Tworzenie konta...",
-        "wholesalePricingAndBulk": "Ceny hurtowe i zamówienia zbiorcze"
+        "forgotPasswordTitle": "Nie pamiętasz hasła?",
+        "forgotPasswordSubtitle": "Wpisz adres e-mail, a wyślemy bezpieczny link do resetu hasła.",
+        "sendResetLink": "Wyślij link resetujący",
+        "sendingResetLink": "Wysyłanie linku...",
+        "resetEmailSent": "Wysłaliśmy e-mail z linkiem do resetu hasła. Sprawdź skrzynkę.",
+        "resetPasswordTitle": "Ustaw nowe hasło",
+        "setNewPassword": "Zaktualizuj hasło",
+        "updatingPassword": "Aktualizowanie hasła...",
+        "passwordResetSuccess": "Hasło zostało zaktualizowane. Przekierowanie do logowania...",
+        "invalidResetLink": "Ten link resetujący jest nieprawidłowy lub wygasł.",
+        "backToLogin": "Powrót do logowania",
+        "wholesalePricingAndBulk": "Ceny hurtowe i zamówienia zbiorcze",
+        "showPassword": "Pokaż hasło",
+        "hidePassword": "Ukryj hasło",
+        "rememberMe30Days": "Zapamiętaj mnie na 30 dni",
+        "loginPanelEyebrow": "Witamy ponownie",
+        "loginPanelTitle": "Wróć dokładnie tam, gdzie skończyłeś.",
+        "loginPanelSubtitle": "Zaloguj się, aby przejść do panelu konta, historii zamówień i narzędzi cen partnerskich.",
+        "loginBenefitDashboard": "Szybki dostęp do panelu konta.",
+        "loginBenefitOrders": "Śledzenie bieżących i wcześniejszych zamówień.",
+        "loginBenefitPricing": "Dostęp do funkcji cen partnerskich i hurtowych.",
+        "signupPanelEyebrow": "Zacznij",
+        "signupPanelTitle": "Kupuj mądrzej, zamawiaj szybciej.",
+        "signupPanelSubtitle": "Utwórz konto, aby przyspieszyć zakupy i wygodnie obsługiwać zamówienia detaliczne oraz hurtowe.",
+        "signupBenefitCheckout": "Szybkie finalizowanie zakupów dzięki zapisanym danym.",
+        "signupBenefitTracking": "Śledzenie wszystkich zamówień w jednym panelu.",
+        "signupBenefitPricing": "Dostęp do ekskluzywnych cen partnerskich i hurtowych."
     },
     "authErrors": {
         "unexpected": "Wystąpił nieoczekiwany błąd",
         "passwordMismatch": "Hasła nie są takie same",
         "passwordMinLength": "Hasło musi mieć co najmniej 6 znaków",
-        "companyRequired": "Nazwa firmy jest wymagana dla kont biznesowych"
+        "companyRequired": "Nazwa firmy jest wymagana dla kont biznesowych",
+        "nameRequired": "Imię i nazwisko są wymagane",
+        "nipRequired": "Numer NIP jest wymagany dla kont biznesowych"
     },
     "b2b": {
         "portal": "Portal hurtowy",
@@ -328,7 +407,32 @@
         "companyLabel": "Firma:",
         "startShoppingTitle": "Rozpocznij zakupy w cenach hurtowych",
         "startShoppingDescription": "Wszystkie produkty w katalogu są już dostępne w cenach hurtowych. Przejdź do sklepu i rozpocznij zakupy.",
-        "browseCatalog": "Przeglądaj katalog produktów"
+        "browseCatalog": "Przeglądaj katalog produktów",
+        "bulkOrder": {
+            "title": "Formularz zamówienia hurtowego",
+            "subtitle": "Prześlij CSV lub wklej listę SKU, aby szybko uzupełnić zatowarowanie.",
+            "csvCardTitle": "Przesyłanie CSV",
+            "csvHint": "Użyj eksportu z systemu zakupowego i złóż większe zamówienie szybciej.",
+            "csvInputLabel": "Prześlij plik CSV",
+            "csvTemplateHint": "Wymagane nagłówki: sku,quantity,notes",
+            "downloadSampleCsv": "Pobierz przykładowy CSV",
+            "pasteSampleRows": "Wklej przykładowe wiersze",
+            "manualCardTitle": "Ręczne wprowadzanie SKU",
+            "manualHint": "Wklej jeden produkt w wierszu w formacie SKU,quantity,notes.",
+            "manualPlaceholder": "SKU-1001,12,uzupełnienie magazynu A\nSKU-2200,4,pilne",
+            "parseButton": "Podgląd zamówienia hurtowego",
+            "parsing": "Przetwarzanie...",
+            "parseSummary": "Przeanalizowane wiersze:",
+            "validRowsLabel": "Gotowe do dodania",
+            "blockedRowsLabel": "Wymaga uwagi",
+            "issuesLabel": "Błędy formatu",
+            "blockedNotFound": "Nie znaleziono SKU",
+            "blockedStock": "Niewystarczający stan magazynowy. Dostępne:",
+            "addValidItems": "Dodaj poprawne pozycje do koszyka",
+            "addingToCart": "Dodawanie do koszyka...",
+            "noValidRows": "Brak poprawnych wierszy do dodania.",
+            "backToPortal": "Powrót do portalu"
+        }
     },
     "cartPage": {
         "loading": "Ładowanie koszyka...",
@@ -336,12 +440,18 @@
         "itemSingular": "produkt",
         "itemPlural": "produkty",
         "clearCart": "Wyczyść koszyk",
+        "backToShop": "Powrót do sklepu",
         "noImage": "Brak zdjęcia",
         "each": "za szt.",
         "wholesalePricing": "Cena hurtowa",
         "orderSummary": "Podsumowanie zamówienia",
         "wholesaleBanner": "Korzystasz z cen hurtowych",
-        "added": "Dodano!"
+        "bulkImportSuccess": "Pozycje z zamówienia hurtowego zostały dodane do koszyka.",
+        "loginPrompt": "Masz już konto?",
+        "loginPromptSuffix": "aby szybciej finalizować zakupy i skorzystać z cen hurtowych.",
+        "secureCheckout": "Bezpieczne zakupy",
+        "added": "Dodano!",
+        "dismiss": "Zamknij"
     },
     "profileForm": {
         "saving": "Zapisywanie..."
@@ -454,7 +564,7 @@
         "paymentFailed": "Nieudana",
         "paymentRefunded": "Zwrócona",
         "invoiceTitle": "Faktura",
-        "invoiceHint": "Kliknij \"Wygeneruj fakturę\", aby utworzyć i pobrać fakturę VAT.",
+        "invoiceHint": "Twoja faktura pojawi się tutaj po przesłaniu przez administratora i wysłaniu e-mailem.",
         "invoiceRequiredBanner": "Faktura B2B - wymagana do dokumentacji firmowej",
         "contactSupport": "Skontaktuj się z pomocą"
     },
@@ -463,7 +573,7 @@
         "subtitle": "Dziękujemy za zamówienie. Otrzymaliśmy je i wkrótce rozpoczniemy realizację.",
         "orderNumberLabel": "Numer zamówienia",
         "orderDetailsTitle": "Szczegóły zamówienia",
-        "invoiceNotice": "Faktura VAT zostanie wygenerowana i wysłana na Twój email w ciągu 24 godzin.",
+        "invoiceNotice": "Faktura VAT zostanie przesłana przez administratora i wysłana na Twój email.",
         "nextTitle": "Co dalej?",
         "nextSteps": [
             "Wkrótce otrzymasz email z potwierdzeniem zamówienia.",

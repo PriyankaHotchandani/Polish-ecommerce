@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Bebas_Neue } from "next/font/google";
 import { cookies } from "next/headers";
 import "./globals.css";
 import ConditionalNav from "@/components/ConditionalNav";
+import FatFooter from "@/components/FatFooter";
 import ProfileCompletenessPrompt from "@/components/ProfileCompletenessPrompt";
 import { Providers } from "@/components/Providers";
 import type { Locale } from "@/contexts/LocaleContext";
@@ -45,6 +46,7 @@ export default async function RootLayout({
           <ConditionalNav initialLocale={locale} />
           <ProfileCompletenessPrompt />
           {children}
+          <FatFooter />
         </Providers>
       </body>
     </html>

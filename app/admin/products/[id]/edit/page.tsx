@@ -25,6 +25,7 @@ export default function EditProductPage({
     const [categories, setCategories] = useState<Category[]>([])
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
+    const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle')
     const [error, setError] = useState<string | null>(null)
     const [showDeleteModal, setShowDeleteModal] = useState(false)
     const [deleting, setDeleting] = useState(false)
@@ -44,6 +45,7 @@ export default function EditProductPage({
     })
 
     const [errors, setErrors] = useState<Record<string, string>>({})
+    const [initialSnapshot, setInitialSnapshot] = useState('')
 
     useEffect(() => {
         async function init() {
@@ -69,7 +71,7 @@ export default function EditProductPage({
                 ? Object.entries(product.specifications).map(([key, value]) => ({ key, value: String(value) }))
                 : [{ key: '', value: '' }]
 
-            setFormData({
+            const preparedFormData = {
                 sku: product.sku,
                 title: product.title,
                 slug: product.slug,
@@ -81,7 +83,10 @@ export default function EditProductPage({
                 category_id: product.category_id,
                 specifications: specs,
                 image_urls: product.image_urls || [],
-            })
+            }
+
+            setFormData(preparedFormData)
+            setInitialSnapshot(JSON.stringify(preparedFormData))
 
             if (categoriesResult.data) {
                 setCategories(categoriesResult.data)
@@ -95,6 +100,9 @@ export default function EditProductPage({
 
     const handleChange = (field: string, value: any) => {
         setFormData(prev => ({ ...prev, [field]: value }))
+        if (saveState !== 'idle') {
+            setSaveState('idle')
+        }
         if (errors[field]) {
             setErrors(prev => ({ ...prev, [field]: '' }))
         }
@@ -104,6 +112,9 @@ export default function EditProductPage({
         const newSpecs = [...formData.specifications]
         newSpecs[index][field] = value
         setFormData(prev => ({ ...prev, specifications: newSpecs }))
+        if (saveState !== 'idle') {
+            setSaveState('idle')
+        }
     }
 
     const addSpecification = () => {
@@ -111,6 +122,9 @@ export default function EditProductPage({
             ...prev,
             specifications: [...prev.specifications, { key: '', value: '' }]
         }))
+        if (saveState !== 'idle') {
+            setSaveState('idle')
+        }
     }
 
     const removeSpecification = (index: number) => {
@@ -118,6 +132,9 @@ export default function EditProductPage({
             ...prev,
             specifications: prev.specifications.filter((_, i) => i !== index)
         }))
+        if (saveState !== 'idle') {
+            setSaveState('idle')
+        }
     }
 
     const validate = (): boolean => {
@@ -155,6 +172,7 @@ export default function EditProductPage({
         }
 
         setSaving(true)
+        setSaveState('saving')
         setError(null)
 
         try {
@@ -165,30 +183,46 @@ export default function EditProductPage({
                     return acc
                 }, {} as Record<string, string>)
 
-            const { error: updateError } = await supabase
-                .from('products')
-                .update({
-                    sku: formData.sku.toUpperCase(),
-                    title: formData.title,
-                    slug: formData.slug,
-                    brand: formData.brand || null,
-                    description: formData.description || null,
-                    price_retail: parseFloat(formData.price_retail),
-                    price_wholesale: parseFloat(formData.price_wholesale),
-                    inventory_count: parseInt(formData.inventory_count),
-                    category_id: formData.category_id,
-                    specifications: Object.keys(specs).length > 0 ? specs : null,
-                    image_urls: formData.image_urls.length > 0 ? formData.image_urls : null,
-                    updated_at: new Date().toISOString()
-                })
-                .eq('id', productId)
+            const normalizedSku = formData.sku.toUpperCase()
+
+            const [{ error: updateError }] = await Promise.all([
+                supabase
+                    .from('products')
+                    .update({
+                        sku: normalizedSku,
+                        title: formData.title,
+                        slug: formData.slug,
+                        brand: formData.brand || null,
+                        description: formData.description || null,
+                        price_retail: parseFloat(formData.price_retail),
+                        price_wholesale: parseFloat(formData.price_wholesale),
+                        inventory_count: parseInt(formData.inventory_count),
+                        category_id: formData.category_id,
+                        specifications: Object.keys(specs).length > 0 ? specs : null,
+                        image_urls: formData.image_urls.length > 0 ? formData.image_urls : null,
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('id', productId),
+                new Promise((resolve) => setTimeout(resolve, 1000)),
+            ])
 
             if (updateError) throw updateError
 
-            router.push('/admin/products')
+            const savedFormData = {
+                ...formData,
+                sku: normalizedSku,
+            }
+
+            setFormData(savedFormData)
+            setInitialSnapshot(JSON.stringify(savedFormData))
+            setSaveState('saved')
+            setTimeout(() => setSaveState('idle'), 2000)
+            router.refresh()
         } catch (err: any) {
             console.error('Error updating product:', err)
             setError(err.message || 'Failed to update product')
+            setSaveState('idle')
+        } finally {
             setSaving(false)
         }
     }
@@ -217,7 +251,7 @@ export default function EditProductPage({
         return (
             <div className="flex items-center justify-center min-h-screen">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#163579] mx-auto mb-4"></div>
                     <p className="text-gray-600">Loading product...</p>
                 </div>
             </div>
@@ -228,19 +262,23 @@ export default function EditProductPage({
         return (
             <div className="text-center py-12">
                 <p className="text-red-600 text-lg">{error}</p>
-                <Link href="/admin/products" className="text-green-600 hover:text-green-800 mt-4 inline-block">
+                <Link href="/admin/products" className="text-[#163579] hover:text-[#102a63] mt-4 inline-block">
                     ← Back to Products
                 </Link>
             </div>
         )
     }
 
+    const hasUnsavedChanges = initialSnapshot !== '' && JSON.stringify(formData) !== initialSnapshot
+    const labelClassName = 'mb-2 block text-xs font-semibold uppercase tracking-wide text-gray-500'
+    const inputClassName = 'w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 transition focus:border-[#163579] focus:outline-none focus:ring-2 focus:ring-[#163579]/20'
+
     return (
         <div>
             <div className="mb-8">
                 <Link
                     href="/admin/products"
-                    className="text-green-600 hover:text-green-800 text-sm font-medium mb-2 inline-block"
+                    className="text-[#163579] hover:text-[#102a63] text-sm font-semibold mb-2 inline-block"
                 >
                     ← Back to Products
                 </Link>
@@ -259,68 +297,74 @@ export default function EditProductPage({
                             <div className="space-y-4">
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        <label className={labelClassName}>
                                             SKU *
                                         </label>
                                         <input
                                             type="text"
                                             value={formData.sku}
                                             onChange={(e) => handleChange('sku', e.target.value)}
-                                            className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 ${errors.sku ? 'border-red-500' : 'border-gray-300'
-                                                }`}
+                                            className={`${inputClassName} ${errors.sku ? 'border-red-500 focus:border-red-500 focus:ring-red-100' : ''}`}
                                         />
                                         {errors.sku && <p className="mt-1 text-sm text-red-600">{errors.sku}</p>}
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        <label className={labelClassName}>
                                             Brand
                                         </label>
                                         <input
                                             type="text"
                                             value={formData.brand}
                                             onChange={(e) => handleChange('brand', e.target.value)}
-                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                                            className={inputClassName}
                                         />
                                     </div>
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    <label className={labelClassName}>
                                         Product Title *
                                     </label>
                                     <input
                                         type="text"
                                         value={formData.title}
                                         onChange={(e) => handleChange('title', e.target.value)}
-                                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 ${errors.title ? 'border-red-500' : 'border-gray-300'
-                                            }`}
+                                        className={`${inputClassName} ${errors.title ? 'border-red-500 focus:border-red-500 focus:ring-red-100' : ''}`}
                                     />
                                     {errors.title && <p className="mt-1 text-sm text-red-600">{errors.title}</p>}
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    <label className={labelClassName}>
                                         URL Slug
                                     </label>
-                                    <input
-                                        type="text"
-                                        value={formData.slug}
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 font-mono text-sm"
-                                        disabled
-                                    />
+                                    <div className="relative">
+                                        <input
+                                            type="text"
+                                            value={formData.slug}
+                                            className="w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-2.5 pr-11 font-mono text-sm text-gray-700"
+                                            disabled
+                                        />
+                                        <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-400" aria-hidden="true">
+                                            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
+                                                <rect x="5" y="11" width="14" height="10" rx="2" />
+                                                <path d="M8 11V8a4 4 0 1 1 8 0v3" strokeLinecap="round" />
+                                            </svg>
+                                        </span>
+                                    </div>
                                     <p className="mt-1 text-xs text-gray-500">Slug cannot be changed after creation</p>
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    <label className={labelClassName}>
                                         Description
                                     </label>
                                     <textarea
                                         value={formData.description}
                                         onChange={(e) => handleChange('description', e.target.value)}
                                         rows={4}
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                                        className={inputClassName}
                                     />
                                 </div>
                             </div>
@@ -332,7 +376,7 @@ export default function EditProductPage({
 
                             <div className="grid grid-cols-3 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    <label className={labelClassName}>
                                         Retail Price (PLN) *
                                     </label>
                                     <input
@@ -340,14 +384,13 @@ export default function EditProductPage({
                                         step="0.01"
                                         value={formData.price_retail}
                                         onChange={(e) => handleChange('price_retail', e.target.value)}
-                                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 ${errors.price_retail ? 'border-red-500' : 'border-gray-300'
-                                            }`}
+                                        className={`${inputClassName} ${errors.price_retail ? 'border-red-500 focus:border-red-500 focus:ring-red-100' : ''}`}
                                     />
                                     {errors.price_retail && <p className="mt-1 text-sm text-red-600">{errors.price_retail}</p>}
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    <label className={labelClassName}>
                                         Wholesale Price (PLN) *
                                     </label>
                                     <input
@@ -355,22 +398,20 @@ export default function EditProductPage({
                                         step="0.01"
                                         value={formData.price_wholesale}
                                         onChange={(e) => handleChange('price_wholesale', e.target.value)}
-                                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 ${errors.price_wholesale ? 'border-red-500' : 'border-gray-300'
-                                            }`}
+                                        className={`${inputClassName} ${errors.price_wholesale ? 'border-red-500 focus:border-red-500 focus:ring-red-100' : ''}`}
                                     />
                                     {errors.price_wholesale && <p className="mt-1 text-sm text-red-600">{errors.price_wholesale}</p>}
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    <label className={labelClassName}>
                                         Stock Quantity *
                                     </label>
                                     <input
                                         type="number"
                                         value={formData.inventory_count}
                                         onChange={(e) => handleChange('inventory_count', e.target.value)}
-                                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 ${errors.inventory_count ? 'border-red-500' : 'border-gray-300'
-                                            }`}
+                                        className={`${inputClassName} ${errors.inventory_count ? 'border-red-500 focus:border-red-500 focus:ring-red-100' : ''}`}
                                     />
                                     {errors.inventory_count && <p className="mt-1 text-sm text-red-600">{errors.inventory_count}</p>}
                                 </div>
@@ -384,7 +425,7 @@ export default function EditProductPage({
                                 <button
                                     type="button"
                                     onClick={addSpecification}
-                                    className="text-sm text-green-600 hover:text-green-800 font-medium"
+                                    className="text-sm text-[#163579] hover:text-[#122d67] font-medium"
                                 >
                                     + Add Field
                                 </button>
@@ -398,14 +439,14 @@ export default function EditProductPage({
                                             value={spec.key}
                                             onChange={(e) => handleSpecificationChange(index, 'key', e.target.value)}
                                             placeholder="Key"
-                                            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                                            className={`flex-1 ${inputClassName}`}
                                         />
                                         <input
                                             type="text"
                                             value={spec.value}
                                             onChange={(e) => handleSpecificationChange(index, 'value', e.target.value)}
                                             placeholder="Value"
-                                            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                                            className={`flex-1 ${inputClassName}`}
                                         />
                                         <button
                                             type="button"
@@ -428,21 +469,33 @@ export default function EditProductPage({
                                 maxImages={5}
                             />
                         </div>
+
+                        {/* Danger Zone */}
+                        <div className="rounded-xl border border-red-200 bg-red-50 p-6">
+                            <h2 className="text-lg font-bold text-red-900">Danger Zone</h2>
+                            <p className="mt-1 text-sm text-red-700">Deleting this product is permanent and cannot be undone.</p>
+                            <button
+                                type="button"
+                                onClick={() => setShowDeleteModal(true)}
+                                className="mt-4 inline-flex items-center rounded-lg border border-red-300 bg-white px-4 py-2.5 text-sm font-semibold text-red-700 transition-colors hover:bg-red-100"
+                            >
+                                Delete Product
+                            </button>
+                        </div>
                     </div>
 
                     {/* Sidebar */}
                     <div className="lg:col-span-1">
-                        <div className="bg-white rounded-lg shadow-sm p-6 sticky top-4 space-y-4">
+                        <div className="bg-white rounded-lg shadow-sm p-6 sticky top-[120px] space-y-4">
                             <div>
                                 <h2 className="text-xl font-bold text-gray-900 mb-4">Category</h2>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <label className={labelClassName}>
                                     Select Category *
                                 </label>
                                 <select
                                     value={formData.category_id}
                                     onChange={(e) => handleChange('category_id', e.target.value)}
-                                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 ${errors.category_id ? 'border-red-500' : 'border-gray-300'
-                                        }`}
+                                    className={`${inputClassName} ${errors.category_id ? 'border-red-500 focus:border-red-500 focus:ring-red-100' : ''}`}
                                 >
                                     <option value="">Choose a category</option>
                                     {categories.map(cat => (
@@ -460,33 +513,38 @@ export default function EditProductPage({
 
                             <button
                                 type="submit"
-                                disabled={saving}
-                                className="w-full bg-green-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-green-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center"
+                                disabled={saving || !hasUnsavedChanges}
+                                className={`w-full rounded-lg py-3 px-6 font-semibold text-white transition-colors flex items-center justify-center ${saveState === 'saved'
+                                    ? 'bg-emerald-600'
+                                    : 'bg-[#163579] hover:bg-[#122d67]'
+                                    } disabled:bg-gray-300 disabled:cursor-not-allowed`}
                             >
-                                {saving ? (
+                                {saveState === 'saving' ? (
                                     <>
                                         <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
                                         Saving...
                                     </>
-                                ) : 'Save Changes'}
+                                ) : saveState === 'saved' ? (
+                                    <>
+                                        <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true">
+                                            <path d="m5 13 4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
+                                        </svg>
+                                        Saved!
+                                    </>
+                                ) : (
+                                    <>
+                                        Save Changes
+                                        {hasUnsavedChanges && <span className="ml-2 inline-block h-2 w-2 rounded-full bg-amber-400" aria-hidden="true" />}
+                                    </>
+                                )}
                             </button>
 
                             <Link
                                 href="/admin/products"
-                                className="block w-full text-center text-gray-600 py-2 hover:text-gray-900"
+                                className="block w-full text-center py-1 text-gray-500 hover:text-[#163579]"
                             >
                                 Cancel
                             </Link>
-
-                            <div className="border-t pt-4">
-                                <button
-                                    type="button"
-                                    onClick={() => setShowDeleteModal(true)}
-                                    className="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
-                                >
-                                    Delete Product
-                                </button>
-                            </div>
                         </div>
                     </div>
                 </div>

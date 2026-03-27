@@ -168,7 +168,7 @@ export default function SavedAddresses({ userId }: { userId: string }) {
                 {!showForm && (
                     <button
                         onClick={() => setShowForm(true)}
-                        className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                        className="px-4 py-2 bg-[#163579] text-white rounded-md shadow-sm hover:-translate-y-0.5 hover:shadow-md hover:bg-[#102a63] transition-all duration-200"
                     >
                         {messages.savedAddresses.addNew}
                     </button>
@@ -183,14 +183,14 @@ export default function SavedAddresses({ userId }: { userId: string }) {
 
             {/* Address Form */}
             {showForm && (
-                <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
+                <div className="bg-gray-50 p-6 rounded-xl">
                     <h3 className="text-lg font-semibold mb-4">
                         {editingId ? messages.savedAddresses.editAddress : messages.savedAddresses.newAddress}
                     </h3>
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                <label className="block text-xs uppercase tracking-[0.08em] font-semibold text-gray-500 mb-1.5">
                                     {messages.savedAddresses.addressLabel} *
                                 </label>
                                 <input
@@ -199,12 +199,12 @@ export default function SavedAddresses({ userId }: { userId: string }) {
                                     value={formData.label}
                                     onChange={(e) => setFormData({ ...formData, label: e.target.value })}
                                     placeholder={messages.savedAddresses.labelPlaceholder}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                    className="w-full px-3 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#163579]/20 focus:border-[#163579] transition-colors"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                <label className="block text-xs uppercase tracking-[0.08em] font-semibold text-gray-500 mb-1.5">
                                     {messages.savedAddresses.addressType} *
                                 </label>
                                 <select
@@ -216,7 +216,7 @@ export default function SavedAddresses({ userId }: { userId: string }) {
                                             address_type: e.target.value as 'shipping' | 'billing' | 'both',
                                         })
                                     }
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                    className="w-full px-3 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#163579]/20 focus:border-[#163579] transition-colors"
                                 >
                                     <option value="both">{messages.savedAddresses.typeBoth}</option>
                                     <option value="shipping">{messages.savedAddresses.typeShippingOnly}</option>
@@ -225,7 +225,7 @@ export default function SavedAddresses({ userId }: { userId: string }) {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                <label className="block text-xs uppercase tracking-[0.08em] font-semibold text-gray-500 mb-1.5">
                                     {messages.savedAddresses.fullName} *
                                 </label>
                                 <input
@@ -233,24 +233,24 @@ export default function SavedAddresses({ userId }: { userId: string }) {
                                     required
                                     value={formData.full_name}
                                     onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                    className="w-full px-3 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#163579]/20 focus:border-[#163579] transition-colors"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                <label className="block text-xs uppercase tracking-[0.08em] font-semibold text-gray-500 mb-1.5">
                                     {messages.savedAddresses.companyOptional}
                                 </label>
                                 <input
                                     type="text"
                                     value={formData.company_name}
                                     onChange={(e) => setFormData({ ...formData, company_name: e.target.value })}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                    className="w-full px-3 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#163579]/20 focus:border-[#163579] transition-colors"
                                 />
                             </div>
 
                             <div className="md:col-span-2">
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                <label className="block text-xs uppercase tracking-[0.08em] font-semibold text-gray-500 mb-1.5">
                                     {messages.savedAddresses.street} *
                                 </label>
                                 <input
@@ -258,12 +258,12 @@ export default function SavedAddresses({ userId }: { userId: string }) {
                                     required
                                     value={formData.street}
                                     onChange={(e) => setFormData({ ...formData, street: e.target.value })}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                    className="w-full px-3 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#163579]/20 focus:border-[#163579] transition-colors"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                <label className="block text-xs uppercase tracking-[0.08em] font-semibold text-gray-500 mb-1.5">
                                     {messages.savedAddresses.city} *
                                 </label>
                                 <input
@@ -271,12 +271,12 @@ export default function SavedAddresses({ userId }: { userId: string }) {
                                     required
                                     value={formData.city}
                                     onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                    className="w-full px-3 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#163579]/20 focus:border-[#163579] transition-colors"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                <label className="block text-xs uppercase tracking-[0.08em] font-semibold text-gray-500 mb-1.5">
                                     {messages.savedAddresses.postalCode} *
                                 </label>
                                 <input
@@ -284,12 +284,12 @@ export default function SavedAddresses({ userId }: { userId: string }) {
                                     required
                                     value={formData.postal_code}
                                     onChange={(e) => setFormData({ ...formData, postal_code: e.target.value })}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                    className="w-full px-3 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#163579]/20 focus:border-[#163579] transition-colors"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                <label className="block text-xs uppercase tracking-[0.08em] font-semibold text-gray-500 mb-1.5">
                                     {messages.savedAddresses.country} *
                                 </label>
                                 <input
@@ -297,12 +297,12 @@ export default function SavedAddresses({ userId }: { userId: string }) {
                                     required
                                     value={formData.country}
                                     onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                    className="w-full px-3 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#163579]/20 focus:border-[#163579] transition-colors"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                <label className="block text-xs uppercase tracking-[0.08em] font-semibold text-gray-500 mb-1.5">
                                     {messages.savedAddresses.phone} *
                                 </label>
                                 <input
@@ -310,7 +310,7 @@ export default function SavedAddresses({ userId }: { userId: string }) {
                                     required
                                     value={formData.phone}
                                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                    className="w-full px-3 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#163579]/20 focus:border-[#163579] transition-colors"
                                 />
                             </div>
                         </div>
@@ -321,7 +321,7 @@ export default function SavedAddresses({ userId }: { userId: string }) {
                                 id="is_default"
                                 checked={formData.is_default}
                                 onChange={(e) => setFormData({ ...formData, is_default: e.target.checked })}
-                                className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+                                className="h-4 w-4 text-[#163579] focus:ring-[#163579]/30 border-gray-300 rounded"
                             />
                             <label htmlFor="is_default" className="ml-2 text-sm text-gray-700">
                                 {messages.savedAddresses.setDefault}
@@ -332,7 +332,7 @@ export default function SavedAddresses({ userId }: { userId: string }) {
                             <button
                                 type="submit"
                                 disabled={submitting}
-                                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="px-4 py-2 bg-[#163579] text-white rounded-md shadow-sm hover:-translate-y-0.5 hover:shadow-md hover:bg-[#102a63] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {submitting
                                     ? (editingId ? messages.savedAddresses.updating : messages.savedAddresses.saving)
@@ -345,7 +345,7 @@ export default function SavedAddresses({ userId }: { userId: string }) {
                                     resetForm()
                                 }}
                                 disabled={submitting}
-                                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="px-4 py-2 bg-white text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {messages.common.cancel}
                             </button>
@@ -364,14 +364,14 @@ export default function SavedAddresses({ userId }: { userId: string }) {
                     addresses.map((address) => (
                         <div
                             key={address.id}
-                            className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+                            className="bg-gray-50 rounded-xl p-4 md:p-5"
                         >
                             <div className="flex items-start justify-between">
                                 <div className="flex-1">
                                     <div className="flex items-center gap-2 mb-2">
                                         <h3 className="font-semibold text-gray-900">{address.label}</h3>
                                         {address.is_default && (
-                                            <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full font-medium">
+                                            <span className="px-2 py-1 bg-[#163579]/10 text-[#163579] text-xs rounded-full font-medium">
                                                 {messages.savedAddresses.defaultLabel}
                                             </span>
                                         )}
@@ -396,13 +396,13 @@ export default function SavedAddresses({ userId }: { userId: string }) {
                                 <div className="flex gap-2 ml-4">
                                     <button
                                         onClick={() => handleEdit(address)}
-                                        className="px-3 py-1 text-sm text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                                        className="px-3 py-1 text-sm text-gray-500 hover:text-[#163579] hover:bg-gray-100 rounded transition-colors"
                                     >
                                         {messages.common.edit}
                                     </button>
                                     <button
                                         onClick={() => handleDelete(address.id)}
-                                        className="px-3 py-1 text-sm text-red-600 hover:bg-red-50 rounded transition-colors"
+                                        className="px-3 py-1 text-sm text-gray-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
                                     >
                                         {messages.common.delete}
                                     </button>

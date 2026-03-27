@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/utils/supabase/client'
+import { usePathname } from 'next/navigation'
 
 interface ProfileSummary {
     first_name: string | null
@@ -13,6 +14,7 @@ interface ProfileSummary {
 }
 
 export default function ProfileCompletenessPrompt() {
+    const pathname = usePathname()
     const [visible, setVisible] = useState(false)
     const [dismissed, setDismissed] = useState(false)
     const [userId, setUserId] = useState<string | null>(null)
@@ -113,6 +115,10 @@ export default function ProfileCompletenessPrompt() {
         }
     }, [supabase])
 
+    if (pathname.startsWith('/admin')) {
+        return null
+    }
+
     if (!visible || dismissed) {
         return null
     }
@@ -126,24 +132,26 @@ export default function ProfileCompletenessPrompt() {
     }
 
     return (
-        <div className="bg-yellow-50 border-b border-yellow-200">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-4">
-                <p className="text-sm text-yellow-900">
-                    Complete your profile to make checkout faster and keep your account details up to date.
-                </p>
-                <div className="flex items-center gap-3 shrink-0">
-                    <Link
-                        href="/account"
-                        className="text-sm font-semibold text-yellow-900 hover:text-yellow-700"
-                    >
-                        Complete profile
-                    </Link>
-                    <button
-                        onClick={dismissPrompt}
-                        className="text-sm text-yellow-800 hover:text-yellow-600"
-                    >
-                        Dismiss
-                    </button>
+        <div className="mt-16 sm:mt-20">
+            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                <div className="flex items-center justify-between gap-4 rounded-xl border border-amber-200 bg-amber-50/80 px-4 py-3 text-amber-900 shadow-sm">
+                    <p className="text-sm">
+                        Complete your profile to make checkout faster and keep your account details up to date.
+                    </p>
+                    <div className="flex shrink-0 items-center gap-3">
+                        <Link
+                            href="/account"
+                            className="text-sm font-semibold text-amber-900 hover:text-amber-700"
+                        >
+                            Complete profile
+                        </Link>
+                        <button
+                            onClick={dismissPrompt}
+                            className="text-sm text-amber-800 hover:text-amber-600"
+                        >
+                            Dismiss
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

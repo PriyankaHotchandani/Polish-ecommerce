@@ -1,0 +1,163 @@
+'use client'
+
+import { useEffect, useRef, useState } from 'react'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+
+interface StatusOption {
+    value: string
+    label: string
+}
+
+interface OrdersFilterBarProps {
+    initialSearch: string
+    initialStatus: string
+    statusOptions: StatusOption[]
+}
+
+export default function OrdersFilterBar({
+    initialSearch,
+    initialStatus,
+    statusOptions,
+}: OrdersFilterBarProps) {
+    const router = useRouter()
+    const pathname = usePathname()
+    const searchParams = useSearchParams()
+    const [searchValue, setSearchValue] = useState(initialSearch)
+    const [statusValue, setStatusValue] = useState(initialStatus)
+    const [isStatusOpen, setIsStatusOpen] = useState(false)
+    const statusDropdownRef = useRef<HTMLDivElement | null>(null)
+    const controlClassName = 'h-14 w-full rounded-lg border border-slate-300 bg-white text-sm text-slate-900 focus:border-[#163579] focus:outline-none focus:ring-2 focus:ring-[#163579]/20'
+
+    const selectedStatusLabel = statusOptions.find((option) => option.value === statusValue)?.label || 'All Orders'
+
+    useEffect(() => {
+        setSearchValue(initialSearch)
+    }, [initialSearch])
+
+    useEffect(() => {
+        setStatusValue(initialStatus)
+    }, [initialStatus])
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (statusDropdownRef.current && !statusDropdownRef.current.contains(event.target as Node)) {
+                setIsStatusOpen(false)
+            }
+        }
+
+        if (isStatusOpen) {
+            document.addEventListener('mousedown', handleClickOutside)
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside)
+        }
+    }, [isStatusOpen])
+
+    const updateQuery = (nextSearch: string, nextStatus: string) => {
+        const nextParams = new URLSearchParams(searchParams.toString())
+
+        const normalizedSearch = nextSearch.trim()
+        if (normalizedSearch) {
+            nextParams.set('search', normalizedSearch)
+        } else {
+            nextParams.delete('search')
+        }
+
+        if (nextStatus && nextStatus !== 'all') {
+            nextParams.set('status', nextStatus)
+        } else {
+            nextParams.delete('status')
+        }
+
+        const nextQuery = nextParams.toString()
+        router.replace(nextQuery ? `${pathname}?${nextQuery}` : pathname, { scroll: false })
+    }
+
+    useEffect(() => {
+        const timeout = setTimeout(() => {
+            updateQuery(searchValue, statusValue)
+        }, 300)
+
+        return () => clearTimeout(timeout)
+    }, [searchValue])
+
+    const handleStatusChange = (nextStatus: string) => {
+        setStatusValue(nextStatus)
+        setIsStatusOpen(false)
+        updateQuery(searchValue, nextStatus)
+    }
+
+    return (
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5 mb-6">
+            <div className="flex flex-col md:flex-row md:items-end gap-4">
+                <div className="w-full md:flex-1 md:max-w-md">
+                    <label htmlFor="order-search" className="block text-sm font-semibold text-slate-700 mb-2">
+                        Search Order ID
+                    </label>
+                    <div className="relative">
+                        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                            <svg className="h-4 w-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                                <path d="m21 21-4.35-4.35" strokeLinecap="round" strokeLinejoin="round" />
+                                <circle cx="11" cy="11" r="6" />
+                            </svg>
+                        </div>
+                        <input
+                            type="text"
+                            id="order-search"
+                            value={searchValue}
+                            onChange={(event) => setSearchValue(event.target.value)}
+                            placeholder="Search by order number"
+                            className={`${controlClassName} pl-10 pr-3 placeholder:text-slate-400`}
+                        />
+                    </div>
+                </div>
+
+                <div className="w-full md:flex-1 md:max-w-md" ref={statusDropdownRef}>
+                    <label htmlFor="order-status" className="block text-sm font-semibold text-slate-700 mb-2">
+                        Status
+                    </label>
+                    <div className="relative">
+                        <button
+                            type="button"
+                            id="order-status"
+                            aria-haspopup="listbox"
+                            aria-expanded={isStatusOpen}
+                            onClick={() => setIsStatusOpen((current) => !current)}
+                            className={`${controlClassName} flex items-center justify-between px-3.5 text-left transition hover:border-slate-300`}
+                        >
+                            <span>{selectedStatusLabel}</span>
+                            <svg
+                                className={`h-4 w-4 text-slate-400 transition-transform ${isStatusOpen ? 'rotate-180' : ''}`}
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                                aria-hidden="true"
+                            >
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+
+                        {isStatusOpen && (
+                            <div className="absolute z-30 mt-2 w-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-[0_14px_30px_rgba(15,23,42,0.12)]">
+                                <div className="max-h-56 overflow-auto py-1.5" role="listbox" aria-label="Order status options">
+                                    {statusOptions.map((option) => (
+                                        <button
+                                            key={option.value}
+                                            type="button"
+                                            onClick={() => handleStatusChange(option.value)}
+                                            className={`flex w-full items-center justify-between px-3.5 py-2.5 text-left text-sm transition ${statusValue === option.value ? 'bg-[#163579]/8 text-[#163579]' : 'text-slate-700 hover:bg-slate-50'}`}
+                                        >
+                                            <span>{option.label}</span>
+                                            {statusValue === option.value && <span aria-hidden="true">•</span>}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+        </div>
+    )
+}

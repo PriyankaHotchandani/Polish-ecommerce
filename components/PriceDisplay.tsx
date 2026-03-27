@@ -1,8 +1,10 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import { useLocaleMessages } from '@/contexts/LocaleContext'
+import type { SupabaseClient } from '@supabase/supabase-js'
+import type { Database } from '@/types/database.types'
 
 interface PriceDisplayProps {
     price_retail: number
@@ -12,53 +14,83 @@ interface PriceDisplayProps {
 
 type UserRole = 'admin' | 'b2c_customer' | 'b2b_customer' | null
 
+let cachedUserRole: UserRole | undefined
+let cachedUserRolePromise: Promise<UserRole> | null = null
+
+async function fetchUserRoleOnce(supabase: SupabaseClient<Database>): Promise<UserRole> {
+    if (cachedUserRole !== undefined) {
+        return cachedUserRole
+    }
+
+    if (cachedUserRolePromise) {
+        return cachedUserRolePromise
+    }
+
+    cachedUserRolePromise = (async () => {
+        try {
+            const { data: { user } } = await supabase.auth.getUser()
+
+            if (!user) {
+                cachedUserRole = null
+                return null
+            }
+
+            const { data: userData, error } = await supabase
+                .from('users')
+                .select('role')
+                .eq('id', user.id)
+                .maybeSingle()
+
+            if (error) {
+                cachedUserRole = 'b2c_customer'
+                return 'b2c_customer'
+            }
+
+            cachedUserRole = userData?.role || 'b2c_customer'
+            return cachedUserRole
+        } catch {
+            cachedUserRole = 'b2c_customer'
+            return 'b2c_customer'
+        } finally {
+            cachedUserRolePromise = null
+        }
+    })()
+
+    return cachedUserRolePromise
+}
+
 export default function PriceDisplay({ price_retail, price_wholesale, variant = 'default' }: PriceDisplayProps) {
     const [userRole, setUserRole] = useState<UserRole>(null)
     const [isLoading, setIsLoading] = useState(true)
-    const supabase = createClient()
+    const supabase = useMemo(() => createClient(), [])
     const isFeatured = variant === 'featured'
     const { messages, locale } = useLocaleMessages()
 
     useEffect(() => {
+        let isMounted = true
+
         async function fetchUserRole() {
             try {
-                // Get current user session
-                const { data: { user } } = await supabase.auth.getUser()
-
-                if (!user) {
-                    // Guest user - treat as B2C customer
-                    setUserRole(null)
-                    setIsLoading(false)
-                    return
+                const role = await fetchUserRoleOnce(supabase)
+                if (isMounted) {
+                    setUserRole(role)
                 }
-
-                // Fetch user role from users table
-                const { data: userData, error } = await supabase
-                    .from('users')
-                    .select('role')
-                    .eq('id', user.id)
-                    .maybeSingle()
-
-                if (error) {
-                    console.error('Error fetching user role:', error)
-                    console.error('Error details:', JSON.stringify(error))
-                    setUserRole('b2c_customer') // Default to B2C on error
-                } else if (!userData) {
-                    // User profile doesn't exist yet - default to B2C
-                    console.warn('User profile not found, defaulting to B2C customer')
+            } catch {
+                if (isMounted) {
                     setUserRole('b2c_customer')
-                } else {
-                    setUserRole(userData.role || 'b2c_customer')
                 }
-            } catch (error) {
-                console.error('Error in fetchUserRole:', error)
-                setUserRole('b2c_customer')
             } finally {
-                setIsLoading(false)
+                if (isMounted) {
+                    setIsLoading(false)
+                }
             }
         }
 
         fetchUserRole()
+
+        return () => {
+            isMounted = false
+        }
     }, [supabase])
 
     const formatPrice = (price: number) => {

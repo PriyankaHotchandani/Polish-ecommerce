@@ -4,6 +4,7 @@ import { cookies } from 'next/headers'
 import enMessages from '@/messages/en.json'
 import plMessages from '@/messages/pl.json'
 import B2BPortalLoginForm from '@/components/B2BPortalLoginForm'
+import B2BCommandCenter from '@/components/b2b/B2BCommandCenter'
 
 type Locale = 'en' | 'pl'
 
@@ -25,9 +26,6 @@ export default async function B2BPortalPage() {
         copy.benefits.vatInvoices,
         copy.benefits.accountManager,
     ]
-
-    console.log('B2B Portal - Auth user:', user?.id, user?.email)
-    console.log('B2B Portal - Auth error:', authError)
 
     if (!user) {
         return (
@@ -87,12 +85,9 @@ export default async function B2BPortalPage() {
         .eq('id', user.id)
         .maybeSingle()
 
-    // Debug logging
     if (userError) {
         console.error('Error fetching user data in B2B portal:', userError)
     }
-
-    console.log('B2B Portal - User data:', userData)
 
     if (!userData || (userData.role !== 'b2b_customer' && userData.role !== 'admin')) {
         return (
@@ -116,7 +111,7 @@ export default async function B2BPortalPage() {
                     )}
                     <Link
                         href="/shop"
-                        className="inline-block bg-green-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-green-700 transition-colors"
+                        className="inline-block rounded-md bg-[#163579] px-6 py-3 font-semibold text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#102a63] hover:shadow-md"
                     >
                         {copy.continueShopping}
                     </Link>
@@ -125,65 +120,131 @@ export default async function B2BPortalPage() {
         )
     }
 
+    const { data: recentOrdersData } = await supabase
+        .from('orders')
+        .select(`
+            id,
+            created_at,
+            total_amount,
+            order_items (
+                quantity,
+                product:products (*)
+            )
+        `)
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(2)
+
+    const { data: latestInvoiceData } = await supabase
+        .from('orders')
+        .select('invoice_url, invoice_number, created_at')
+        .eq('user_id', user.id)
+        .not('invoice_url', 'is', null)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+    const dashboardCopy = locale === 'pl'
+        ? {
+            quickOrderTitle: 'Szybkie zamowienie',
+            quickOrderHint: 'Masz gotowa liste SKU? Uruchom szybkie zamowienie bez przeklikiwania katalogu.',
+            bulkOrderForm: 'Formularz zamowienia hurtowego',
+            uploadCsv: 'Przeslij CSV',
+            downloadTemplate: 'Pobierz szablon CSV',
+            recentOrdersTitle: 'Ostatnie zamowienia',
+            recentOrdersHint: 'Zamow ponownie poprzednie pozycje jednym kliknieciem.',
+            noRecentOrders: 'Brak ostatnich zamowien do ponowienia.',
+            reorder: 'Zamow ponownie',
+            adding: 'Dodawanie...',
+            added: 'Dodano',
+            viewAllOrders: 'Wszystkie zamowienia',
+            recentInvoicesTitle: 'Faktury i rozliczenia',
+            creditTermsLabel: 'Warunki platnosci',
+            creditTermsValue: 'Net 30',
+            accountBalanceLabel: 'Saldo konta',
+            accountBalanceValue: 'PLN 0.00',
+            downloadLatestInvoice: 'Pobierz ostatnia fakture VAT',
+            invoicePending: 'Ostatnia faktura oczekuje na przeslanie przez administratora.',
+            supportTitle: 'Dedykowane wsparcie',
+            supportHint: 'Twoj opiekun konta jest dostepny od razu, gdy potrzebujesz pomocy.',
+            accountManagerLabel: 'Opiekun konta',
+            accountManagerName: 'Anna Kowalska',
+            accountManagerPhone: '+48 22 100 20 30',
+            accountManagerEmail: 'anna.kowalska@bmspzoo.pl',
+            callLabel: 'Telefon:',
+            emailLabel: 'Email:',
+            orderLabel: 'Zamowienie',
+            productsLabel: 'produktow',
+        }
+        : {
+            quickOrderTitle: 'Quick Order',
+            quickOrderHint: 'Have a SKU list ready? Place replenishment orders without browsing the full catalog.',
+            bulkOrderForm: 'Bulk Order Form',
+            uploadCsv: 'Upload CSV',
+            downloadTemplate: 'Download CSV Template',
+            recentOrdersTitle: 'Recent Orders',
+            recentOrdersHint: 'Reorder your latest purchases in a single click.',
+            noRecentOrders: 'No recent orders available to reorder yet.',
+            reorder: 'Reorder',
+            adding: 'Adding...',
+            added: 'Added',
+            viewAllOrders: 'View all orders',
+            recentInvoicesTitle: 'Invoices & Billing',
+            creditTermsLabel: 'Credit terms',
+            creditTermsValue: 'Net 30',
+            accountBalanceLabel: 'Account balance',
+            accountBalanceValue: 'PLN 0.00',
+            downloadLatestInvoice: 'Download Latest VAT Invoice',
+            invoicePending: 'Latest invoice is pending admin upload.',
+            supportTitle: 'Dedicated Support',
+            supportHint: 'Your account manager is one message away for urgent fulfillment support.',
+            accountManagerLabel: 'Your Account Manager',
+            accountManagerName: 'Anna Kowalska',
+            accountManagerPhone: '+48 22 100 20 30',
+            accountManagerEmail: 'anna.kowalska@bmspzoo.pl',
+            callLabel: 'Call:',
+            emailLabel: 'Email:',
+            orderLabel: 'Order',
+            productsLabel: 'products',
+        }
+
+    const recentOrders = (recentOrdersData || []).map((order) => ({
+        id: order.id,
+        createdAt: order.created_at,
+        totalAmount: Number(order.total_amount),
+        items: (order.order_items || []).map((item: any) => ({
+            quantity: item.quantity,
+            product: item.product || null,
+        })),
+    }))
+
+    const latestInvoice = latestInvoiceData?.invoice_url
+        ? {
+            invoiceUrl: latestInvoiceData.invoice_url,
+            invoiceNumber: latestInvoiceData.invoice_number,
+        }
+        : null
+
     // User has B2B access
     return (
-        <div className="min-h-screen bg-gray-50">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="min-h-screen bg-gray-50 pt-24 md:pt-28">
+            <div className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 md:pb-14 lg:px-8">
                 <div className="mb-8">
-                    <h1 className="text-4xl font-bold text-gray-900">{copy.portalTitle}</h1>
+                    <div className="mb-3 inline-flex items-center rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-emerald-800">
+                        {copy.active}
+                    </div>
+                    <h1 className="text-4xl font-bold tracking-tight text-gray-900">{copy.portalTitle}</h1>
                     <p className="mt-2 text-gray-600">
                         {copy.welcomeBack} {userData.company_name || user.email}
                     </p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-                    <div className="bg-white p-6 rounded-lg shadow-sm">
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-semibold text-gray-900">Wholesale Pricing</h3>
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                {copy.active}
-                            </span>
-                        </div>
-                        <p className="text-gray-600 text-sm">
-                            {copy.wholesaleCardDescription}
-                        </p>
-                    </div>
-
-                    <div className="bg-white p-6 rounded-lg shadow-sm">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4">{copy.quickActionsTitle}</h3>
-                        <Link
-                            href="/shop"
-                            className="block text-green-600 hover:text-green-700 text-sm font-medium"
-                        >
-                            {copy.browseProductsArrow}
-                        </Link>
-                    </div>
-
-                    <div className="bg-white p-6 rounded-lg shadow-sm">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4">{copy.accountDetailsTitle}</h3>
-                        <div className="text-sm space-y-2">
-                            <p className="text-gray-600">{copy.emailLabel} {user.email}</p>
-                            {userData.company_name && (
-                                <p className="text-gray-600">{copy.companyLabel} {userData.company_name}</p>
-                            )}
-                        </div>
-                    </div>
-                </div>
-
-                <div className="bg-white rounded-lg shadow-sm p-8">
-                    <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                        {copy.startShoppingTitle}
-                    </h2>
-                    <p className="text-gray-600 mb-6">
-                        {copy.startShoppingDescription}
-                    </p>
-                    <Link
-                        href="/shop"
-                        className="inline-block bg-green-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-green-700 transition-colors"
-                    >
-                        {copy.browseCatalog}
-                    </Link>
-                </div>
+                <B2BCommandCenter
+                    locale={locale}
+                    copy={dashboardCopy}
+                    recentOrders={recentOrders}
+                    latestInvoice={latestInvoice}
+                />
             </div>
         </div>
     )

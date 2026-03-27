@@ -1,4 +1,5 @@
 import { createClient } from '@/utils/supabase/server'
+import AdminMetricsGrid from '@/components/admin/AdminMetricsGrid'
 
 export default async function AdminDashboard() {
     const supabase = await createClient()
@@ -20,128 +21,65 @@ export default async function AdminDashboard() {
     return (
         <div>
             <div className="mb-8">
-                <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-                <p className="text-gray-600 mt-2">Overview of your e-commerce platform</p>
+                <h1 className="text-3xl font-bold tracking-tight text-slate-900">Dashboard</h1>
+                <p className="mt-2 text-slate-600">Overview of your e-commerce platform</p>
             </div>
 
-            {/* Metrics Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                {/* Total Orders */}
-                <div className="bg-white rounded-lg shadow-sm p-6 border-l-4 border-blue-500">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm text-gray-600 font-medium">Total Orders</p>
-                            <p className="text-3xl font-bold text-gray-900 mt-2">{totalOrders}</p>
-                        </div>
-                        <div className="bg-blue-100 rounded-full p-3">
-                            <span className="text-3xl">📦</span>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Total Revenue */}
-                <div className="bg-white rounded-lg shadow-sm p-6 border-l-4 border-green-500">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm text-gray-600 font-medium">Total Revenue</p>
-                            <p className="text-3xl font-bold text-gray-900 mt-2">
-                                {totalRevenue.toLocaleString('en-US', {
-                                    style: 'currency',
-                                    currency: 'PLN',
-                                    currencyDisplay: 'code'
-                                }).replace('PLN', 'PLN ')}
-                            </p>
-                        </div>
-                        <div className="bg-green-100 rounded-full p-3">
-                            <span className="text-3xl">💰</span>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Pending Orders */}
-                <div className="bg-white rounded-lg shadow-sm p-6 border-l-4 border-yellow-500">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm text-gray-600 font-medium">Pending Orders</p>
-                            <p className="text-3xl font-bold text-gray-900 mt-2">{pendingOrders}</p>
-                        </div>
-                        <div className="bg-yellow-100 rounded-full p-3">
-                            <span className="text-3xl">⏳</span>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Total Products */}
-                <div className="bg-white rounded-lg shadow-sm p-6 border-l-4 border-purple-500">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm text-gray-600 font-medium">Total Products</p>
-                            <p className="text-3xl font-bold text-gray-900 mt-2">{totalProducts}</p>
-                        </div>
-                        <div className="bg-purple-100 rounded-full p-3">
-                            <span className="text-3xl">🛍️</span>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Low Stock Alert */}
-                <div className="bg-white rounded-lg shadow-sm p-6 border-l-4 border-red-500">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm text-gray-600 font-medium">Low Stock Products</p>
-                            <p className="text-3xl font-bold text-gray-900 mt-2">{lowStockProducts}</p>
-                            <p className="text-xs text-gray-500 mt-1">Below 10 units</p>
-                        </div>
-                        <div className="bg-red-100 rounded-full p-3">
-                            <span className="text-3xl">⚠️</span>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Total Users */}
-                <div className="bg-white rounded-lg shadow-sm p-6 border-l-4 border-indigo-500">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm text-gray-600 font-medium">Total Users</p>
-                            <p className="text-3xl font-bold text-gray-900 mt-2">{totalUsers}</p>
-                        </div>
-                        <div className="bg-indigo-100 rounded-full p-3">
-                            <span className="text-3xl">👥</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <AdminMetricsGrid
+                totalOrders={totalOrders}
+                totalRevenue={totalRevenue}
+                pendingOrders={pendingOrders}
+                totalProducts={totalProducts}
+                lowStockProducts={lowStockProducts}
+                totalUsers={totalUsers}
+            />
 
             {/* Quick Actions */}
-            <div className="bg-white rounded-lg shadow-sm p-6">
-                <h2 className="text-xl font-bold text-gray-900 mb-4">Quick Actions</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="shop-card-reveal rounded-2xl bg-white p-6 shadow-sm" style={{ animationDelay: '260ms' }}>
+                <h2 className="mb-4 text-xl font-bold text-slate-900">Quick Actions</h2>
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
                     <a
                         href="/admin/orders"
-                        className="flex items-center justify-center px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                        className="shop-card-reveal group inline-flex items-center justify-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700 transition-all duration-200 hover:border-[#163579] hover:bg-[#163579] hover:text-white"
+                        style={{ animationDelay: '320ms' }}
                     >
-                        <span className="mr-2">📦</span>
+                        <svg className="h-4 w-4 text-slate-500 transition-colors group-hover:text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" aria-hidden="true">
+                            <path d="M4 7h16M7 4h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" strokeLinecap="round" strokeLinejoin="round" />
+                            <path d="M9 12h6M9 16h4" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
                         View Orders
                     </a>
                     <a
                         href="/admin/products/new"
-                        className="flex items-center justify-center px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                        className="shop-card-reveal group inline-flex items-center justify-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700 transition-all duration-200 hover:border-[#163579] hover:bg-[#163579] hover:text-white"
+                        style={{ animationDelay: '380ms' }}
                     >
-                        <span className="mr-2">➕</span>
+                        <svg className="h-4 w-4 text-slate-500 transition-colors group-hover:text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" aria-hidden="true">
+                            <path d="M12 5v14M5 12h14" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
                         Add Product
                     </a>
                     <a
                         href="/admin/categories/new"
-                        className="flex items-center justify-center px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                        className="shop-card-reveal group inline-flex items-center justify-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700 transition-all duration-200 hover:border-[#163579] hover:bg-[#163579] hover:text-white"
+                        style={{ animationDelay: '440ms' }}
                     >
-                        <span className="mr-2">📁</span>
+                        <svg className="h-4 w-4 text-slate-500 transition-colors group-hover:text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" aria-hidden="true">
+                            <path d="M3 7.5A1.5 1.5 0 0 1 4.5 6h4l1.5 2H19.5A1.5 1.5 0 0 1 21 9.5v8A1.5 1.5 0 0 1 19.5 19h-15A1.5 1.5 0 0 1 3 17.5v-10Z" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
                         Add Category
                     </a>
                     <a
                         href="/admin/users"
-                        className="flex items-center justify-center px-4 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                        className="shop-card-reveal group inline-flex items-center justify-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700 transition-all duration-200 hover:border-[#163579] hover:bg-[#163579] hover:text-white"
+                        style={{ animationDelay: '500ms' }}
                     >
-                        <span className="mr-2">👥</span>
+                        <svg className="h-4 w-4 text-slate-500 transition-colors group-hover:text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" aria-hidden="true">
+                            <path d="M16 19v-1a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v1" strokeLinecap="round" strokeLinejoin="round" />
+                            <circle cx="10" cy="8" r="3" />
+                            <path d="M20 19v-1a4 4 0 0 0-3-3.87" strokeLinecap="round" strokeLinejoin="round" />
+                            <path d="M14 5.13a3 3 0 0 1 0 5.75" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
                         Manage Users
                     </a>
                 </div>

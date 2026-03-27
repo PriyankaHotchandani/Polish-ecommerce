@@ -95,13 +95,13 @@ export default function ProfileForm({ user, onSaved }: ProfileFormProps) {
 
     return (
         <>
-            <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="bg-white rounded-2xl shadow-sm p-6 md:p-7 transition-all duration-300">
                 <div className="flex justify-between items-center mb-6">
                     <h2 className="text-xl font-bold text-gray-900">{messages.profile.personalInfo}</h2>
                     {!isEditing && (
                         <button
                             onClick={() => setIsEditing(true)}
-                            className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors"
+                            className="px-4 py-2 text-sm font-medium text-white bg-[#163579] rounded-md shadow-sm hover:-translate-y-0.5 hover:shadow-md hover:bg-[#102a63] transition-all duration-200"
                         >
                             {messages.profile.editProfile}
                         </button>
@@ -109,10 +109,10 @@ export default function ProfileForm({ user, onSaved }: ProfileFormProps) {
                 </div>
 
                 {isEditing ? (
-                    <form onSubmit={handleSubmit} className="space-y-6">
+                    <form onSubmit={handleSubmit} className="space-y-6 transition-opacity duration-200">
                         <div className="grid grid-cols-2 gap-6">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <label className="block text-xs uppercase tracking-[0.08em] font-semibold text-gray-500 mb-2">
                                     {messages.profile.firstName}
                                 </label>
                                 <input
@@ -120,11 +120,11 @@ export default function ProfileForm({ user, onSaved }: ProfileFormProps) {
                                     name="first_name"
                                     value={formData.first_name}
                                     onChange={handleChange}
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#163579]/20 focus:border-[#163579] transition-colors"
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <label className="block text-xs uppercase tracking-[0.08em] font-semibold text-gray-500 mb-2">
                                     {messages.profile.lastName}
                                 </label>
                                 <input
@@ -132,26 +132,26 @@ export default function ProfileForm({ user, onSaved }: ProfileFormProps) {
                                     name="last_name"
                                     value={formData.last_name}
                                     onChange={handleChange}
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#163579]/20 focus:border-[#163579] transition-colors"
                                 />
                             </div>
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                            <label className="block text-xs uppercase tracking-[0.08em] font-semibold text-gray-500 mb-2">
                                 {messages.profile.email}
                             </label>
                             <input
                                 type="email"
                                 value={user.email || ''}
                                 disabled
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-600 cursor-not-allowed"
+                                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg bg-gray-50 text-gray-600 cursor-not-allowed"
                             />
                             <p className="text-xs text-gray-500 mt-1">{messages.profile.emailNote}</p>
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                            <label className="block text-xs uppercase tracking-[0.08em] font-semibold text-gray-500 mb-2">
                                 {messages.profile.phone}
                             </label>
                             <input
@@ -159,14 +159,14 @@ export default function ProfileForm({ user, onSaved }: ProfileFormProps) {
                                 name="phone"
                                 value={formData.phone}
                                 onChange={handleChange}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#163579]/20 focus:border-[#163579] transition-colors"
                             />
                         </div>
 
                         {user.role === 'b2b_customer' && (
                             <>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    <label className="block text-xs uppercase tracking-[0.08em] font-semibold text-gray-500 mb-2">
                                         {messages.profile.company}
                                     </label>
                                     <input
@@ -174,12 +174,12 @@ export default function ProfileForm({ user, onSaved }: ProfileFormProps) {
                                         name="company_name"
                                         value={formData.company_name}
                                         onChange={handleChange}
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                        className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#163579]/20 focus:border-[#163579] transition-colors"
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    <label className="block text-xs uppercase tracking-[0.08em] font-semibold text-gray-500 mb-2">
                                         {messages.profile.nip}
                                     </label>
                                     <input
@@ -187,7 +187,7 @@ export default function ProfileForm({ user, onSaved }: ProfileFormProps) {
                                         name="nip_number"
                                         value={formData.nip_number}
                                         onChange={handleChange}
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                        className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#163579]/20 focus:border-[#163579] transition-colors"
                                     />
                                 </div>
                             </>
@@ -197,7 +197,7 @@ export default function ProfileForm({ user, onSaved }: ProfileFormProps) {
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="px-6 py-2 bg-[#163579] text-white rounded-md shadow-sm hover:-translate-y-0.5 hover:shadow-md hover:bg-[#102a63] transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {loading ? messages.profileForm.saving : messages.profile.saveChanges}
                             </button>
@@ -220,30 +220,30 @@ export default function ProfileForm({ user, onSaved }: ProfileFormProps) {
                         </div>
                     </form>
                 ) : (
-                    <div className="space-y-4">
+                    <div className="space-y-5 transition-opacity duration-200">
                         <div className="grid grid-cols-2 gap-6">
                             <div>
-                                <p className="text-sm text-gray-600 mb-1">{messages.profile.firstName}</p>
-                                <p className="text-base font-medium text-gray-900">
+                                <p className="text-xs uppercase tracking-[0.08em] text-gray-500 font-semibold mb-1.5">{messages.profile.firstName}</p>
+                                <p className="text-lg font-semibold text-gray-900">
                                     {formData.first_name || '—'}
                                 </p>
                             </div>
                             <div>
-                                <p className="text-sm text-gray-600 mb-1">{messages.profile.lastName}</p>
-                                <p className="text-base font-medium text-gray-900">
+                                <p className="text-xs uppercase tracking-[0.08em] text-gray-500 font-semibold mb-1.5">{messages.profile.lastName}</p>
+                                <p className="text-lg font-semibold text-gray-900">
                                     {formData.last_name || '—'}
                                 </p>
                             </div>
                         </div>
 
                         <div>
-                            <p className="text-sm text-gray-600 mb-1">{messages.profile.email}</p>
-                            <p className="text-base font-medium text-gray-900">{user.email || '—'}</p>
+                            <p className="text-xs uppercase tracking-[0.08em] text-gray-500 font-semibold mb-1.5">{messages.profile.email}</p>
+                            <p className="text-lg font-semibold text-gray-900">{user.email || '—'}</p>
                         </div>
 
                         <div>
-                            <p className="text-sm text-gray-600 mb-1">{messages.profile.phone}</p>
-                            <p className="text-base font-medium text-gray-900">
+                            <p className="text-xs uppercase tracking-[0.08em] text-gray-500 font-semibold mb-1.5">{messages.profile.phone}</p>
+                            <p className="text-lg font-semibold text-gray-900">
                                 {formData.phone || '—'}
                             </p>
                         </div>
@@ -251,15 +251,15 @@ export default function ProfileForm({ user, onSaved }: ProfileFormProps) {
                         {user.role === 'b2b_customer' && (
                             <>
                                 <div>
-                                    <p className="text-sm text-gray-600 mb-1">{messages.profile.company}</p>
-                                    <p className="text-base font-medium text-gray-900">
+                                    <p className="text-xs uppercase tracking-[0.08em] text-gray-500 font-semibold mb-1.5">{messages.profile.company}</p>
+                                    <p className="text-lg font-semibold text-gray-900">
                                         {formData.company_name || '—'}
                                     </p>
                                 </div>
 
                                 <div>
-                                    <p className="text-sm text-gray-600 mb-1">{messages.profile.nip}</p>
-                                    <p className="text-base font-medium text-gray-900">
+                                    <p className="text-xs uppercase tracking-[0.08em] text-gray-500 font-semibold mb-1.5">{messages.profile.nip}</p>
+                                    <p className="text-lg font-semibold text-gray-900">
                                         {formData.nip_number || '—'}
                                     </p>
                                 </div>

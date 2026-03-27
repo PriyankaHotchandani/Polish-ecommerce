@@ -27,6 +27,48 @@
         "myAccount": "My Account",
         "cart": "Cart"
     },
+    "footer": {
+        "newsletter": {
+            "heading": "Get industry insights and exclusive wholesale offers.",
+            "placeholder": "Enter your business email",
+            "button": "Subscribe"
+        },
+        "brand": {
+            "description": "We power retail and wholesale growth with quality household products and professional tools. Built for reliability, value, and long-term business partnerships."
+        },
+        "shopping": {
+            "title": "Shopping",
+            "household": "Household",
+            "tools": "Professional Tools",
+            "newArrivals": "New Arrivals",
+            "specialOffers": "Special Offers"
+        },
+        "partner": {
+            "title": "Partner Portal",
+            "applyAccount": "Apply for Account",
+            "login": "Partner Login",
+            "bulkOrdering": "Bulk Ordering",
+            "volumeDiscounts": "Volume Discounts"
+        },
+        "customer": {
+            "title": "Customer Service",
+            "contact": "Contact Us",
+            "shipping": "Shipping Policy",
+            "returns": "Returns",
+            "about": "About Us"
+        },
+        "bottom": {
+            "copyright": "© 2026 BM SP. Z O.O. All rights reserved.",
+            "privacy": "Privacy Policy",
+            "terms": "Terms of Service",
+            "payments": [
+                "Visa",
+                "Mastercard",
+                "BLIK",
+                "PayPal"
+            ]
+        }
+    },
     "product": {
         "price": "Price",
         "wholesalePrice": "Wholesale Price",
@@ -77,26 +119,63 @@
         "accountType": "Account Type",
         "retailCustomer": "Retail Customer (B2C)",
         "businessCustomer": "Business Customer (B2B)",
+        "firstName": "First Name",
+        "lastName": "Last Name",
         "companyName": "Company Name",
         "nipNumber": "NIP Number (Polish Tax ID)",
         "nipOptional": "NIP Number (Optional)",
+        "industryType": "Industry Type",
+        "industryOptional": "Optional",
+        "industryConstruction": "Construction",
+        "industryRetailer": "Retailer",
+        "industryPlumber": "Plumber",
+        "industryOther": "Other",
         "welcomeBack": "Welcome back!",
         "createAccount": "Create your account",
         "createAccountButton": "Create account",
         "createAccountLink": "create a new account",
         "companyPlaceholder": "Your Company Ltd.",
+        "emailPlaceholder": "you@example.com",
         "forPersonalShopping": "For personal shopping",
         "orPrefix": "Or",
         "signInTitle": "Sign in to your account",
         "signingIn": "Signing in...",
         "creatingAccount": "Creating account...",
-        "wholesalePricingAndBulk": "Wholesale pricing & bulk orders"
+        "forgotPasswordTitle": "Forgot your password?",
+        "forgotPasswordSubtitle": "Enter your email and we will send you a secure password reset link.",
+        "sendResetLink": "Send reset link",
+        "sendingResetLink": "Sending reset link...",
+        "resetEmailSent": "Password reset email sent. Please check your inbox.",
+        "resetPasswordTitle": "Set a new password",
+        "setNewPassword": "Update password",
+        "updatingPassword": "Updating password...",
+        "passwordResetSuccess": "Password updated successfully. Redirecting to login...",
+        "invalidResetLink": "This reset link is invalid or has expired.",
+        "backToLogin": "Back to login",
+        "wholesalePricingAndBulk": "Wholesale pricing & bulk orders",
+        "showPassword": "Show password",
+        "hidePassword": "Hide password",
+        "rememberMe30Days": "Remember me for 30 days",
+        "loginPanelEyebrow": "Welcome Back",
+        "loginPanelTitle": "Pick up right where you left off.",
+        "loginPanelSubtitle": "Sign in to access your account dashboard, order history, and partner pricing tools.",
+        "loginBenefitDashboard": "Access your account dashboard instantly.",
+        "loginBenefitOrders": "Track current and past orders in one place.",
+        "loginBenefitPricing": "Unlock partner and wholesale pricing features.",
+        "signupPanelEyebrow": "Get Started",
+        "signupPanelTitle": "Shop smarter, order faster.",
+        "signupPanelSubtitle": "Create your account to unlock a faster, smarter shopping workflow for retail and wholesale orders.",
+        "signupBenefitCheckout": "Fast checkout with saved account details.",
+        "signupBenefitTracking": "Track every order in one clean dashboard.",
+        "signupBenefitPricing": "Access exclusive partner and wholesale pricing."
     },
     "authErrors": {
         "unexpected": "An unexpected error occurred",
         "passwordMismatch": "Passwords do not match",
         "passwordMinLength": "Password must be at least 6 characters",
-        "companyRequired": "Company name is required for business accounts"
+        "companyRequired": "Company name is required for business accounts",
+        "nameRequired": "First name and last name are required",
+        "nipRequired": "NIP Number is required for business accounts"
     },
     "b2b": {
         "portal": "Wholesale Portal",
@@ -328,7 +407,32 @@
         "companyLabel": "Company:",
         "startShoppingTitle": "Start Shopping with Wholesale Prices",
         "startShoppingDescription": "All products in our catalog are now available at wholesale prices. Visit the shop to start browsing.",
-        "browseCatalog": "Browse Product Catalog"
+        "browseCatalog": "Browse Product Catalog",
+        "bulkOrder": {
+            "title": "Bulk Order Form",
+            "subtitle": "Upload CSV or paste SKU lines to replenish inventory in minutes.",
+            "csvCardTitle": "CSV Upload",
+            "csvHint": "Use your purchasing export file to place large replenishment orders faster.",
+            "csvInputLabel": "Upload CSV file",
+            "csvTemplateHint": "Required headers: sku,quantity,notes",
+            "downloadSampleCsv": "Download sample CSV",
+            "pasteSampleRows": "Paste sample rows",
+            "manualCardTitle": "Manual SKU Entry",
+            "manualHint": "Paste one item per line using SKU,quantity,notes.",
+            "manualPlaceholder": "SKU-1001,12,restock warehouse A\nSKU-2200,4,priority",
+            "parseButton": "Preview Bulk Order",
+            "parsing": "Parsing...",
+            "parseSummary": "Rows analyzed:",
+            "validRowsLabel": "Ready to add",
+            "blockedRowsLabel": "Needs attention",
+            "issuesLabel": "Format errors",
+            "blockedNotFound": "SKU not found",
+            "blockedStock": "Insufficient stock. Available:",
+            "addValidItems": "Add valid items to cart",
+            "addingToCart": "Adding to cart...",
+            "noValidRows": "No valid lines to add yet.",
+            "backToPortal": "Back to portal"
+        }
     },
     "cartPage": {
         "loading": "Loading cart...",
@@ -336,12 +440,18 @@
         "itemSingular": "item",
         "itemPlural": "items",
         "clearCart": "Clear Cart",
+        "backToShop": "Back to shop",
         "noImage": "No image",
         "each": "each",
         "wholesalePricing": "Wholesale pricing",
         "orderSummary": "Order Summary",
         "wholesaleBanner": "You're receiving wholesale pricing",
-        "added": "Added!"
+        "bulkImportSuccess": "Bulk order items were added to your cart successfully.",
+        "loginPrompt": "Already have an account?",
+        "loginPromptSuffix": "for faster checkout and wholesale pricing.",
+        "secureCheckout": "Secure checkout",
+        "added": "Added!",
+        "dismiss": "Dismiss"
     },
     "profileForm": {
         "saving": "Saving..."
@@ -454,7 +564,7 @@
         "paymentFailed": "Failed",
         "paymentRefunded": "Refunded",
         "invoiceTitle": "Invoice",
-        "invoiceHint": "Click \"Generate Invoice\" to create and download your VAT invoice.",
+        "invoiceHint": "Your invoice will appear here after admin upload and email delivery.",
         "invoiceRequiredBanner": "B2B Invoice - Required for your business records",
         "contactSupport": "Contact Support"
     },
@@ -463,7 +573,7 @@
         "subtitle": "Thank you for your order. We've received your order and will begin processing it shortly.",
         "orderNumberLabel": "Order Number",
         "orderDetailsTitle": "Order Details",
-        "invoiceNotice": "VAT invoice will be generated and sent to your email within 24 hours.",
+        "invoiceNotice": "VAT invoice will be uploaded by our admin team and sent to your email.",
         "nextTitle": "What's Next?",
         "nextSteps": [
             "You'll receive an order confirmation email shortly.",
