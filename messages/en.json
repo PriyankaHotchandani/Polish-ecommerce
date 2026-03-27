@@ -253,6 +253,7 @@
     "aboutPage": {
         "title": "About BM SP. Z O.O.",
         "storyTitle": "Our Story",
+        "watermarkTagline": "Polish Excellence in Products & Service",
         "storyParagraph1": "BM SP. Z O.O. is a leading Polish retail and wholesale business specializing in household items, tools, and equipment. For years, we have been serving both individual consumers and business clients with quality products and competitive pricing.",
         "storyParagraph2": "Our mission is to provide a seamless shopping experience whether you're furnishing your home or equipping your business with professional tools.",
         "missionTitle": "Our Mission",
@@ -268,7 +269,25 @@
             "b2bTitle": "B2B Wholesale",
             "b2bDescription": "Exclusive wholesale pricing and bulk order capabilities for business customers and contractors."
         },
+        "offerCtas": {
+            "household": "Explore household catalog",
+            "tools": "Browse professional tools",
+            "b2c": "Shop retail collection",
+            "b2b": "See B2B wholesale perks"
+        },
         "whyChooseTitle": "Why Choose Us",
+        "whyChooseFeatures": {
+            "catalogTitle": "Massive Catalog",
+            "catalogDescription": "Thousands of items in stock across all categories.",
+            "pricingTitle": "Dual-Market Pricing",
+            "pricingDescription": "Competitive rates tailored for both retail and wholesale.",
+            "deliveryTitle": "Fast Delivery",
+            "deliveryDescription": "Reliable, nationwide shipping across Poland.",
+            "supportTitle": "Dedicated Support",
+            "supportDescription": "An expert team ready to help with your orders.",
+            "qualityTitle": "Quality Guarantee",
+            "qualityDescription": "Trusted, premium products for your home and business."
+        },
         "bullets": [
             "Extensive product catalog with thousands of items in stock",
             "Competitive pricing for both retail and wholesale customers",

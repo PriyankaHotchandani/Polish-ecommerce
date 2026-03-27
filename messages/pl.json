@@ -253,6 +253,7 @@
     "aboutPage": {
         "title": "O BM SP. Z O.O.",
         "storyTitle": "Nasza historia",
+        "watermarkTagline": "Polska jakość produktów i obsługi",
         "storyParagraph1": "BM SP. Z O.O. to czołowa polska firma detaliczno-hurtowa specjalizująca się w artykułach gospodarstwa domowego, narzędziach i wyposażeniu. Od lat obsługujemy zarówno klientów indywidualnych, jak i biznesowych, oferując wysoką jakość i konkurencyjne ceny.",
         "storyParagraph2": "Naszą misją jest zapewnienie płynnych zakupów, niezależnie od tego, czy urządzasz dom, czy wyposażasz firmę w profesjonalne narzędzia.",
         "missionTitle": "Nasza misja",
@@ -268,7 +269,25 @@
             "b2bTitle": "Hurt B2B",
             "b2bDescription": "Ekskluzywne ceny hurtowe i możliwość zamówień zbiorczych dla firm i wykonawców."
         },
+        "offerCtas": {
+            "household": "Poznaj katalog domowy",
+            "tools": "Przeglądaj narzędzia profesjonalne",
+            "b2c": "Kupuj w ofercie detalicznej",
+            "b2b": "Sprawdź korzyści hurtowe B2B"
+        },
         "whyChooseTitle": "Dlaczego my",
+        "whyChooseFeatures": {
+            "catalogTitle": "Ogromny katalog",
+            "catalogDescription": "Tysiące produktów dostępnych od ręki we wszystkich kategoriach.",
+            "pricingTitle": "Ceny dla dwóch segmentów",
+            "pricingDescription": "Konkurencyjne stawki dopasowane do klientów detalicznych i hurtowych.",
+            "deliveryTitle": "Szybka dostawa",
+            "deliveryDescription": "Niezawodna wysyłka na terenie całej Polski.",
+            "supportTitle": "Dedykowane wsparcie",
+            "supportDescription": "Ekspercki zespół gotowy pomóc przy Twoich zamówieniach.",
+            "qualityTitle": "Gwarancja jakości",
+            "qualityDescription": "Sprawdzone, premium produkty do domu i biznesu."
+        },
         "bullets": [
             "Szeroki katalog produktów z tysiącami pozycji dostępnych od ręki",
             "Konkurencyjne ceny dla klientów detalicznych i hurtowych",

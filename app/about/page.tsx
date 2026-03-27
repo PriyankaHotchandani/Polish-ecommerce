@@ -1,6 +1,8 @@
 import { cookies } from 'next/headers'
 import enMessages from '@/messages/en.json'
 import plMessages from '@/messages/pl.json'
+import OfferGrid from '@/components/about/OfferGrid'
+import WhyChooseGrid from '@/components/about/WhyChooseGrid'
 
 type Locale = 'en' | 'pl'
 
@@ -15,57 +17,52 @@ export default async function AboutPage() {
     const copy = MESSAGES[locale].aboutPage as typeof enMessages.aboutPage
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-                <h1 className="text-4xl font-bold text-gray-900 mb-8">{copy.title}</h1>
-
-                <div className="bg-white rounded-lg shadow-sm p-8 mb-8">
-                    <h2 className="text-2xl font-bold text-gray-900 mb-4">{copy.storyTitle}</h2>
-                    <p className="text-gray-700 leading-relaxed mb-4">{copy.storyParagraph1}</p>
-                    <p className="text-gray-700 leading-relaxed">{copy.storyParagraph2}</p>
-                </div>
-
-                <div className="bg-white rounded-lg shadow-sm p-8 mb-8">
-                    <h2 className="text-2xl font-bold text-gray-900 mb-4">{copy.missionTitle}</h2>
-                    <p className="text-gray-700 leading-relaxed">{copy.missionParagraph}</p>
-                </div>
-
-                <div className="bg-white rounded-lg shadow-sm p-8 mb-8">
-                    <h2 className="text-2xl font-bold text-gray-900 mb-4">{copy.offerTitle}</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="min-h-screen bg-white">
+            {/* Editorial Hero Section */}
+            <section className="bg-white">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+                        {/* Left: Story Text */}
                         <div>
-                            <h3 className="text-lg font-semibold text-gray-900 mb-2">{copy.offer.householdTitle}</h3>
-                            <p className="text-gray-700 text-sm">{copy.offer.householdDescription}</p>
+                            <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
+                                {copy.storyTitle}
+                            </h1>
+                            <p className="text-lg text-gray-700 leading-relaxed mb-6 text-justify">
+                                {copy.storyParagraph1}
+                            </p>
+                            <p className="text-lg text-gray-700 leading-relaxed text-justify">
+                                {copy.storyParagraph2}
+                            </p>
                         </div>
-                        <div>
-                            <h3 className="text-lg font-semibold text-gray-900 mb-2">{copy.offer.toolsTitle}</h3>
-                            <p className="text-gray-700 text-sm">{copy.offer.toolsDescription}</p>
-                        </div>
-                        <div>
-                            <h3 className="text-lg font-semibold text-gray-900 mb-2">{copy.offer.b2cTitle}</h3>
-                            <p className="text-gray-700 text-sm">{copy.offer.b2cDescription}</p>
-                        </div>
-                        <div>
-                            <h3 className="text-lg font-semibold text-gray-900 mb-2">{copy.offer.b2bTitle}</h3>
-                            <p className="text-gray-700 text-sm">{copy.offer.b2bDescription}</p>
+
+                        {/* Right: Typographic Element / Image Placeholder */}
+                        <div className="relative h-96 md:h-full flex items-center justify-center">
+                            <div className="absolute inset-0 flex items-center justify-center">
+                                <div className="text-9xl font-bold text-gray-100 select-none" style={{ wordWrap: 'break-word' }}>
+                                    BM
+                                </div>
+                            </div>
+                            <p className="relative text-center text-gray-500 text-sm max-w-xs px-4">
+                                {copy.watermarkTagline}
+                            </p>
                         </div>
                     </div>
                 </div>
+            </section>
 
-                <div className="bg-white rounded-lg shadow-sm p-8">
-                    <h2 className="text-2xl font-bold text-gray-900 mb-4">{copy.whyChooseTitle}</h2>
-                    <ul className="space-y-3">
-                        {copy.bullets.map((item: string) => (
-                            <li key={item} className="flex items-start">
-                                <svg className="h-6 w-6 text-green-500 mr-3 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                </svg>
-                                <span className="text-gray-700">{item}</span>
-                            </li>
-                        ))}
-                    </ul>
+            {/* Navy Mission Block */}
+            <section className="bg-slate-900 text-white py-24">
+                <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                    <p className="text-blue-200 text-sm font-semibold uppercase tracking-wide mb-4">{copy.missionTitle}</p>
+                    <h2 className="text-4xl md:text-5xl font-bold leading-relaxed">
+                        {copy.missionParagraph}
+                    </h2>
                 </div>
-            </div>
+            </section>
+
+            <OfferGrid copy={copy} />
+
+            <WhyChooseGrid copy={copy} />
         </div>
     )
 }
