@@ -146,26 +146,24 @@ export default function ProfileCompletenessPrompt() {
     }
 
     return (
-        <div className="mt-16 sm:mt-20">
-            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                <div className="flex items-center justify-between gap-4 rounded-xl border border-amber-200 bg-amber-50/80 px-4 py-3 text-amber-900 shadow-sm">
-                    <p className="text-sm">
-                        Complete your profile to make checkout faster and keep your account details up to date.
-                    </p>
-                    <div className="flex shrink-0 items-center gap-3">
-                        <Link
-                            href="/account"
-                            className="text-sm font-semibold text-amber-900 hover:text-amber-700"
-                        >
-                            Complete profile
-                        </Link>
-                        <button
-                            onClick={dismissPrompt}
-                            className="text-sm text-amber-800 hover:text-amber-600"
-                        >
-                            Dismiss
-                        </button>
-                    </div>
+        <div className="pointer-events-none fixed inset-x-0 top-[4.15rem] z-40 w-full px-3">
+            <div className="pointer-events-auto flex w-full flex-wrap items-center justify-between gap-3 rounded-full border border-amber-200 bg-amber-50/95 px-4 py-3 text-amber-900 shadow-sm sm:px-6 lg:px-8">
+                <p className="text-sm">
+                    Complete your profile to make checkout faster and keep your account details up to date.
+                </p>
+                <div className="flex shrink-0 items-center gap-3">
+                    <Link
+                        href="/account"
+                        className="text-sm font-semibold text-amber-900 hover:text-amber-700"
+                    >
+                        Complete profile
+                    </Link>
+                    <button
+                        onClick={dismissPrompt}
+                        className="text-sm text-amber-800 hover:text-amber-600"
+                    >
+                        Dismiss
+                    </button>
                 </div>
             </div>
         </div>
