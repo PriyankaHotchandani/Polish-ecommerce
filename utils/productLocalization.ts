@@ -1,5 +1,69 @@
 type Locale = 'en' | 'pl'
 
+type TranslationMap = {
+    en?: string | null
+    pl?: string | null
+} | null | undefined
+
+const TITLE_CASE_LOWER_WORDS = new Set([
+    'a',
+    'an',
+    'and',
+    'as',
+    'at',
+    'by',
+    'for',
+    'from',
+    'in',
+    'of',
+    'on',
+    'or',
+    'the',
+    'to',
+    'with',
+    'i',
+    'w',
+    'z',
+    'na',
+    'do',
+    'od',
+    'po',
+    'u',
+    'oraz',
+])
+
+function toTitleCaseWords(value: string): string {
+    let wordIndex = 0
+
+    return value
+        .split(/(\s+|\/|-)/)
+        .map((token) => {
+            if (!token || /^\s+$/.test(token) || token === '/' || token === '-') {
+                return token
+            }
+
+            if (/\d/.test(token)) {
+                wordIndex += 1
+                return token
+            }
+
+            if (/^[A-Z]{2,4}$/.test(token)) {
+                wordIndex += 1
+                return token
+            }
+
+            const lowerToken = token.toLocaleLowerCase()
+            if (wordIndex > 0 && TITLE_CASE_LOWER_WORDS.has(lowerToken)) {
+                wordIndex += 1
+                return lowerToken
+            }
+
+            wordIndex += 1
+            return lowerToken.charAt(0).toLocaleUpperCase() + lowerToken.slice(1)
+        })
+        .join('')
+}
+
 const CATEGORY_NAME_BY_SLUG: Record<string, { en: string; pl: string }> = {
     kitchenware: {
         en: 'Kitchenware',
@@ -52,17 +116,62 @@ const PL_BRAND_NAME_BY_VALUE: Record<string, string> = {
 
 export function getLocalizedCategoryName(categoryName: string, categorySlug: string | null | undefined, locale: Locale): string {
     if (locale === 'en') {
-        return categoryName
+        return toTitleCaseWords(categoryName)
     }
 
     if (categorySlug && CATEGORY_NAME_BY_SLUG[categorySlug]) {
-        return CATEGORY_NAME_BY_SLUG[categorySlug].pl
+        return toTitleCaseWords(CATEGORY_NAME_BY_SLUG[categorySlug].pl)
     }
 
-    return categoryName
+    return toTitleCaseWords(categoryName)
 }
 
-export function getLocalizedProductTitle(productTitle: string, productSlug: string, locale: Locale): string {
+function getTranslationFromMap(baseValue: string | null, translations: TranslationMap, locale: Locale): string | null {
+    if (!baseValue && !translations) {
+        return null
+    }
+
+    const localized = locale === 'pl' ? translations?.pl : translations?.en
+    if (localized) {
+        return localized
+    }
+
+    return baseValue
+}
+
+export function getLocalizedCategoryNameWithTranslations(
+    categoryName: string,
+    categorySlug: string | null | undefined,
+    locale: Locale,
+    translations?: TranslationMap
+): string {
+    const fromTranslations = getTranslationFromMap(categoryName, translations, locale)
+    if (fromTranslations) {
+        return toTitleCaseWords(fromTranslations)
+    }
+
+    if (locale === 'en') {
+        return toTitleCaseWords(categoryName)
+    }
+
+    if (categorySlug && CATEGORY_NAME_BY_SLUG[categorySlug]) {
+        return toTitleCaseWords(CATEGORY_NAME_BY_SLUG[categorySlug].pl)
+    }
+
+    return toTitleCaseWords(categoryName)
+}
+
+export function getLocalizedProductTitle(
+    productTitle: string,
+    productSlug: string,
+    locale: Locale,
+    translations?: TranslationMap
+): string {
+    const fromTranslations = getTranslationFromMap(productTitle, translations, locale)
+    if (fromTranslations) {
+        return fromTranslations
+    }
+
     if (locale === 'pl' && PL_PRODUCT_TITLE_BY_SLUG[productSlug]) {
         return PL_PRODUCT_TITLE_BY_SLUG[productSlug]
     }
@@ -73,9 +182,11 @@ export function getLocalizedProductTitle(productTitle: string, productSlug: stri
 export function getLocalizedProductDescription(
     productDescription: string | null,
     productSlug: string,
-    locale: Locale
+    locale: Locale,
+    translations?: TranslationMap
 ): string | null {
-    if (!productDescription) {
+    const fromTranslations = getTranslationFromMap(productDescription, translations, locale)
+    if (!fromTranslations) {
         return null
     }
 
@@ -83,7 +194,7 @@ export function getLocalizedProductDescription(
         return PL_PRODUCT_DESCRIPTION_BY_SLUG[productSlug]
     }
 
-    return productDescription
+    return fromTranslations
 }
 
 export function getLocalizedBrandName(

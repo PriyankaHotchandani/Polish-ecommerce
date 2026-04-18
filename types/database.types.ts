@@ -68,6 +68,7 @@ export interface Database {
                     name: string
                     slug: string
                     parent_id: string | null
+                    name_translations: Json | null
                     created_at: string
                     updated_at: string
                 }
@@ -76,6 +77,7 @@ export interface Database {
                     name: string
                     slug: string
                     parent_id?: string | null
+                    name_translations?: Json | null
                     created_at?: string
                     updated_at?: string
                 }
@@ -84,6 +86,7 @@ export interface Database {
                     name?: string
                     slug?: string
                     parent_id?: string | null
+                    name_translations?: Json | null
                     created_at?: string
                     updated_at?: string
                 }
@@ -102,6 +105,23 @@ export interface Database {
                     category_id: string
                     specifications: Json | null
                     image_urls: string[] | null
+                    source_co: string | null
+                    source_nazwa: string | null
+                    source_opis: string | null
+                    source_url_produktu: string | null
+                    source_zdjecie_glowne: string | null
+                    source_zdjecia_produktu_pozostale: string[] | null
+                    source_sku_nokaut: string | null
+                    source_sku_stan: string | null
+                    source_stan: number | null
+                    source_netto: number | null
+                    source_brutto: number | null
+                    source_sku_info: string | null
+                    source_ena: string | null
+                    source_cn: string | null
+                    source_waga: number | null
+                    title_translations: Json | null
+                    description_translations: Json | null
                     created_at: string
                     updated_at: string
                 }
@@ -118,6 +138,23 @@ export interface Database {
                     category_id: string
                     specifications?: Json | null
                     image_urls?: string[] | null
+                    source_co?: string | null
+                    source_nazwa?: string | null
+                    source_opis?: string | null
+                    source_url_produktu?: string | null
+                    source_zdjecie_glowne?: string | null
+                    source_zdjecia_produktu_pozostale?: string[] | null
+                    source_sku_nokaut?: string | null
+                    source_sku_stan?: string | null
+                    source_stan?: number | null
+                    source_netto?: number | null
+                    source_brutto?: number | null
+                    source_sku_info?: string | null
+                    source_ena?: string | null
+                    source_cn?: string | null
+                    source_waga?: number | null
+                    title_translations?: Json | null
+                    description_translations?: Json | null
                     created_at?: string
                     updated_at?: string
                 }
@@ -134,6 +171,23 @@ export interface Database {
                     category_id?: string
                     specifications?: Json | null
                     image_urls?: string[] | null
+                    source_co?: string | null
+                    source_nazwa?: string | null
+                    source_opis?: string | null
+                    source_url_produktu?: string | null
+                    source_zdjecie_glowne?: string | null
+                    source_zdjecia_produktu_pozostale?: string[] | null
+                    source_sku_nokaut?: string | null
+                    source_sku_stan?: string | null
+                    source_stan?: number | null
+                    source_netto?: number | null
+                    source_brutto?: number | null
+                    source_sku_info?: string | null
+                    source_ena?: string | null
+                    source_cn?: string | null
+                    source_waga?: number | null
+                    title_translations?: Json | null
+                    description_translations?: Json | null
                     created_at?: string
                     updated_at?: string
                 }

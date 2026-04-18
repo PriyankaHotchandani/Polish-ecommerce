@@ -3,6 +3,11 @@ import Link from 'next/link'
 import ProductsFilterBar from '@/components/admin/ProductsFilterBar'
 import ProductSkuCopy from '@/components/admin/ProductSkuCopy'
 import ProductActionsMenu from '@/components/admin/ProductActionsMenu'
+import type { Product, Category } from '@/types/database.types'
+
+type AdminProductRow = Product & {
+    category: Pick<Category, 'name'> | null
+}
 
 interface SearchParams {
     search?: string
@@ -42,7 +47,7 @@ export default async function AdminProductsPage({
         console.error('Error fetching products:', error)
     }
 
-    const safeProducts = Array.isArray(products) ? products : []
+    const safeProducts: AdminProductRow[] = Array.isArray(products) ? products as AdminProductRow[] : []
 
     const getStockBadgeClass = (inventoryCount: number) => {
         if (inventoryCount === 0) return 'bg-red-100 text-red-700 border border-red-200 font-semibold'
@@ -95,15 +100,18 @@ export default async function AdminProductsPage({
                                 <tr>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Image</th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">CO</th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">SKU</th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ENA / CN / WAGA</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">URL PRODUKTU</th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Pricing</th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Stock</th>
                                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="bg-white divide-y divide-gray-200">
-                                {safeProducts.map((product: any) => (
+                                {safeProducts.map((product) => (
                                     <tr key={product.id} className="hover:bg-gray-50">
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="w-16 h-16 rounded-md border border-gray-100 bg-gray-50 p-1 overflow-hidden">
@@ -124,11 +132,33 @@ export default async function AdminProductsPage({
                                             <div className="text-sm font-medium text-gray-900">{product.title}</div>
                                             {product.brand && <div className="text-sm text-gray-500">{product.brand}</div>}
                                         </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-600">
+                                            {product.source_co || 'N/A'}
+                                        </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <ProductSkuCopy sku={product.sku} />
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                                             {product.category?.name || 'N/A'}
+                                        </td>
+                                        <td className="px-6 py-4 text-xs text-gray-700">
+                                            <div>ENA: {product.source_ena || 'N/A'}</div>
+                                            <div>CN: {product.source_cn || 'N/A'}</div>
+                                            <div>WAGA: {product.source_waga ?? 'N/A'}</div>
+                                        </td>
+                                        <td className="px-6 py-4 text-xs text-gray-700 max-w-[220px] break-all">
+                                            {product.source_url_produktu ? (
+                                                <a
+                                                    href={product.source_url_produktu}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                    className="text-[#163579] hover:text-[#122d67] underline"
+                                                >
+                                                    {product.source_url_produktu}
+                                                </a>
+                                            ) : (
+                                                'N/A'
+                                            )}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm">
                                             <div className="text-gray-900 font-semibold">

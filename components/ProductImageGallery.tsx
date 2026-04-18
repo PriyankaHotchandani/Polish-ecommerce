@@ -10,6 +10,7 @@ interface ProductImageGalleryProps {
 
 export default function ProductImageGallery({ images, title }: ProductImageGalleryProps) {
     const [selectedImage, setSelectedImage] = useState(0)
+    const [zoomOrigin, setZoomOrigin] = useState('50% 50%')
     const { messages } = useLocaleMessages()
 
     if (!images || images.length === 0) {
@@ -23,11 +24,21 @@ export default function ProductImageGallery({ images, title }: ProductImageGalle
     return (
         <div>
             {/* Main Image */}
-            <div className="aspect-square bg-gray-200 rounded-lg overflow-hidden relative group">
+            <div
+                className="aspect-square bg-gray-200 rounded-lg overflow-hidden relative group"
+                onMouseMove={(event) => {
+                    const rect = event.currentTarget.getBoundingClientRect()
+                    const x = ((event.clientX - rect.left) / rect.width) * 100
+                    const y = ((event.clientY - rect.top) / rect.height) * 100
+                    setZoomOrigin(`${x}% ${y}%`)
+                }}
+                onMouseLeave={() => setZoomOrigin('50% 50%')}
+            >
                 <img
                     src={images[selectedImage]}
                     alt={`${title} - Image ${selectedImage + 1}`}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover transition-transform duration-300 ease-out group-hover:scale-150"
+                    style={{ transformOrigin: zoomOrigin }}
                 />
 
                 {/* Navigation arrows for multiple images */}
@@ -70,7 +81,7 @@ export default function ProductImageGallery({ images, title }: ProductImageGalle
                             key={index}
                             onClick={() => setSelectedImage(index)}
                             className={`aspect-square bg-gray-200 rounded-md overflow-hidden border-2 transition-all ${selectedImage === index
-                                ? 'border-green-600 ring-2 ring-green-600 ring-offset-2'
+                                ? 'border-slate-900 ring-2 ring-slate-900/70 ring-offset-2'
                                 : 'border-transparent hover:border-gray-300'
                                 }`}
                         >

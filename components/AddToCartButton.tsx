@@ -22,6 +22,7 @@ export default function AddToCartButton({
     const { messages } = useLocaleMessages()
     const [quantity, setQuantity] = useState(1)
     const [isAdding, setIsAdding] = useState(false)
+    const [isAdded, setIsAdded] = useState(false)
     const isAddingRef = useRef(false)
     const lastAddTimeRef = useRef(0)
 
@@ -42,6 +43,7 @@ export default function AddToCartButton({
         isAddingRef.current = true
         lastAddTimeRef.current = now
         setIsAdding(true)
+        setIsAdded(false)
 
         // Always add exactly 1 item from shop page, use quantity selector value from detail page
         const quantityToAdd = showQuantity ? quantity : 1
@@ -50,12 +52,17 @@ export default function AddToCartButton({
         // Visual feedback and cooldown
         setTimeout(() => {
             setIsAdding(false)
+            setIsAdded(true)
+        }, 500)
+
+        setTimeout(() => {
+            setIsAdded(false)
             isAddingRef.current = false
             // Reset quantity to 1 after adding on detail pages
             if (showQuantity) {
                 setQuantity(1)
             }
-        }, 800)
+        }, 1300)
     }, [product, quantity, showQuantity, addItem, isOutOfStock])
 
     return (
@@ -68,7 +75,7 @@ export default function AddToCartButton({
                             e.stopPropagation()
                             setQuantity(Math.max(1, quantity - 1))
                         }}
-                        className="px-3 py-2 hover:bg-gray-100"
+                        className="px-3 py-2 hover:bg-gray-50 transition-colors"
                         disabled={quantity <= 1}
                         type="button"
                     >
@@ -95,7 +102,7 @@ export default function AddToCartButton({
                             e.stopPropagation()
                             setQuantity(Math.min(product.inventory_count, quantity + 1))
                         }}
-                        className="px-3 py-2 hover:bg-gray-100"
+                        className="px-3 py-2 hover:bg-gray-50 transition-colors"
                         disabled={quantity >= product.inventory_count}
                         type="button"
                     >
@@ -107,7 +114,7 @@ export default function AddToCartButton({
                 onClick={handleAddToCart}
                 disabled={disabled || isOutOfStock || isAdding}
                 type="button"
-                className={`flex-1 bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors ${className}`}
+                className={`flex-1 bg-slate-900 text-white py-2 px-4 rounded-md hover:bg-slate-950 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors font-semibold ${className}`}
             >
                 {isAdding ? (
                     <span className="flex items-center justify-center gap-2">
@@ -115,7 +122,12 @@ export default function AddToCartButton({
                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                         </svg>
-                        {messages.cartPage.added}
+                        {messages.common.loading}
+                    </span>
+                ) : isAdded ? (
+                    <span className="flex items-center justify-center gap-2">
+                        <span>{messages.cartPage.added}</span>
+                        <span aria-hidden="true">✓</span>
                     </span>
                 ) : isOutOfStock ? (
                     messages.product.outOfStock

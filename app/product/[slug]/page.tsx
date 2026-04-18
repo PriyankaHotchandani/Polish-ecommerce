@@ -1,13 +1,13 @@
 import { createClient } from '@/utils/supabase/server'
 import { notFound } from 'next/navigation'
-import type { Product, Category } from '@/types/database.types'
+import type { Category } from '@/types/database.types'
 import ProductDetails from '@/components/ProductDetails'
 import ProductImageGallery from '@/components/ProductImageGallery'
 import Link from 'next/link'
 import { cookies } from 'next/headers'
 import enMessages from '@/messages/en.json'
 import plMessages from '@/messages/pl.json'
-import { getLocalizedCategoryName, getLocalizedProductTitle } from '@/utils/productLocalization'
+import { getLocalizedCategoryNameWithTranslations, getLocalizedProductTitle } from '@/utils/productLocalization'
 
 type Locale = 'en' | 'pl'
 
@@ -43,19 +43,29 @@ export default async function ProductPage({ params }: ProductPageProps) {
     }
 
     const category = product.category as Category
-    const localizedCategoryName = getLocalizedCategoryName(category.name, category.slug, locale)
-    const localizedProductTitle = getLocalizedProductTitle(product.title, product.slug, locale)
+    const localizedCategoryName = getLocalizedCategoryNameWithTranslations(
+        category.name,
+        category.slug,
+        locale,
+        category.name_translations as { en?: string | null, pl?: string | null } | null
+    )
+    const localizedProductTitle = getLocalizedProductTitle(
+        product.title,
+        product.slug,
+        locale,
+        product.title_translations as { en?: string | null, pl?: string | null } | null
+    )
 
     return (
         <div className="min-h-screen bg-gray-50">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-12">
                 {/* Breadcrumb */}
                 <nav className="mb-8 text-sm">
-                    <Link href="/shop" className="text-green-600 hover:text-green-700">
+                    <Link href="/shop" className="text-slate-600 hover:text-slate-900 transition-colors">
                         {messages.nav.shop}
                     </Link>
                     <span className="mx-2 text-gray-400">/</span>
-                    <Link href={`/shop?category=${category.slug}`} className="text-green-600 hover:text-green-700">
+                    <Link href={`/shop?category=${category.slug}`} className="text-slate-600 hover:text-slate-900 transition-colors">
                         {localizedCategoryName}
                     </Link>
                     <span className="mx-2 text-gray-400">/</span>

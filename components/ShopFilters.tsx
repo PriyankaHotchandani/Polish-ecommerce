@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useEffect, useRef, useState, useTransition } from 'react'
+import { useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import { useLocaleMessages } from '@/contexts/LocaleContext'
 
 interface Category {
@@ -15,6 +15,22 @@ interface ShopFiltersProps {
     activeFiltersCount: number
 }
 
+const TOOL_CATEGORY_KEYWORDS = [
+    'tool',
+    'tools',
+    'narzed',
+    'wiert',
+    'pil',
+    'szlifier',
+    'mlot',
+    'warsztat',
+    'spaw',
+    'pomiar',
+    'ogrod',
+    'elektronarzed',
+    'power',
+]
+
 export default function ShopFilters({ categories, activeFiltersCount }: ShopFiltersProps) {
     const router = useRouter()
     const searchParams = useSearchParams()
@@ -24,6 +40,7 @@ export default function ShopFilters({ categories, activeFiltersCount }: ShopFilt
 
     const currentSearch = searchParams.get('search') || ''
     const currentCategory = searchParams.get('category') || ''
+    const currentGroup = searchParams.get('group') || ''
     const currentMinPrice = searchParams.get('minPrice') || ''
     const currentMaxPrice = searchParams.get('maxPrice') || ''
     const currentInStock = searchParams.get('inStock') === 'true'
@@ -46,6 +63,29 @@ export default function ShopFilters({ categories, activeFiltersCount }: ShopFilt
         ? (categories.find((category) => category.slug === selectedCategory)?.name || messages.shop.allProducts)
         : messages.shop.allProducts
     const selectedSortLabel = sortOptions.find((option) => option.value === selectedSort)?.label || messages.shop.sortByNewest
+    const groupedCategories = useMemo(() => {
+        return categories.reduce(
+            (groups, category) => {
+                const normalized = `${category.slug} ${category.name}`.toLowerCase()
+                const isToolCategory = TOOL_CATEGORY_KEYWORDS.some((keyword) => normalized.includes(keyword))
+
+                if (isToolCategory) {
+                    groups.tools.push(category)
+                } else {
+                    groups.household.push(category)
+                }
+
+                return groups
+            },
+            {
+                household: [] as Category[],
+                tools: [] as Category[],
+            }
+        )
+    }, [categories])
+
+    const householdHeading = messages.nav?.household || 'Household Products'
+    const toolsHeading = 'Tools & Categories'
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -76,6 +116,7 @@ export default function ShopFilters({ categories, activeFiltersCount }: ShopFilt
 
         if (currentSearch) params.set('search', currentSearch)
         if (category) params.set('category', category)
+        if (!category && currentGroup) params.set('group', currentGroup)
         if (minPrice) params.set('minPrice', minPrice)
         if (maxPrice) params.set('maxPrice', maxPrice)
         if (inStock) params.set('inStock', 'true')
@@ -191,7 +232,13 @@ export default function ShopFilters({ categories, activeFiltersCount }: ShopFilt
                                                             <span>{messages.shop.allProducts}</span>
                                                             {selectedCategory === '' && <span aria-hidden="true">•</span>}
                                                         </button>
-                                                        {categories.map((cat) => (
+
+                                                        {groupedCategories.household.length > 0 && (
+                                                            <div className="px-3.5 pb-1 pt-2 text-[0.7rem] font-semibold uppercase tracking-[0.14em] text-slate-400">
+                                                                {householdHeading}
+                                                            </div>
+                                                        )}
+                                                        {groupedCategories.household.map((cat) => (
                                                             <button
                                                                 key={cat.id}
                                                                 type="button"
@@ -199,7 +246,27 @@ export default function ShopFilters({ categories, activeFiltersCount }: ShopFilt
                                                                     setSelectedCategory(cat.slug)
                                                                     setOpenMenu(null)
                                                                 }}
-                                                                className={`flex w-full items-center justify-between px-3.5 py-2.5 text-left text-sm transition ${selectedCategory === cat.slug ? 'bg-[#163579]/8 text-[#163579]' : 'text-slate-700 hover:bg-slate-50'}`}
+                                                                className={`flex w-full items-center justify-between px-6 py-2.5 text-left text-sm transition ${selectedCategory === cat.slug ? 'bg-[#163579]/8 text-[#163579]' : 'text-slate-700 hover:bg-slate-50'}`}
+                                                            >
+                                                                <span>{cat.name}</span>
+                                                                {selectedCategory === cat.slug && <span aria-hidden="true">•</span>}
+                                                            </button>
+                                                        ))}
+
+                                                        {groupedCategories.tools.length > 0 && (
+                                                            <div className="px-3.5 pb-1 pt-3 text-[0.7rem] font-semibold uppercase tracking-[0.14em] text-slate-400">
+                                                                {toolsHeading}
+                                                            </div>
+                                                        )}
+                                                        {groupedCategories.tools.map((cat) => (
+                                                            <button
+                                                                key={cat.id}
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    setSelectedCategory(cat.slug)
+                                                                    setOpenMenu(null)
+                                                                }}
+                                                                className={`flex w-full items-center justify-between px-6 py-2.5 text-left text-sm transition ${selectedCategory === cat.slug ? 'bg-[#163579]/8 text-[#163579]' : 'text-slate-700 hover:bg-slate-50'}`}
                                                             >
                                                                 <span>{cat.name}</span>
                                                                 {selectedCategory === cat.slug && <span aria-hidden="true">•</span>}

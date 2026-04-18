@@ -84,7 +84,13 @@
         "category": "Kategoria",
         "specifications": "Specyfikacja",
         "description": "Opis",
-        "details": "Szczegóły produktu"
+        "details": "Szczegóły produktu",
+        "sourceAttributes": "Atrybuty źródłowe",
+        "co": "CO",
+        "productUrl": "URL produktu",
+        "ena": "ENA",
+        "cn": "CN",
+        "weight": "Waga"
     },
     "shop": {
         "title": "Sklep",

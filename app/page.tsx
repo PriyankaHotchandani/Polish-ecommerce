@@ -6,6 +6,7 @@ import TrustIndicators from '@/components/TrustIndicators'
 import { cookies } from 'next/headers'
 import enMessages from '@/messages/en.json'
 import plMessages from '@/messages/pl.json'
+import type { Product, Category } from '@/types/database.types'
 
 type Locale = 'en' | 'pl'
 
@@ -15,22 +16,31 @@ const MESSAGES = {
 } as const
 
 export default async function Home() {
-  const supabase = await createClient()
   const cookieStore = await cookies()
   const locale: Locale = cookieStore.get('locale')?.value === 'pl' ? 'pl' : 'en'
   const homeCopy = MESSAGES[locale].home as typeof enMessages.home
   const heroCopy = homeCopy.hero
 
+  let products: (Product & { category: Category })[] | null = null
 
-  // Fetch featured products
-  const { data: products } = await supabase
-    .from('products')
-    .select(`
-            *,
-            category:categories(*)
-        `)
-    .order('created_at', { ascending: false })
-    .limit(9)
+  // Fetch featured products when Supabase config is available.
+  if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    try {
+      const supabase = await createClient()
+      const { data } = await supabase
+        .from('products')
+        .select(`
+              *,
+              category:categories(*)
+          `)
+        .order('created_at', { ascending: false })
+        .limit(9)
+
+      products = data
+    } catch {
+      products = null
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-gray-50">
@@ -38,7 +48,7 @@ export default async function Home() {
       <section>
         <div className="grid min-h-screen gap-px bg-[#050b25] lg:grid-cols-[1fr_1.08fr_1fr]">
           <Link
-            href="/shop?category=household"
+            href="/shop?group=household"
             className="group relative overflow-hidden bg-slate-900"
           >
             <div className="hero-panel hero-panel-household">
@@ -70,7 +80,7 @@ export default async function Home() {
           <HeroCenterPanel locale={locale} />
 
           <Link
-            href="/shop?category=tools"
+            href="/shop?group=tools"
             className="group relative overflow-hidden bg-slate-900"
           >
             <div className="hero-panel hero-panel-tools">

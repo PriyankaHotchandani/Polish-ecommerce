@@ -6,10 +6,12 @@ export const locales = ['en', 'pl'] as const
 export type Locale = (typeof locales)[number]
 
 export default getRequestConfig(async ({ locale }) => {
-    // Validate that the incoming `locale` parameter is valid
-    if (!locales.includes(locale as Locale)) notFound()
+    // Validate explicit locale if present, then resolve a guaranteed default locale.
+    if (locale && !locales.includes(locale as Locale)) notFound()
+    const resolvedLocale: Locale = (locale as Locale) || 'en'
 
     return {
-        messages: (await import(`./messages/${locale}.json`)).default
+        locale: resolvedLocale,
+        messages: (await import(`./messages/${resolvedLocale}.json`)).default
     }
 })

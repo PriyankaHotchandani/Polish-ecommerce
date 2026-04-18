@@ -8,7 +8,7 @@ import AddToCartButton from './AddToCartButton'
 import { useLocaleMessages } from '@/contexts/LocaleContext'
 import {
     getLocalizedBrandName,
-    getLocalizedCategoryName,
+    getLocalizedCategoryNameWithTranslations,
     getLocalizedProductTitle,
 } from '@/utils/productLocalization'
 
@@ -21,15 +21,25 @@ export default function ProductCard({ product, variant = 'default' }: ProductCar
     const isFeatured = variant === 'featured'
     const imageUrl = product.image_urls?.[0]
     const { messages, locale } = useLocaleMessages()
-    const localizedTitle = getLocalizedProductTitle(product.title, product.slug, locale)
+    const localizedTitle = getLocalizedProductTitle(
+        product.title,
+        product.slug,
+        locale,
+        product.title_translations as { en?: string | null, pl?: string | null } | null
+    )
     const localizedCategoryName = product.category
-        ? getLocalizedCategoryName(product.category.name, product.category.slug, locale)
+        ? getLocalizedCategoryNameWithTranslations(
+            product.category.name,
+            product.category.slug,
+            locale,
+            product.category.name_translations as { en?: string | null, pl?: string | null } | null
+        )
         : null
     const localizedBrandName = getLocalizedBrandName(product.brand, locale)
 
     return (
         <div className={isFeatured ? 'product-card product-card-featured' : 'product-card product-card-default'}>
-            <Link href={`/product/${product.slug}`} className={isFeatured ? 'product-card-image-link product-card-image-link-featured' : ''}>
+            <Link href={`/product/${product.slug}`} prefetch={false} className={isFeatured ? 'product-card-image-link product-card-image-link-featured' : ''}>
                 <div className={isFeatured ? 'product-card-image-wrap product-card-image-wrap-featured' : 'aspect-square bg-gray-200 relative'}>
                     {imageUrl ? (
                         <Image
@@ -54,7 +64,7 @@ export default function ProductCard({ product, variant = 'default' }: ProductCar
                         {localizedCategoryName}
                     </span>
                 )}
-                <Link href={`/product/${product.slug}`} className={isFeatured ? 'product-card-title-link product-card-title-link-featured' : ''}>
+                <Link href={`/product/${product.slug}`} prefetch={false} className={isFeatured ? 'product-card-title-link product-card-title-link-featured' : ''}>
                     <h3 className={isFeatured ? 'product-card-title product-card-title-featured' : 'mt-1 text-lg font-semibold text-gray-900 hover:text-green-600 line-clamp-2'}>
                         {localizedTitle}
                     </h3>

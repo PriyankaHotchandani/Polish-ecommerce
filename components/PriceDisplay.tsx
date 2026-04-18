@@ -13,6 +13,7 @@ interface PriceDisplayProps {
 }
 
 type UserRole = 'admin' | 'b2c_customer' | 'b2b_customer' | null
+type UserRoleRow = { role: Exclude<UserRole, null> }
 
 let cachedUserRole: UserRole | undefined
 let cachedUserRolePromise: Promise<UserRole> | null = null
@@ -39,15 +40,16 @@ async function fetchUserRoleOnce(supabase: SupabaseClient<Database>): Promise<Us
                 .from('users')
                 .select('role')
                 .eq('id', user.id)
-                .maybeSingle()
+                .maybeSingle<UserRoleRow>()
 
             if (error) {
                 cachedUserRole = 'b2c_customer'
                 return 'b2c_customer'
             }
 
-            cachedUserRole = userData?.role || 'b2c_customer'
-            return cachedUserRole
+            const resolvedRole: UserRole = userData?.role ?? 'b2c_customer'
+            cachedUserRole = resolvedRole
+            return resolvedRole
         } catch {
             cachedUserRole = 'b2c_customer'
             return 'b2c_customer'
@@ -115,10 +117,10 @@ export default function PriceDisplay({ price_retail, price_wholesale, variant = 
         return (
             <div className="flex flex-col gap-2">
                 <div className="flex items-center gap-2">
-                    <span className={`${isFeatured ? 'text-[1.12rem] leading-tight font-bold text-slate-900' : 'text-2xl font-bold text-green-600'}`}>
+                    <span className={`${isFeatured ? 'text-[1.12rem] leading-tight font-bold text-slate-900' : 'text-4xl leading-tight font-extrabold text-slate-950'}`}>
                         {formatPrice(price_wholesale)}
                     </span>
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${isFeatured ? 'bg-slate-100 text-slate-700' : 'bg-green-100 text-green-800'}`}>
+                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border ${isFeatured ? 'bg-slate-100 text-slate-700 border-slate-300' : 'bg-white text-slate-800 border-slate-800'}`}>
                         {messages.product.wholesalePrice}
                     </span>
                 </div>
@@ -128,7 +130,7 @@ export default function PriceDisplay({ price_retail, price_wholesale, variant = 
                     </span>
                     <span className={`${isFeatured ? 'text-xs text-slate-500' : 'text-xs text-gray-400'}`}>{messages.product.retail}</span>
                 </div>
-                <div className={`${isFeatured ? 'text-xs text-slate-600 font-medium' : 'text-xs text-green-600 font-medium'}`}>
+                <div className={`${isFeatured ? 'text-xs text-slate-600 font-medium' : 'text-xs text-slate-600 font-medium'}`}>
                     {messages.product.youSave} {formatPrice(price_retail - price_wholesale)}
                 </div>
             </div>

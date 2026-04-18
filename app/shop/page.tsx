@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { cookies } from 'next/headers'
 import enMessages from '@/messages/en.json'
 import plMessages from '@/messages/pl.json'
-import { getLocalizedCategoryName } from '@/utils/productLocalization'
+import { getLocalizedCategoryNameWithTranslations } from '@/utils/productLocalization'
 
 type Locale = 'en' | 'pl'
 
@@ -17,10 +17,37 @@ const MESSAGES = {
 interface SearchParams {
     search?: string
     category?: string
+    group?: string
     minPrice?: string
     maxPrice?: string
     inStock?: string
     sort?: string
+    page?: string
+}
+
+const PAGE_SIZE = 24
+
+const TOOL_CATEGORY_KEYWORDS = [
+    'tool',
+    'tools',
+    'narzed',
+    'wiert',
+    'pil',
+    'szlifier',
+    'mlot',
+    'warsztat',
+    'spaw',
+    'pomiar',
+    'ogrod',
+    'elektronarzed',
+    'power',
+]
+
+type LocalizedCategory = {
+    id: string
+    name: string
+    slug: string
+    name_translations?: { en?: string | null, pl?: string | null } | null
 }
 
 export default async function ShopPage({
@@ -34,20 +61,54 @@ export default async function ShopPage({
     const locale: Locale = cookieStore.get('locale')?.value === 'pl' ? 'pl' : 'en'
     const shopCopy = MESSAGES[locale].shop as typeof enMessages.shop
     const navCopy = MESSAGES[locale].nav as typeof enMessages.nav
+    const currentPage = Math.max(1, Number.parseInt(params.page || '1', 10) || 1)
+    const rangeFrom = (currentPage - 1) * PAGE_SIZE
+    const rangeTo = rangeFrom + PAGE_SIZE - 1
 
     // Fetch all categories for filter
     const { data: categories } = await supabase
         .from('categories')
-        .select('id, name, slug')
+        .select('id, name, slug, name_translations')
         .order('name')
+
+    const isToolCategoryRaw = (category: { slug: string, name: string }) => {
+        const normalized = `${category.slug} ${category.name}`.toLowerCase()
+        return TOOL_CATEGORY_KEYWORDS.some((keyword) => normalized.includes(keyword))
+    }
+
+    const groupedCategoriesRaw = (categories || []).reduce(
+        (groups, category) => {
+            if (isToolCategoryRaw(category)) {
+                groups.tools.push(category)
+            } else {
+                groups.household.push(category)
+            }
+
+            return groups
+        },
+        {
+            household: [] as Array<{ id: string, name: string, slug: string, name_translations: unknown }>,
+            tools: [] as Array<{ id: string, name: string, slug: string, name_translations: unknown }>,
+        }
+    )
 
     // Build query with filters
     let query = supabase
         .from('products')
         .select(`
-            *,
-            category:categories(*)
-        `)
+            id,
+            sku,
+            title,
+            slug,
+            brand,
+            price_retail,
+            price_wholesale,
+            inventory_count,
+            image_urls,
+            title_translations,
+            created_at,
+            category:categories(id,name,slug,name_translations)
+        `, { count: 'exact' })
 
     // Apply search filter
     if (params.search) {
@@ -59,6 +120,11 @@ export default async function ShopPage({
         const category = categories?.find(c => c.slug === params.category)
         if (category) {
             query = query.eq('category_id', category.id)
+        }
+    } else if (params.group === 'household' || params.group === 'tools') {
+        const groupedIds = groupedCategoriesRaw[params.group].map((category) => category.id)
+        if (groupedIds.length > 0) {
+            query = query.in('category_id', groupedIds)
         }
     }
 
@@ -95,22 +161,26 @@ export default async function ShopPage({
             break
     }
 
-    const { data: products, error } = await query
+    query = query.range(rangeFrom, rangeTo)
 
-    if (error) {
-        console.error('Error fetching products:', error)
-    }
+    const { data: products, count: productsCount, error } = await query
+    const fetchErrorMessage = error?.message || null
 
     const activeFiltersCount = [
         params.search,
         params.category,
+        params.group,
         params.minPrice,
         params.maxPrice,
         params.inStock,
         params.sort && params.sort !== 'newest'
     ].filter(Boolean).length
 
-    const getCategoryLabel = (slug: string, name: string) => {
+    const getCategoryLabel = (
+        slug: string,
+        name: string,
+        translations?: { en?: string | null, pl?: string | null } | null
+    ) => {
         if (slug === 'kitchenware') {
             return navCopy.household
         }
@@ -119,71 +189,207 @@ export default async function ShopPage({
             return navCopy.tools
         }
 
-        return getLocalizedCategoryName(name, slug, locale)
+        return getLocalizedCategoryNameWithTranslations(
+            name,
+            slug,
+            locale,
+            translations
+        )
     }
 
     const localizedCategories = (categories || []).map((category) => ({
         ...category,
-        name: getCategoryLabel(category.slug, category.name),
-    }))
+        name: getCategoryLabel(
+            category.slug,
+            category.name,
+            category.name_translations as { en?: string | null, pl?: string | null } | null
+        ),
+    })) as LocalizedCategory[]
+
+    const isToolCategory = (category: LocalizedCategory) => {
+        const normalized = `${category.slug} ${category.name}`.toLowerCase()
+        return TOOL_CATEGORY_KEYWORDS.some((keyword) => normalized.includes(keyword))
+    }
+
+    const groupedCategories = localizedCategories.reduce(
+        (groups, category) => {
+            if (isToolCategory(category)) {
+                groups.tools.push(category)
+            } else {
+                groups.household.push(category)
+            }
+
+            return groups
+        },
+        {
+            household: [] as LocalizedCategory[],
+            tools: [] as LocalizedCategory[],
+        }
+    )
+
+    const selectedIsToolCategory = params.group === 'tools' || (params.category
+        ? groupedCategories.tools.some((category) => category.slug === params.category)
+        : false)
+
+    const selectedIsHouseholdCategory = params.group === 'household' || (params.category
+        ? groupedCategories.household.some((category) => category.slug === params.category)
+        : false)
+
+    const selectedIsHouseholdMain = selectedIsHouseholdCategory
+    const selectedIsToolsMain = selectedIsToolCategory
+
+    const householdHeading = locale === 'pl' ? 'Artykuly gospodarstwa domowego' : 'Household Products'
+    const toolsHeading = locale === 'pl' ? 'Narzedzia i kategorie' : 'Tools & Categories'
 
     const selectedCategory = (categories || []).find((category) => category.slug === params.category)
     const dynamicHeading = selectedCategory
-        ? getCategoryLabel(selectedCategory.slug, selectedCategory.name)
-        : shopCopy.title
+        ? getCategoryLabel(
+            selectedCategory.slug,
+            selectedCategory.name,
+            selectedCategory.name_translations as { en?: string | null, pl?: string | null } | null
+        )
+        : params.group === 'household'
+            ? householdHeading
+            : params.group === 'tools'
+                ? toolsHeading
+                : shopCopy.title
 
-    const buildShopHref = (nextCategory?: string) => {
+    const buildShopHref = (
+        nextCategory?: string,
+        nextPage?: number,
+        nextGroup?: 'household' | 'tools' | null,
+        preserveCurrentGroup = false
+    ) => {
         const nextParams = new URLSearchParams()
 
         if (params.search) nextParams.set('search', params.search)
-        if (nextCategory) nextParams.set('category', nextCategory)
+        if (nextCategory) {
+            nextParams.set('category', nextCategory)
+        } else if (nextGroup) {
+            nextParams.set('group', nextGroup)
+        } else if (preserveCurrentGroup && params.group && !nextCategory) {
+            nextParams.set('group', params.group)
+        }
         if (params.minPrice) nextParams.set('minPrice', params.minPrice)
         if (params.maxPrice) nextParams.set('maxPrice', params.maxPrice)
         if (params.inStock) nextParams.set('inStock', params.inStock)
         if (params.sort) nextParams.set('sort', params.sort)
+        if (nextPage && nextPage > 1) nextParams.set('page', String(nextPage))
 
         const queryString = nextParams.toString()
         return queryString ? `/shop?${queryString}` : '/shop'
     }
 
+    const totalPages = Math.max(1, Math.ceil((productsCount || 0) / PAGE_SIZE))
+    const hasPreviousPage = currentPage > 1
+    const hasNextPage = currentPage < totalPages
+    const previousPageHref = buildShopHref(
+        params.category,
+        currentPage - 1,
+        params.group === 'household' || params.group === 'tools' ? params.group : null,
+        true
+    )
+    const nextPageHref = buildShopHref(
+        params.category,
+        currentPage + 1,
+        params.group === 'household' || params.group === 'tools' ? params.group : null,
+        true
+    )
+
     return (
         <div className="min-h-screen bg-[#f3f4f6]">
             <div className="mx-auto max-w-[1520px] px-4 pb-14 pt-28 sm:px-6 lg:px-10 lg:pt-32">
                 <div className="grid gap-10 lg:grid-cols-[minmax(220px,24%)_1fr] lg:gap-14">
-                    <aside className="self-start border-b border-slate-200 pb-6 lg:sticky lg:top-28 lg:border-b-0 lg:border-r lg:pb-0 lg:pr-8">
+                    <aside className="self-start border-b border-slate-200 pb-6 lg:sticky lg:top-28 lg:flex lg:max-h-[calc(100vh-8rem)] lg:flex-col lg:border-b-0 lg:border-r lg:pb-0 lg:pr-8">
                         <p className="mb-6 text-[0.67rem] font-semibold uppercase tracking-[0.32em] text-slate-500">
                             {shopCopy.categories}
                         </p>
 
-                        <nav className="divide-y divide-slate-200 border-y border-slate-200" aria-label={shopCopy.categories}>
+                        <nav className="divide-y divide-slate-200 border-y border-slate-200 lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:pr-1" aria-label={shopCopy.categories}>
                             <Link
                                 href={buildShopHref()}
-                                className={`flex items-center justify-between rounded-lg px-3 py-4 text-[1.03rem] transition-colors ${!params.category
+                                className={`flex items-center justify-between rounded-lg px-3 py-4 text-[1.03rem] transition-colors ${!params.category && !params.group
                                     ? 'bg-slate-100 font-semibold text-slate-900'
                                     : 'font-medium text-slate-400 hover:text-slate-700'
                                     }`}
                             >
                                 <span>{shopCopy.allProducts}</span>
-                                {!params.category && <span aria-hidden="true">&rarr;</span>}
+                                {!params.category && !params.group && <span aria-hidden="true">&rarr;</span>}
                             </Link>
 
-                            {localizedCategories.map((category) => {
-                                const isActive = params.category === category.slug
+                            <details open={selectedIsHouseholdCategory} className="group rounded-lg">
+                                <summary className="list-none marker:content-none">
+                                    <div className={`flex items-center justify-between rounded-lg px-3 py-4 transition-colors ${selectedIsHouseholdMain ? 'bg-slate-100' : 'hover:bg-slate-50'}`}>
+                                        <Link
+                                            href={buildShopHref(undefined, undefined, 'household')}
+                                            className={`inline-flex items-center gap-2 text-[1.03rem] font-semibold transition-colors ${selectedIsHouseholdMain
+                                                ? 'text-[#163579]'
+                                                : 'text-slate-900 hover:text-slate-950'
+                                                }`}
+                                        >
+                                            {selectedIsHouseholdMain && <span className="h-2 w-2 rounded-full bg-[#163579]" aria-hidden="true" />}
+                                            {householdHeading}
+                                        </Link>
+                                        <span className="text-slate-500 transition-transform group-open:rotate-90" aria-hidden="true">&rsaquo;</span>
+                                    </div>
+                                </summary>
+                                <div className="space-y-1 pb-3 pl-3 pr-2">
+                                    {groupedCategories.household.map((category) => {
+                                        const isActive = params.category === category.slug
 
-                                return (
-                                    <Link
-                                        key={category.id}
-                                        href={buildShopHref(category.slug)}
-                                        className={`flex items-center justify-between rounded-lg px-3 py-4 text-[1.03rem] transition-colors ${isActive
-                                            ? 'bg-slate-100 font-semibold text-slate-900'
-                                            : 'font-medium text-slate-400 hover:text-slate-700'
-                                            }`}
-                                    >
-                                        <span>{category.name}</span>
-                                        {isActive && <span aria-hidden="true">&rarr;</span>}
-                                    </Link>
-                                )
-                            })}
+                                        return (
+                                            <Link
+                                                key={category.id}
+                                                href={buildShopHref(category.slug)}
+                                                className={`flex items-center justify-between rounded-lg px-3 py-2.5 text-[0.96rem] transition-colors ${isActive
+                                                    ? 'bg-slate-100 font-semibold text-slate-900'
+                                                    : 'font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-800'
+                                                    }`}
+                                            >
+                                                <span>{category.name}</span>
+                                                {isActive && <span aria-hidden="true">&rarr;</span>}
+                                            </Link>
+                                        )
+                                    })}
+                                </div>
+                            </details>
+
+                            <details open={selectedIsToolCategory} className="group rounded-lg">
+                                <summary className="list-none marker:content-none">
+                                    <div className={`flex items-center justify-between rounded-lg px-3 py-4 transition-colors ${selectedIsToolsMain ? 'bg-slate-100' : 'hover:bg-slate-50'}`}>
+                                        <Link
+                                            href={buildShopHref(undefined, undefined, 'tools')}
+                                            className={`inline-flex items-center gap-2 text-[1.03rem] font-semibold transition-colors ${selectedIsToolsMain
+                                                ? 'text-[#163579]'
+                                                : 'text-slate-900 hover:text-slate-950'
+                                                }`}
+                                        >
+                                            {selectedIsToolsMain && <span className="h-2 w-2 rounded-full bg-[#163579]" aria-hidden="true" />}
+                                            {toolsHeading}
+                                        </Link>
+                                        <span className="text-slate-500 transition-transform group-open:rotate-90" aria-hidden="true">&rsaquo;</span>
+                                    </div>
+                                </summary>
+                                <div className="space-y-1 pb-3 pl-3 pr-2">
+                                    {groupedCategories.tools.map((category) => {
+                                        const isActive = params.category === category.slug
+
+                                        return (
+                                            <Link
+                                                key={category.id}
+                                                href={buildShopHref(category.slug)}
+                                                className={`flex items-center justify-between rounded-lg px-3 py-2.5 text-[0.96rem] transition-colors ${isActive
+                                                    ? 'bg-slate-100 font-semibold text-slate-900'
+                                                    : 'font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-800'
+                                                    }`}
+                                            >
+                                                <span>{category.name}</span>
+                                                {isActive && <span aria-hidden="true">&rarr;</span>}
+                                            </Link>
+                                        )
+                                    })}
+                                </div>
+                            </details>
                         </nav>
                     </aside>
 
@@ -201,6 +407,7 @@ export default async function ShopPage({
                             <div className="flex h-12 items-center rounded-full border border-slate-200 bg-white px-2.5 shadow-[0_6px_24px_rgba(15,23,42,0.06)] transition-all duration-200 focus-within:border-[#163579] focus-within:shadow-[0_10px_28px_rgba(15,23,42,0.12)]">
                                 <form method="GET" action="/shop" className="flex-1">
                                     <input type="hidden" name="category" value={params.category || ''} />
+                                    <input type="hidden" name="group" value={params.group || ''} />
                                     <input type="hidden" name="minPrice" value={params.minPrice || ''} />
                                     <input type="hidden" name="maxPrice" value={params.maxPrice || ''} />
                                     <input type="hidden" name="inStock" value={params.inStock || ''} />
@@ -234,13 +441,19 @@ export default async function ShopPage({
 
                         <div className="mb-6 flex items-center justify-between">
                             <p className="text-slate-600">
-                                {products && products.length > 0 ? (
-                                    <span className="font-semibold text-slate-900">{products.length}</span>
+                                {productsCount && productsCount > 0 ? (
+                                    <span className="font-semibold text-slate-900">{productsCount}</span>
                                 ) : (
                                     <span>{shopCopy.none}</span>
                                 )} {shopCopy.productsFoundLabel}
                             </p>
                         </div>
+
+                        {fetchErrorMessage && (
+                            <div className="mb-6 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                                Could not load full product list right now. Try refreshing the page.
+                            </div>
+                        )}
 
                         {products && products.length > 0 ? (
                             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
@@ -271,6 +484,40 @@ export default async function ShopPage({
                                 </Link>
                             </div>
                         )}
+
+                        {productsCount ? (
+                            <nav className="mt-10 flex items-center justify-between gap-4" aria-label="Pagination">
+                                {hasPreviousPage ? (
+                                    <Link
+                                        href={previousPageHref}
+                                        className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+                                    >
+                                        Previous
+                                    </Link>
+                                ) : (
+                                    <span className="rounded-lg border border-slate-200 bg-slate-100 px-4 py-2 text-sm text-slate-400">
+                                        Previous
+                                    </span>
+                                )}
+
+                                <span className="text-sm text-slate-600">
+                                    Page {currentPage} of {totalPages}
+                                </span>
+
+                                {hasNextPage ? (
+                                    <Link
+                                        href={nextPageHref}
+                                        className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+                                    >
+                                        Next
+                                    </Link>
+                                ) : (
+                                    <span className="rounded-lg border border-slate-200 bg-slate-100 px-4 py-2 text-sm text-slate-400">
+                                        Next
+                                    </span>
+                                )}
+                            </nav>
+                        ) : null}
                     </section>
                 </div>
             </div>

@@ -84,7 +84,13 @@
         "category": "Category",
         "specifications": "Specifications",
         "description": "Description",
-        "details": "Product Details"
+        "details": "Product Details",
+        "sourceAttributes": "Source Attributes",
+        "co": "CO",
+        "productUrl": "Product URL",
+        "ena": "ENA",
+        "cn": "CN",
+        "weight": "Weight"
     },
     "shop": {
         "title": "Shop",

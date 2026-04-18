@@ -18,6 +18,18 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: '*.supabase.co',
       },
+      {
+        protocol: 'https',
+        hostname: 'b2b.kraftdele.info',
+      },
+      {
+        protocol: 'https',
+        hostname: 'kraftdele.info',
+      },
+      {
+        protocol: 'https',
+        hostname: 'dawika.pl',
+      },
     ],
   },
 };
