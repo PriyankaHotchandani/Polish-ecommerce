@@ -96,17 +96,7 @@ export default async function ShopPage({
     let query = supabase
         .from('products')
         .select(`
-            id,
-            sku,
-            title,
-            slug,
-            brand,
-            price_retail,
-            price_wholesale,
-            inventory_count,
-            image_urls,
-            title_translations,
-            created_at,
+            *,
             category:categories(id,name,slug,name_translations)
         `, { count: 'exact' })
 
@@ -165,6 +155,10 @@ export default async function ShopPage({
 
     const { data: products, count: productsCount, error } = await query
     const fetchErrorMessage = error?.message || null
+    const normalizedProducts = (products || []).map((product) => ({
+        ...product,
+        category: Array.isArray(product.category) ? product.category[0] : product.category,
+    }))
 
     const activeFiltersCount = [
         params.search,
@@ -455,9 +449,9 @@ export default async function ShopPage({
                             </div>
                         )}
 
-                        {products && products.length > 0 ? (
+                        {normalizedProducts.length > 0 ? (
                             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-                                {products.map((product, index) => (
+                                {normalizedProducts.map((product, index) => (
                                     <div
                                         key={product.id}
                                         className="shop-card-reveal [&_.product-card-image-wrap-featured]:h-[20.8rem] lg:[&_.product-card-image-wrap-featured]:h-[22.2rem]"
