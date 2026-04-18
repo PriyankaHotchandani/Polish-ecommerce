@@ -221,7 +221,7 @@ export default async function Home() {
       {/* Trust Indicators */}
       <TrustIndicators
         stats={[
-          { value: '500+', label: homeCopy.trustIndicators.products },
+          { value: '3500+', label: homeCopy.trustIndicators.products },
           { value: '24/7', label: homeCopy.trustIndicators.onlineShopping },
           { value: homeCopy.trustIndicators.fastValue, label: homeCopy.trustIndicators.shipping },
           { value: '100%', label: homeCopy.trustIndicators.satisfaction },
