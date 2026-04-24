@@ -34,15 +34,47 @@ type NokautOfferRow = {
 }
 
 type LogSyncRunParams = {
-    p_status: 'success' | 'failed'
+    p_status: 'success' | 'failed' | 'skipped_lock'
     p_updated_rows: number
     p_inventory_rows_parsed: number
     p_info_rows_parsed: number
+    p_nokaut_rows_parsed?: number
+    p_stock_rows_skipped?: number
+    p_info_rows_skipped?: number
+    p_lock_acquired?: boolean
+    p_lock_owner?: string | null
+    p_duration_ms?: number
+    p_nokaut_fetch_ms?: number
+    p_stock_fetch_ms?: number
+    p_info_fetch_ms?: number
     p_error_message?: string | null
+}
+
+type FeedFetchResult = {
+    content: string
+    durationMs: number
+}
+
+type ParseStockResult = {
+    rows: StockFeedRow[]
+    skippedRows: number
+}
+
+type ParseInfoResult = {
+    rows: InfoFeedRow[]
+    skippedRows: number
 }
 
 type CategoryInsert = Database['public']['Tables']['categories']['Insert']
 type ProductInsert = Database['public']['Tables']['products']['Insert']
+
+const DEFAULT_NOKAUT_FEED_URL = 'https://sklep757254.shoparena.pl/console/integration/execute/name/Nokaut'
+const DEFAULT_STOCK_FEED_URL = 'https://vpn.gwalento.ovh/stany.txt'
+const DEFAULT_INFO_FEED_URL = 'https://vpn.gwalento.ovh/b2b/info.txt'
+const INVENTORY_LOCK_NAME = 'inventory_sync'
+const INVENTORY_LOCK_TTL_SECONDS = 600
+const FEED_FETCH_TIMEOUT_MS = 15000
+const FEED_FETCH_MAX_RETRIES = 3
 
 function ensureEnv(name: string): string {
     const value = process.env[name]
@@ -57,15 +89,26 @@ async function logSyncRun(
     supabase: ReturnType<typeof createServiceClient>,
     params: LogSyncRunParams
 ) {
+    const payload = {
+        status: params.p_status,
+        updated_rows: Math.max(0, params.p_updated_rows || 0),
+        inventory_rows_parsed: Math.max(0, params.p_inventory_rows_parsed || 0),
+        info_rows_parsed: Math.max(0, params.p_info_rows_parsed || 0),
+        nokaut_rows_parsed: Math.max(0, params.p_nokaut_rows_parsed || 0),
+        stock_rows_skipped: Math.max(0, params.p_stock_rows_skipped || 0),
+        info_rows_skipped: Math.max(0, params.p_info_rows_skipped || 0),
+        lock_acquired: Boolean(params.p_lock_acquired),
+        lock_owner: params.p_lock_owner || null,
+        duration_ms: Math.max(0, params.p_duration_ms || 0),
+        nokaut_fetch_ms: Math.max(0, params.p_nokaut_fetch_ms || 0),
+        stock_fetch_ms: Math.max(0, params.p_stock_fetch_ms || 0),
+        info_fetch_ms: Math.max(0, params.p_info_fetch_ms || 0),
+        error_message: params.p_error_message || null,
+    }
+
     const { error } = await supabase
         .from('supplier_sync_runs')
-        .insert({
-            status: params.p_status,
-            updated_rows: Math.max(0, params.p_updated_rows || 0),
-            inventory_rows_parsed: Math.max(0, params.p_inventory_rows_parsed || 0),
-            info_rows_parsed: Math.max(0, params.p_info_rows_parsed || 0),
-            error_message: params.p_error_message || null,
-        } as never)
+        .insert(payload as never)
 
     if (error) {
         console.error('Failed to insert supplier sync log:', error.message)
@@ -83,6 +126,10 @@ function normalizeDecimal(value: string): number | null {
 function normalizeInteger(value: string): number | null {
     const parsed = Number.parseInt(value.trim(), 10)
     return Number.isFinite(parsed) ? parsed : null
+}
+
+function stripBom(value: string): string {
+    return value.replace(/^\uFEFF/, '')
 }
 
 function normalizeForTranslation(value: string | null): string {
@@ -209,16 +256,20 @@ function parseNokautFeed(content: string): NokautOfferRow[] {
     return rows
 }
 
-function parseStockFeed(content: string): StockFeedRow[] {
+function parseStockFeed(content: string): ParseStockResult {
     const rows: StockFeedRow[] = []
-    const lines = content.split(/\r?\n/)
+    let skippedRows = 0
+    const lines = stripBom(content).split(/\r?\n/)
 
     for (const rawLine of lines) {
         const line = rawLine.trim()
         if (!line) continue
 
         const parts = line.split('|').map((part) => part.trim())
-        if (parts.length < 4) continue
+        if (parts.length < 4) {
+            skippedRows += 1
+            continue
+        }
 
         if (parts[0].toUpperCase() === 'SKU') continue
 
@@ -228,6 +279,7 @@ function parseStockFeed(content: string): StockFeedRow[] {
         const brutto = normalizeDecimal(parts[3])
 
         if (!sku || stan === null || netto === null || brutto === null) {
+            skippedRows += 1
             continue
         }
 
@@ -239,22 +291,32 @@ function parseStockFeed(content: string): StockFeedRow[] {
         })
     }
 
-    return rows
+    return {
+        rows,
+        skippedRows,
+    }
 }
 
-function parseInfoFeed(content: string): InfoFeedRow[] {
+function parseInfoFeed(content: string): ParseInfoResult {
     const rows: InfoFeedRow[] = []
-    const lines = content.split(/\r?\n/)
+    let skippedRows = 0
+    const lines = stripBom(content).split(/\r?\n/)
 
     for (const rawLine of lines) {
         const line = rawLine.trim()
         if (!line) continue
 
         const parts = line.split('|').map((part) => part.trim())
-        if (parts.length < 4) continue
+        if (parts.length < 4) {
+            skippedRows += 1
+            continue
+        }
 
         const sku = parts[0]
-        if (!sku || sku.toUpperCase() === 'SKU') continue
+        if (!sku || sku.toUpperCase() === 'SKU') {
+            skippedRows += 1
+            continue
+        }
 
         const ena = parts[1] || null
         const cn = parts[2] || null
@@ -268,7 +330,10 @@ function parseInfoFeed(content: string): InfoFeedRow[] {
         })
     }
 
-    return rows
+    return {
+        rows,
+        skippedRows,
+    }
 }
 
 async function upsertCategories(
@@ -386,23 +451,96 @@ function isAuthorized(request: NextRequest): boolean {
     return false
 }
 
-async function fetchText(url: string): Promise<string> {
-    const response = await fetch(url, {
-        headers: {
-            'Accept': 'text/plain,text/*,*/*',
-            'User-Agent': 'Polish-ecommerce-inventory-sync/1.0',
-        },
-        cache: 'no-store',
-    })
+function sleep(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms))
+}
 
-    if (!response.ok) {
-        throw new Error(`Feed request failed (${response.status}) for ${url}`)
+async function fetchTextWithRetry(url: string): Promise<FeedFetchResult> {
+    let lastError: Error | null = null
+
+    for (let attempt = 1; attempt <= FEED_FETCH_MAX_RETRIES; attempt++) {
+        const startedAt = Date.now()
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), FEED_FETCH_TIMEOUT_MS)
+
+        try {
+            const response = await fetch(url, {
+                headers: {
+                    'Accept': 'text/plain,text/*,*/*',
+                    'User-Agent': 'Polish-ecommerce-inventory-sync/1.0',
+                },
+                cache: 'no-store',
+                signal: controller.signal,
+            })
+
+            if (!response.ok) {
+                const isRetriable = response.status === 429 || response.status >= 500
+                if (!isRetriable || attempt === FEED_FETCH_MAX_RETRIES) {
+                    throw new Error(`Feed request failed (${response.status}) for ${url}`)
+                }
+
+                await sleep(250 * attempt + Math.floor(Math.random() * 250))
+                continue
+            }
+
+            const content = await response.text()
+            return {
+                content,
+                durationMs: Date.now() - startedAt,
+            }
+        } catch (error) {
+            lastError = error instanceof Error ? error : new Error('Feed request failed')
+
+            if (attempt === FEED_FETCH_MAX_RETRIES) {
+                break
+            }
+
+            await sleep(250 * attempt + Math.floor(Math.random() * 250))
+        } finally {
+            clearTimeout(timeoutId)
+        }
     }
 
-    return response.text()
+    throw lastError || new Error(`Failed to fetch ${url}`)
+}
+
+async function acquireSyncLock(
+    supabase: ReturnType<typeof createServiceClient>,
+    lockOwner: string
+): Promise<boolean> {
+    const { data, error } = await supabase.rpc('acquire_inventory_sync_lock', {
+        p_lock_name: INVENTORY_LOCK_NAME,
+        p_lock_owner: lockOwner,
+        p_ttl_seconds: INVENTORY_LOCK_TTL_SECONDS,
+    } as never)
+
+    if (error) {
+        throw new Error(`Failed to acquire inventory sync lock: ${error.message}`)
+    }
+
+    return Boolean(data)
+}
+
+async function releaseSyncLock(
+    supabase: ReturnType<typeof createServiceClient>,
+    lockOwner: string
+): Promise<void> {
+    const { error } = await supabase.rpc('release_inventory_sync_lock', {
+        p_lock_name: INVENTORY_LOCK_NAME,
+        p_lock_owner: lockOwner,
+    } as never)
+
+    if (error) {
+        console.error('Failed to release inventory sync lock:', error.message)
+    }
 }
 
 async function runSync(request: NextRequest) {
+    const runStartedAt = Date.now()
+    const lockOwner = typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+        ? crypto.randomUUID()
+        : `${Date.now()}-${Math.random().toString(16).slice(2)}`
+
     if (!isAuthorized(request)) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -411,27 +549,70 @@ async function runSync(request: NextRequest) {
     ensureEnv('SUPABASE_SERVICE_ROLE_KEY')
 
     const sourceConfig = await readWorkbookSourceConfig()
-    const stockFeedUrl = process.env.SUPPLIER_STOCK_FEED_URL || sourceConfig.sourceUrls.stock
-    const infoFeedUrl = process.env.SUPPLIER_INFO_FEED_URL || sourceConfig.sourceUrls.info
-    const nokautFeedUrl = process.env.SUPPLIER_NOKAUT_FEED_URL || sourceConfig.sourceUrls.nokaut
+    const stockFeedUrl = process.env.SUPPLIER_STOCK_FEED_URL || sourceConfig.sourceUrls.stock || DEFAULT_STOCK_FEED_URL
+    const infoFeedUrl = process.env.SUPPLIER_INFO_FEED_URL || sourceConfig.sourceUrls.info || DEFAULT_INFO_FEED_URL
+    const nokautFeedUrl = process.env.SUPPLIER_NOKAUT_FEED_URL || sourceConfig.sourceUrls.nokaut || DEFAULT_NOKAUT_FEED_URL
 
     const supabase = createServiceClient()
 
     let stockRows: StockFeedRow[] = []
     let infoRows: InfoFeedRow[] = []
     let nokautRows: NokautOfferRow[] = []
+    let stockRowsSkipped = 0
+    let infoRowsSkipped = 0
     let updatedRows = 0
+    let lockAcquired = false
+    let nokautFetchMs = 0
+    let stockFetchMs = 0
+    let infoFetchMs = 0
 
     try {
-        const [nokautRaw, stockRaw, infoRaw] = await Promise.all([
-            fetchText(nokautFeedUrl),
-            fetchText(stockFeedUrl),
-            fetchText(infoFeedUrl),
+        lockAcquired = await acquireSyncLock(supabase, lockOwner)
+
+        if (!lockAcquired) {
+            await logSyncRun(supabase, {
+                p_status: 'skipped_lock',
+                p_updated_rows: 0,
+                p_inventory_rows_parsed: 0,
+                p_info_rows_parsed: 0,
+                p_nokaut_rows_parsed: 0,
+                p_stock_rows_skipped: 0,
+                p_info_rows_skipped: 0,
+                p_lock_acquired: false,
+                p_lock_owner: lockOwner,
+                p_duration_ms: Date.now() - runStartedAt,
+                p_error_message: 'Skipped: another inventory sync run is already in progress.',
+            })
+
+            return NextResponse.json(
+                {
+                    success: true,
+                    skipped: true,
+                    reason: 'inventory_sync_locked',
+                },
+                { status: 202 }
+            )
+        }
+
+        const [nokautFetch, stockFetch, infoFetch] = await Promise.all([
+            fetchTextWithRetry(nokautFeedUrl),
+            fetchTextWithRetry(stockFeedUrl),
+            fetchTextWithRetry(infoFeedUrl),
         ])
 
-        nokautRows = parseNokautFeed(nokautRaw)
-        stockRows = parseStockFeed(stockRaw)
-        infoRows = parseInfoFeed(infoRaw)
+        nokautFetchMs = nokautFetch.durationMs
+        stockFetchMs = stockFetch.durationMs
+        infoFetchMs = infoFetch.durationMs
+
+        nokautRows = parseNokautFeed(nokautFetch.content)
+
+        const stockParseResult = parseStockFeed(stockFetch.content)
+        stockRows = stockParseResult.rows
+        stockRowsSkipped = stockParseResult.skippedRows
+
+        const infoParseResult = parseInfoFeed(infoFetch.content)
+        infoRows = infoParseResult.rows
+        infoRowsSkipped = infoParseResult.skippedRows
 
         const stockBySku = new Map(stockRows.map((row) => [row.sku, row]))
         const infoBySku = new Map(infoRows.map((row) => [row.sku, row]))
@@ -565,6 +746,15 @@ async function runSync(request: NextRequest) {
             p_updated_rows: updatedRows,
             p_inventory_rows_parsed: stockRows.length,
             p_info_rows_parsed: infoRows.length,
+            p_nokaut_rows_parsed: nokautRows.length,
+            p_stock_rows_skipped: stockRowsSkipped,
+            p_info_rows_skipped: infoRowsSkipped,
+            p_lock_acquired: true,
+            p_lock_owner: lockOwner,
+            p_duration_ms: Date.now() - runStartedAt,
+            p_nokaut_fetch_ms: nokautFetchMs,
+            p_stock_fetch_ms: stockFetchMs,
+            p_info_fetch_ms: infoFetchMs,
             p_error_message: null,
         })
 
@@ -574,6 +764,11 @@ async function runSync(request: NextRequest) {
             inventoryRowsParsed: stockRows.length,
             infoRowsParsed: infoRows.length,
             nokautRowsParsed: nokautRows.length,
+            skippedRows: {
+                stock: stockRowsSkipped,
+                info: infoRowsSkipped,
+            },
+            lockOwner,
             sourceColumns: sourceConfig.columns,
             syncedAt: new Date().toISOString(),
         })
@@ -585,10 +780,23 @@ async function runSync(request: NextRequest) {
             p_updated_rows: updatedRows,
             p_inventory_rows_parsed: stockRows.length,
             p_info_rows_parsed: infoRows.length,
+            p_nokaut_rows_parsed: nokautRows.length,
+            p_stock_rows_skipped: stockRowsSkipped,
+            p_info_rows_skipped: infoRowsSkipped,
+            p_lock_acquired: lockAcquired,
+            p_lock_owner: lockOwner,
+            p_duration_ms: Date.now() - runStartedAt,
+            p_nokaut_fetch_ms: nokautFetchMs,
+            p_stock_fetch_ms: stockFetchMs,
+            p_info_fetch_ms: infoFetchMs,
             p_error_message: message,
         })
 
         throw error
+    } finally {
+        if (lockAcquired) {
+            await releaseSyncLock(supabase, lockOwner)
+        }
     }
 }
 

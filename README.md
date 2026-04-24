@@ -93,17 +93,24 @@ Optional overrides (defaults already point to the provided links):
 SUPPLIER_NOKAUT_FEED_URL=https://sklep757254.shoparena.pl/console/integration/execute/name/Nokaut
 SUPPLIER_STOCK_FEED_URL=https://vpn.gwalento.ovh/stany.txt
 SUPPLIER_INFO_FEED_URL=https://vpn.gwalento.ovh/b2b/info.txt
-SUPPLIER_NOKAUT_FEED_URL=https://sklep757254.shoparena.pl/console/integration/execute/name/Nokaut
 ```
 
 ### Scheduler
 
-The project uses Vercel Cron (`vercel.json`) and runs sync every 3 hours.
+Inventory sync is scheduled with GitHub Actions every 5 minutes.
 
-- Schedule: `0 */3 * * *`
-- Route: `GET /api/sync/inventory`
+- Workflow file: `.github/workflows/sync-inventory.yml`
+- Schedule: `*/5 * * * *`
+- Route: `POST /api/sync/inventory`
 
-Set `CRON_SECRET` to the same value as `INVENTORY_SYNC_SECRET` so the route is authorized.
+Required GitHub repository secrets:
+
+- `SYNC_BASE_URL` (example: `https://your-domain.vercel.app`)
+- `INVENTORY_SYNC_SECRET` (must match app runtime env var)
+
+Optional fallback: keep Vercel cron in `vercel.json` as a low-frequency backup only.
+
+The endpoint now uses a database lock (`supplier_sync_locks`) so overlapping runs are skipped safely.
 
 ### Manual Trigger
 

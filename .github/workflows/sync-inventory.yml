@@ -1,0 +1,47 @@
+name: Sync Inventory
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: inventory-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Trigger inventory sync endpoint
+        env:
+          SYNC_BASE_URL: ${{ secrets.SYNC_BASE_URL }}
+          INVENTORY_SYNC_SECRET: ${{ secrets.INVENTORY_SYNC_SECRET }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${SYNC_BASE_URL:-}" ]; then
+            echo "SYNC_BASE_URL secret is required"
+            exit 1
+          fi
+
+          if [ -z "${INVENTORY_SYNC_SECRET:-}" ]; then
+            echo "INVENTORY_SYNC_SECRET secret is required"
+            exit 1
+          fi
+
+          URL="${SYNC_BASE_URL%/}/api/sync/inventory"
+
+          http_code=$(curl -sS -o response.json -w "%{http_code}" \
+            -X POST "$URL" \
+            -H "Authorization: Bearer ${INVENTORY_SYNC_SECRET}" \
+            -H "Content-Type: application/json" \
+            --max-time 300)
+
+          cat response.json
+
+          if [ "$http_code" -lt 200 ] || [ "$http_code" -ge 300 ]; then
+            echo "Inventory sync failed with status $http_code"
+            exit 1
+          fi
