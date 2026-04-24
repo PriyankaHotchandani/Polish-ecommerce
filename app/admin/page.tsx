@@ -3,7 +3,7 @@ import AdminMetricsGrid from '@/components/admin/AdminMetricsGrid'
 import Link from 'next/link'
 
 type LatestSupplierSyncRun = {
-    status: 'success' | 'failed'
+    status: 'success' | 'failed' | 'skipped_lock'
     updated_rows: number
     inventory_rows_parsed: number
     info_rows_parsed: number
@@ -41,8 +41,25 @@ export default async function AdminDashboard() {
     const { data: latestSyncData } = await rpc('get_latest_supplier_sync_run')
     const latestSync = latestSyncData?.[0] || null
 
+    const {
+        data: latestSuccessfulSync,
+    } = await supabase
+        .from('supplier_sync_runs')
+        .select('created_at')
+        .eq('status', 'success')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
     const latestSyncDate = latestSync
         ? new Date(latestSync.created_at).toLocaleString('en-GB', {
+            dateStyle: 'medium',
+            timeStyle: 'short',
+        })
+        : null
+
+    const latestSuccessfulSyncDate = latestSuccessfulSync?.created_at
+        ? new Date(latestSuccessfulSync.created_at).toLocaleString('en-GB', {
             dateStyle: 'medium',
             timeStyle: 'short',
         })
@@ -73,16 +90,20 @@ export default async function AdminDashboard() {
                 </div>
 
                 {latestSync ? (
-                    <div className="grid grid-cols-1 gap-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
+                    <div className="grid grid-cols-1 gap-4 text-sm sm:grid-cols-2 lg:grid-cols-5">
                         <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
                             <p className="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">Last Run</p>
                             <p className="mt-2 text-sm font-semibold text-slate-900">{latestSyncDate}</p>
                         </div>
                         <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
                             <p className="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">Status</p>
-                            <p className={`mt-2 text-sm font-semibold ${latestSync.status === 'success' ? 'text-emerald-700' : 'text-red-700'}`}>
-                                {latestSync.status === 'success' ? 'Success' : 'Failed'}
+                            <p className={`mt-2 text-sm font-semibold ${latestSync.status === 'success' ? 'text-emerald-700' : latestSync.status === 'skipped_lock' ? 'text-amber-700' : 'text-red-700'}`}>
+                                {latestSync.status === 'success' ? 'Success' : latestSync.status === 'skipped_lock' ? 'Skipped (Lock)' : 'Failed'}
                             </p>
+                        </div>
+                        <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                            <p className="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">Last Successful Fetch</p>
+                            <p className="mt-2 text-sm font-semibold text-slate-900">{latestSuccessfulSyncDate || 'No successful run yet'}</p>
                         </div>
                         <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
                             <p className="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">Rows Parsed</p>
