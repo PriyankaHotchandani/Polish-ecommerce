@@ -12,7 +12,7 @@ concurrency:
 jobs:
   sync:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     steps:
       - name: Trigger inventory sync endpoint
         env:
@@ -31,17 +31,49 @@ jobs:
             exit 1
           fi
 
-          URL="${SYNC_BASE_URL%/}/api/sync/inventory"
+          URL="${SYNC_BASE_URL%/}/api/sync/inventory?mode=inventory"
 
-          http_code=$(curl -sS -o response.json -w "%{http_code}" \
-            -X POST "$URL" \
-            -H "Authorization: Bearer ${INVENTORY_SYNC_SECRET}" \
-            -H "Content-Type: application/json" \
-            --max-time 300)
+          attempt=1
+          max_attempts=3
+          success=0
 
-          cat response.json
+          while [ "$attempt" -le "$max_attempts" ]; do
+            echo "Attempt $attempt/$max_attempts -> $URL"
 
-          if [ "$http_code" -lt 200 ] || [ "$http_code" -ge 300 ]; then
-            echo "Inventory sync failed with status $http_code"
+            set +e
+            http_code=$(curl -sS -o response.json -w "%{http_code}" \
+              -X POST "$URL" \
+              -H "Authorization: Bearer ${INVENTORY_SYNC_SECRET}" \
+              -H "Content-Type: application/json" \
+              --connect-timeout 20 \
+              --max-time 600)
+            curl_exit=$?
+            set -e
+
+            if [ -f response.json ]; then
+              cat response.json
+            fi
+
+            if [ "$curl_exit" -eq 0 ] && [ "$http_code" -ge 200 ] && [ "$http_code" -lt 300 ]; then
+              echo "Inventory sync succeeded with status $http_code"
+              success=1
+              break
+            fi
+
+            echo "Attempt $attempt failed (curl_exit=$curl_exit, http_code=${http_code:-none})"
+
+            # Retry only for transport failures and transient HTTP statuses.
+            if [ "$attempt" -lt "$max_attempts" ]; then
+              if [ "$curl_exit" -ne 0 ] || [ "$http_code" -eq 429 ] || [ "$http_code" -ge 500 ]; then
+                attempt=$((attempt + 1))
+                continue
+              fi
+            fi
+
+            break
+          done
+
+          if [ "$success" -ne 1 ]; then
+            echo "Inventory sync failed after $attempt attempt(s)."
             exit 1
           fi

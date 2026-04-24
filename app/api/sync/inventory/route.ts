@@ -552,6 +552,8 @@ async function runSync(request: NextRequest) {
     const stockFeedUrl = process.env.SUPPLIER_STOCK_FEED_URL || sourceConfig.sourceUrls.stock || DEFAULT_STOCK_FEED_URL
     const infoFeedUrl = process.env.SUPPLIER_INFO_FEED_URL || sourceConfig.sourceUrls.info || DEFAULT_INFO_FEED_URL
     const nokautFeedUrl = process.env.SUPPLIER_NOKAUT_FEED_URL || sourceConfig.sourceUrls.nokaut || DEFAULT_NOKAUT_FEED_URL
+    const requestedMode = (request.nextUrl.searchParams.get('mode') || 'inventory').toLowerCase()
+    const isFullSync = requestedMode === 'full'
 
     const supabase = createServiceClient()
 
@@ -613,6 +615,66 @@ async function runSync(request: NextRequest) {
         const infoParseResult = parseInfoFeed(infoFetch.content)
         infoRows = infoParseResult.rows
         infoRowsSkipped = infoParseResult.skippedRows
+
+        if (!isFullSync) {
+            const inventoryPayload = stockRows.map((row) => ({
+                sku: row.sku,
+                quantity: row.stan,
+                net_price: row.netto,
+                gross_price: row.brutto,
+            }))
+
+            const infoPayload = infoRows.map((row) => ({
+                sku: row.sku,
+                ean: row.ena,
+                code_cn: row.cn,
+                weight_kg: row.waga,
+            }))
+
+            const { data, error } = await supabase.rpc('sync_supplier_inventory', {
+                p_inventory: inventoryPayload,
+                p_info: infoPayload,
+            } as never)
+
+            if (error) {
+                throw new Error(`Inventory RPC failed: ${error.message}`)
+            }
+
+            const rpcRows = (data || []) as Array<{ updated_rows: number }>
+            updatedRows = rpcRows[0]?.updated_rows || 0
+
+            await logSyncRun(supabase, {
+                p_status: 'success',
+                p_updated_rows: updatedRows,
+                p_inventory_rows_parsed: stockRows.length,
+                p_info_rows_parsed: infoRows.length,
+                p_nokaut_rows_parsed: nokautRows.length,
+                p_stock_rows_skipped: stockRowsSkipped,
+                p_info_rows_skipped: infoRowsSkipped,
+                p_lock_acquired: true,
+                p_lock_owner: lockOwner,
+                p_duration_ms: Date.now() - runStartedAt,
+                p_nokaut_fetch_ms: nokautFetchMs,
+                p_stock_fetch_ms: stockFetchMs,
+                p_info_fetch_ms: infoFetchMs,
+                p_error_message: null,
+            })
+
+            return NextResponse.json({
+                success: true,
+                mode: 'inventory',
+                updatedRows,
+                inventoryRowsParsed: stockRows.length,
+                infoRowsParsed: infoRows.length,
+                nokautRowsParsed: nokautRows.length,
+                skippedRows: {
+                    stock: stockRowsSkipped,
+                    info: infoRowsSkipped,
+                },
+                lockOwner,
+                syncedAt: new Date().toISOString(),
+            })
+        }
 
         const stockBySku = new Map(stockRows.map((row) => [row.sku, row]))
         const infoBySku = new Map(infoRows.map((row) => [row.sku, row]))
@@ -760,6 +822,7 @@ async function runSync(request: NextRequest) {
 
         return NextResponse.json({
             success: true,
+            mode: 'full',
             updatedRows,
             inventoryRowsParsed: stockRows.length,
             infoRowsParsed: infoRows.length,
