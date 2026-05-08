@@ -19,37 +19,65 @@ type RpcCallResult<T> = {
 export default async function AdminDashboard() {
     const supabase = await createClient()
 
-    // Fetch key metrics
-    const [ordersResult, productsResult, usersResult] = await Promise.all([
-        supabase.from('orders').select('id, total_amount, status', { count: 'exact' }),
-        supabase.from('products').select('id, inventory_count', { count: 'exact' }),
-        supabase.from('users').select('id', { count: 'exact' }),
-    ])
+    // Fetch key metrics with error handling
+    let totalOrders = 0
+    let totalRevenue = 0
+    let pendingOrders = 0
+    let totalProducts = 0
+    let lowStockProducts = 0
+    let totalUsers = 0
 
-    const totalOrders = ordersResult.count || 0
-    const totalRevenue = ordersResult.data?.reduce((sum, order) => sum + Number(order.total_amount), 0) || 0
-    const pendingOrders = ordersResult.data?.filter(o => o.status === 'pending').length || 0
-    const totalProducts = productsResult.count || 0
-    const lowStockProducts = productsResult.data?.filter(p => p.inventory_count < 10).length || 0
-    const totalUsers = usersResult.count || 0
+    try {
+        const [ordersResult, productsResult, usersResult] = await Promise.all([
+            supabase.from('orders').select('id, total_amount, status', { count: 'exact' }),
+            supabase.from('products').select('id, inventory_count', { count: 'exact' }),
+            supabase.from('users').select('id', { count: 'exact' }),
+        ])
 
-    const rpc = supabase.rpc as unknown as (
-        fn: string,
-        params?: Record<string, never>
-    ) => Promise<RpcCallResult<LatestSupplierSyncRun[]>>
+        totalOrders = ordersResult.count || 0
+        totalRevenue = ordersResult.data?.reduce((sum, order) => sum + Number(order.total_amount), 0) || 0
+        pendingOrders = ordersResult.data?.filter(o => o.status === 'pending').length || 0
+        totalProducts = productsResult.count || 0
+        lowStockProducts = productsResult.data?.filter(p => p.inventory_count < 10).length || 0
+        totalUsers = usersResult.count || 0
+    } catch (error) {
+        console.error('Error fetching metrics:', error)
+    }
 
-    const { data: latestSyncData } = await rpc('get_latest_supplier_sync_run')
-    const latestSync = latestSyncData?.[0] || null
+    let latestSync: LatestSupplierSyncRun | null = null
+    let latestSuccessfulSync: { created_at: string } | null = null
 
-    const {
-        data: latestSuccessfulSync,
-    } = await supabase
-        .from('supplier_sync_runs')
-        .select('created_at')
-        .eq('status', 'success')
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle()
+    try {
+        const rpc = supabase.rpc as unknown as (
+            fn: string,
+            params?: Record<string, never>
+        ) => Promise<RpcCallResult<LatestSupplierSyncRun[]>>
+
+        const { data: latestSyncData, error: rpcError } = await rpc('get_latest_supplier_sync_run')
+        if (rpcError) {
+            console.error('Error fetching latest sync:', rpcError)
+        }
+        latestSync = latestSyncData?.[0] || null
+    } catch (error) {
+        console.error('Error calling get_latest_supplier_sync_run RPC:', error)
+    }
+
+    try {
+        const result = await supabase
+            .from('supplier_sync_runs')
+            .select('created_at')
+            .eq('status', 'success')
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle()
+
+        if (result.error) {
+            console.error('Error fetching latest successful sync:', result.error)
+        }
+        latestSuccessfulSync = result.data
+    } catch (error) {
+        console.error('Error fetching latest successful sync:', error)
+    }
 
     const latestSyncDate = latestSync
         ? new Date(latestSync.created_at).toLocaleString('en-GB', {
