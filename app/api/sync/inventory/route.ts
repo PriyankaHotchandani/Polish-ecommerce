@@ -6,6 +6,7 @@ import type { Database } from '@/types/database.types'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
+export const maxDuration = 60
 
 type StockFeedRow = {
     sku: string
@@ -73,7 +74,7 @@ const DEFAULT_STOCK_FEED_URL = 'https://vpn.gwalento.ovh/stany.txt'
 const DEFAULT_INFO_FEED_URL = 'https://vpn.gwalento.ovh/b2b/info.txt'
 const INVENTORY_LOCK_NAME = 'inventory_sync'
 const INVENTORY_LOCK_TTL_SECONDS = 600
-const FEED_FETCH_TIMEOUT_MS = 15000
+const FEED_FETCH_TIMEOUT_MS = 60000
 const FEED_FETCH_MAX_RETRIES = 3
 
 function ensureEnv(name: string): string {
