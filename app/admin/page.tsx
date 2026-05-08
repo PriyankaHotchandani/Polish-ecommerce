@@ -1,5 +1,6 @@
 import { createClient } from '@/utils/supabase/server'
 import AdminMetricsGrid from '@/components/admin/AdminMetricsGrid'
+import RunInventorySyncButton from '@/components/admin/RunInventorySyncButton'
 import Link from 'next/link'
 
 type LatestSupplierSyncRun = {
@@ -115,6 +116,14 @@ export default async function AdminDashboard() {
                     <span className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.08em] text-slate-700">
                         Auto once daily
                     </span>
+                </div>
+
+                <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                    <div>
+                        <p className="text-sm font-semibold text-slate-900">Manual sync</p>
+                        <p className="text-xs text-slate-500">Trigger the supplier import immediately, then refresh the dashboard cards.</p>
+                    </div>
+                    <RunInventorySyncButton />
                 </div>
 
                 {latestSync ? (
