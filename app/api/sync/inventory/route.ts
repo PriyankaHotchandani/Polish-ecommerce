@@ -821,7 +821,7 @@ async function runSync(request: NextRequest) {
             return parts[parts.length - 1] || path
         })
 
-        const titleTranslations = skipTranslation 
+        const titleTranslations = skipTranslation
             ? new Map()
             : await translateUniqueMap(
                 nokautRows.map((row) => row.nazwa || ''),

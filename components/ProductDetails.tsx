@@ -10,6 +10,7 @@ import {
     getLocalizedProductDescription,
     getLocalizedProductTitle,
 } from '@/utils/productLocalization'
+import { useProductTranslation } from '@/utils/useProductTranslation'
 
 interface ProductDetailsProps {
     product: Product & { category: Category }
@@ -123,23 +124,39 @@ function splitParagraphs(text: string): string[] {
 export default function ProductDetails({ product }: ProductDetailsProps) {
     const specifications = product.specifications as Record<string, Json> | null
     const { messages, locale } = useLocaleMessages()
-    const localizedCategoryName = getLocalizedCategoryNameWithTranslations(
-        product.category.name,
-        product.category.slug,
-        locale,
-        product.category.name_translations as { en?: string | null, pl?: string | null } | null
-    )
-    const localizedTitle = getLocalizedProductTitle(
+    
+    // Get base localized values from DB translations
+    const baseLocalizedTitle = getLocalizedProductTitle(
         product.title,
         product.slug,
         locale,
         product.title_translations as { en?: string | null, pl?: string | null } | null
     )
-    const localizedDescription = getLocalizedProductDescription(
+    const baseLocalizedDescription = getLocalizedProductDescription(
         product.description,
         product.slug,
         locale,
         product.description_translations as { en?: string | null, pl?: string | null } | null
+    )
+    
+    // Apply client-side translation if needed
+    const { title: clientTranslatedTitle, description: clientTranslatedDescription } = useProductTranslation(
+        product.title,
+        product.description,
+        product.title_translations as { en?: string | null, pl?: string | null } | null,
+        product.description_translations as { en?: string | null, pl?: string | null } | null,
+        locale
+    )
+    
+    // Use client translations if available, otherwise fall back to base localized values
+    const localizedTitle = clientTranslatedTitle || baseLocalizedTitle
+    const localizedDescription = clientTranslatedDescription || baseLocalizedDescription
+    
+    const localizedCategoryName = getLocalizedCategoryNameWithTranslations(
+        product.category.name,
+        product.category.slug,
+        locale,
+        product.category.name_translations as { en?: string | null, pl?: string | null } | null
     )
     const localizedBrandName = getLocalizedBrandName(product.brand, locale)
     const normalizedDescription = localizedDescription ? normalizeDescriptionText(localizedDescription) : null
