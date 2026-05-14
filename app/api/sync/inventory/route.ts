@@ -11,8 +11,8 @@ export const maxDuration = 60
 type StockFeedRow = {
     sku: string
     stan: number
-    netto: number
-    brutto: number
+    netto: number | null
+    brutto: number | null
 }
 
 type InfoFeedRow = {
@@ -20,6 +20,12 @@ type InfoFeedRow = {
     ena: string | null
     cn: string | null
     waga: number | null
+}
+
+type HouseholdFeedRow = {
+    sku: string
+    quantity: number
+    ean13: string | null
 }
 
 type NokautOfferRow = {
@@ -66,12 +72,18 @@ type ParseInfoResult = {
     skippedRows: number
 }
 
+type ParseHouseholdResult = {
+    rows: HouseholdFeedRow[]
+    skippedRows: number
+}
+
 type CategoryInsert = Database['public']['Tables']['categories']['Insert']
 type ProductInsert = Database['public']['Tables']['products']['Insert']
 
 const DEFAULT_NOKAUT_FEED_URL = 'https://sklep757254.shoparena.pl/console/integration/execute/name/Nokaut'
 const DEFAULT_STOCK_FEED_URL = 'https://vpn.gwalento.ovh/stany.txt'
 const DEFAULT_INFO_FEED_URL = 'https://vpn.gwalento.ovh/b2b/info.txt'
+const DEFAULT_HOUSEHOLD_FEED_URL = 'https://prajo.eu/pl/module/an_export/generator?id_profile=55&token=cbca835e01c150c774866b66cfd1ac3d'
 const INVENTORY_LOCK_NAME = 'inventory_sync'
 const INVENTORY_LOCK_TTL_SECONDS = 600
 const FEED_FETCH_TIMEOUT_MS = 60000
@@ -191,6 +203,15 @@ function extractTagCdataValue(source: string, tagName: string): string | null {
     }
 
     return extractTagValue(source, tagName)
+}
+
+function extractAttributeValue(source: string, attributeName: string): string | null {
+    const regex = new RegExp(`${attributeName}=["']([^"']*)["']`, 'i')
+    const match = source.match(regex)
+    if (!match) return null
+
+    const value = match[1]?.trim()
+    return value ? decodeXmlEntities(value) : null
 }
 
 function extractPropertyValue(source: string, propertyName: string): string | null {
@@ -328,6 +349,35 @@ function parseInfoFeed(content: string): ParseInfoResult {
             ena,
             cn,
             waga,
+        })
+    }
+
+    return {
+        rows,
+        skippedRows,
+    }
+}
+
+function parseHouseholdFeed(content: string): ParseHouseholdResult {
+    const rows: HouseholdFeedRow[] = []
+    let skippedRows = 0
+    const products = Array.from(stripBom(content).matchAll(/<Product\b([^>]*)\/>/gi))
+
+    for (const productMatch of products) {
+        const attributes = productMatch[1] || ''
+        const sku = extractAttributeValue(attributes, 'reference')
+        const quantity = normalizeInteger(extractAttributeValue(attributes, 'quantity') || '')
+        const ean13 = extractAttributeValue(attributes, 'ean13')
+
+        if (!sku || quantity === null) {
+            skippedRows += 1
+            continue
+        }
+
+        rows.push({
+            sku,
+            quantity: Math.max(0, quantity),
+            ean13,
         })
     }
 
@@ -553,6 +603,7 @@ async function runSync(request: NextRequest) {
     const stockFeedUrl = process.env.SUPPLIER_STOCK_FEED_URL || sourceConfig.sourceUrls.stock || DEFAULT_STOCK_FEED_URL
     const infoFeedUrl = process.env.SUPPLIER_INFO_FEED_URL || sourceConfig.sourceUrls.info || DEFAULT_INFO_FEED_URL
     const nokautFeedUrl = process.env.SUPPLIER_NOKAUT_FEED_URL || sourceConfig.sourceUrls.nokaut || DEFAULT_NOKAUT_FEED_URL
+    const householdFeedUrl = process.env.SUPPLIER_HOUSEHOLD_FEED_URL || DEFAULT_HOUSEHOLD_FEED_URL
     const requestedMode = (request.nextUrl.searchParams.get('mode') || 'inventory').toLowerCase()
     const isFullSync = requestedMode === 'full'
 
@@ -561,8 +612,10 @@ async function runSync(request: NextRequest) {
     let stockRows: StockFeedRow[] = []
     let infoRows: InfoFeedRow[] = []
     let nokautRows: NokautOfferRow[] = []
+    let householdRows: HouseholdFeedRow[] = []
     let stockRowsSkipped = 0
     let infoRowsSkipped = 0
+    let householdRowsSkipped = 0
     let updatedRows = 0
     let lockAcquired = false
     let nokautFetchMs = 0
@@ -597,10 +650,11 @@ async function runSync(request: NextRequest) {
             )
         }
 
-        const [nokautFetch, stockFetch, infoFetch] = await Promise.all([
+        const [nokautFetch, stockFetch, infoFetch, householdFetch] = await Promise.all([
             fetchTextWithRetry(nokautFeedUrl),
             fetchTextWithRetry(stockFeedUrl),
             fetchTextWithRetry(infoFeedUrl),
+            fetchTextWithRetry(householdFeedUrl),
         ])
 
         nokautFetchMs = nokautFetch.durationMs
@@ -617,14 +671,44 @@ async function runSync(request: NextRequest) {
         infoRows = infoParseResult.rows
         infoRowsSkipped = infoParseResult.skippedRows
 
-        if (!isFullSync) {
-            const inventoryPayload = stockRows.map((row) => ({
+        const householdParseResult = parseHouseholdFeed(householdFetch.content)
+        householdRows = householdParseResult.rows
+        householdRowsSkipped = householdParseResult.skippedRows
+
+        const inventoryBySku = new Map<string, {
+            sku: string
+            quantity: number
+            net_price: number | null
+            gross_price: number | null
+        }>()
+
+        for (const row of stockRows) {
+            inventoryBySku.set(row.sku, {
                 sku: row.sku,
                 quantity: row.stan,
                 net_price: row.netto,
                 gross_price: row.brutto,
-            }))
+            })
+        }
 
+        for (const row of householdRows) {
+            const existing = inventoryBySku.get(row.sku)
+            if (existing) {
+                existing.quantity = row.quantity
+                continue
+            }
+
+            inventoryBySku.set(row.sku, {
+                sku: row.sku,
+                quantity: row.quantity,
+                net_price: null,
+                gross_price: null,
+            })
+        }
+
+        const inventoryPayload = Array.from(inventoryBySku.values())
+
+        if (!isFullSync) {
             const infoPayload = infoRows.map((row) => ({
                 sku: row.sku,
                 ean: row.ena,
@@ -647,7 +731,7 @@ async function runSync(request: NextRequest) {
             await logSyncRun(supabase, {
                 p_status: 'success',
                 p_updated_rows: updatedRows,
-                p_inventory_rows_parsed: stockRows.length,
+                p_inventory_rows_parsed: inventoryPayload.length,
                 p_info_rows_parsed: infoRows.length,
                 p_nokaut_rows_parsed: nokautRows.length,
                 p_stock_rows_skipped: stockRowsSkipped,
@@ -665,12 +749,14 @@ async function runSync(request: NextRequest) {
                 success: true,
                 mode: 'inventory',
                 updatedRows,
-                inventoryRowsParsed: stockRows.length,
+                inventoryRowsParsed: inventoryPayload.length,
                 infoRowsParsed: infoRows.length,
                 nokautRowsParsed: nokautRows.length,
+                householdRowsParsed: householdRows.length,
                 skippedRows: {
                     stock: stockRowsSkipped,
                     info: infoRowsSkipped,
+                    household: householdRowsSkipped,
                 },
                 lockOwner,
                 syncedAt: new Date().toISOString(),
@@ -807,7 +893,7 @@ async function runSync(request: NextRequest) {
         await logSyncRun(supabase, {
             p_status: 'success',
             p_updated_rows: updatedRows,
-            p_inventory_rows_parsed: stockRows.length,
+            p_inventory_rows_parsed: inventoryPayload.length,
             p_info_rows_parsed: infoRows.length,
             p_nokaut_rows_parsed: nokautRows.length,
             p_stock_rows_skipped: stockRowsSkipped,
@@ -825,12 +911,14 @@ async function runSync(request: NextRequest) {
             success: true,
             mode: 'full',
             updatedRows,
-            inventoryRowsParsed: stockRows.length,
+            inventoryRowsParsed: inventoryPayload.length,
             infoRowsParsed: infoRows.length,
             nokautRowsParsed: nokautRows.length,
+            householdRowsParsed: householdRows.length,
             skippedRows: {
                 stock: stockRowsSkipped,
                 info: infoRowsSkipped,
+                household: householdRowsSkipped,
             },
             lockOwner,
             sourceColumns: sourceConfig.columns,

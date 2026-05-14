@@ -93,6 +93,7 @@ Optional overrides (defaults already point to the provided links):
 SUPPLIER_NOKAUT_FEED_URL=https://sklep757254.shoparena.pl/console/integration/execute/name/Nokaut
 SUPPLIER_STOCK_FEED_URL=https://vpn.gwalento.ovh/stany.txt
 SUPPLIER_INFO_FEED_URL=https://vpn.gwalento.ovh/b2b/info.txt
+SUPPLIER_HOUSEHOLD_FEED_URL=https://prajo.eu/pl/module/an_export/generator?id_profile=55&token=cbca835e01c150c774866b66cfd1ac3d
 ```
 
 ### Scheduler
