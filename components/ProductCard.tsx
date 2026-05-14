@@ -1,7 +1,6 @@
 'use client'
 
 import Link from 'next/link'
-import Image from 'next/image'
 import type { Product, Category } from '@/types/database.types'
 import PriceDisplay from './PriceDisplay'
 import AddToCartButton from './AddToCartButton'
@@ -58,11 +57,9 @@ export default function ProductCard({ product, variant = 'default' }: ProductCar
             <Link href={`/product/${product.slug}`} prefetch={false} className={isFeatured ? 'product-card-image-link product-card-image-link-featured' : ''}>
                 <div className={isFeatured ? 'product-card-image-wrap product-card-image-wrap-featured' : 'aspect-square bg-gray-200 relative'}>
                     {imageUrl ? (
-                        <Image
+                        <img
                             src={imageUrl}
                             alt={localizedTitle}
-                            fill
-                            sizes={isFeatured ? '(max-width: 639px) 100vw, (max-width: 1023px) 50vw, 33vw' : '(max-width: 639px) 100vw, (max-width: 1023px) 50vw, 33vw'}
                             className={isFeatured ? 'product-card-image' : 'w-full h-full object-cover'}
                             loading="lazy"
                             decoding="async"
