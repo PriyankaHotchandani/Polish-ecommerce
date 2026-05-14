@@ -6,7 +6,7 @@ import type { Database } from '@/types/database.types'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
-export const maxDuration = 60
+export const maxDuration = 300
 
 type StockFeedRow = {
     sku: string
