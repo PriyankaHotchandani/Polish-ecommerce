@@ -372,6 +372,11 @@ function parseE24Feed(content: string): ParseE24Result {
         const ean = extractTagValue(productXml, 'ean')
         const category = extractTagValue(productXml, 'category_name')
         const brand = extractTagValue(productXml, 'manufacturer_name')
+        const imageMain = extractTagValue(productXml, 'image')
+        const imageExtras = Array.from(new Set(
+            Array.from({ length: 15 }, (_, index) => extractTagValue(productXml, `image_extra_${index + 1}`))
+                .filter((url): url is string => Boolean(url))
+        ))
         const qtyRaw = extractTagValue(productXml, 'quantity') || null
         const priceNetRaw = extractTagValue(productXml, 'price_net') || extractTagValue(productXml, 'purchase_price') || null
         const priceGrossRaw = extractTagValue(productXml, 'price') || null
@@ -397,8 +402,8 @@ function parseE24Feed(content: string): ParseE24Result {
             nazwa,
             opis: opisRaw,
             url_produktu: null,
-            zdjecie_glowne: null,
-            zdjecia_produktu_pozostale: [],
+            zdjecie_glowne: imageMain,
+            zdjecia_produktu_pozostale: imageExtras,
             sku_nokaut: sku,
             brand,
             category_path: category,
@@ -874,9 +879,9 @@ async function runSync(request: NextRequest) {
                 ].filter(Boolean) as string[]
 
                 const uniqueImageUrls = Array.from(new Set(imageUrls))
-                const translatedTitle = titleTranslations.get(sourceTitle) || sourceTitle
+                const translatedTitle = titleTranslations.get(sourceTitle) || null
                 const translatedDescription = sourceDescriptionForTranslation
-                    ? (descriptionTranslations.get(sourceDescriptionForTranslation) || sourceDescriptionForTranslation)
+                    ? (descriptionTranslations.get(sourceDescriptionForTranslation) || null)
                     : null
 
                 const payload: ProductInsert = {

@@ -101,8 +101,16 @@ export function getTranslationOrFallback(
 ): { text: string | null; needsTranslation: boolean } {
     // If we have DB translations, use them
     if (translations) {
-        const dbTranslation = targetLocale === 'en' ? translations.en : translations.pl
-        if (dbTranslation) {
+        const dbTranslationRaw = targetLocale === 'en' ? translations.en : translations.pl
+        const dbTranslation = dbTranslationRaw?.trim() || null
+        const plTranslation = translations.pl?.trim() || null
+        const baseTrimmed = baseText?.trim() || null
+
+        const looksUntranslatedEnglish = targetLocale === 'en'
+            && Boolean(dbTranslation)
+            && (dbTranslation === plTranslation || dbTranslation === baseTrimmed)
+
+        if (dbTranslation && !looksUntranslatedEnglish) {
             return { text: dbTranslation, needsTranslation: false }
         }
     }

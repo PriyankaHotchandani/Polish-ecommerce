@@ -30,6 +30,10 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'dawika.pl',
       },
+      {
+        protocol: 'https',
+        hostname: 'prajo.eu',
+      },
     ],
   },
 };

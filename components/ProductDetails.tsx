@@ -124,7 +124,7 @@ function splitParagraphs(text: string): string[] {
 export default function ProductDetails({ product }: ProductDetailsProps) {
     const specifications = product.specifications as Record<string, Json> | null
     const { messages, locale } = useLocaleMessages()
-    
+
     // Get base localized values from DB translations
     const baseLocalizedTitle = getLocalizedProductTitle(
         product.title,
@@ -138,7 +138,7 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
         locale,
         product.description_translations as { en?: string | null, pl?: string | null } | null
     )
-    
+
     // Apply client-side translation if needed
     const { title: clientTranslatedTitle, description: clientTranslatedDescription } = useProductTranslation(
         product.title,
@@ -147,11 +147,11 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
         product.description_translations as { en?: string | null, pl?: string | null } | null,
         locale
     )
-    
+
     // Use client translations if available, otherwise fall back to base localized values
     const localizedTitle = clientTranslatedTitle || baseLocalizedTitle
     const localizedDescription = clientTranslatedDescription || baseLocalizedDescription
-    
+
     const localizedCategoryName = getLocalizedCategoryNameWithTranslations(
         product.category.name,
         product.category.slug,

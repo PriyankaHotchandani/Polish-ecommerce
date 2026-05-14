@@ -22,7 +22,7 @@ export default function ProductCard({ product, variant = 'default' }: ProductCar
     const isFeatured = variant === 'featured'
     const imageUrl = product.image_urls?.[0]
     const { messages, locale } = useLocaleMessages()
-    
+
     // Get base localized title from DB translations
     const baseLocalizedTitle = getLocalizedProductTitle(
         product.title,
@@ -30,7 +30,7 @@ export default function ProductCard({ product, variant = 'default' }: ProductCar
         locale,
         product.title_translations as { en?: string | null, pl?: string | null } | null
     )
-    
+
     // Apply client-side translation if needed (for English locale and missing DB translations)
     const { title: clientTranslatedTitle } = useProductTranslation(
         product.title,
@@ -39,10 +39,10 @@ export default function ProductCard({ product, variant = 'default' }: ProductCar
         product.description_translations as { en?: string | null, pl?: string | null } | null,
         locale
     )
-    
+
     // Use client translation if available, otherwise fall back to base localized title
     const localizedTitle = clientTranslatedTitle || baseLocalizedTitle
-    
+
     const localizedCategoryName = product.category
         ? getLocalizedCategoryNameWithTranslations(
             product.category.name,
