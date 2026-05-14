@@ -630,6 +630,7 @@ async function runSync(request: NextRequest) {
     const e24FeedUrl = process.env.SUPPLIER_E24_FEED_URL || DEFAULT_E24_FEED_URL
     const requestedMode = (request.nextUrl.searchParams.get('mode') || 'inventory').toLowerCase()
     const isFullSync = requestedMode === 'full'
+    const skipTranslation = request.nextUrl.searchParams.get('skipTranslation') === 'true'
 
     const supabase = createServiceClient()
 
@@ -820,20 +821,26 @@ async function runSync(request: NextRequest) {
             return parts[parts.length - 1] || path
         })
 
-        const titleTranslations = await translateUniqueMap(
-            nokautRows.map((row) => row.nazwa || ''),
-            { sourceLang: 'PL', targetLang: 'EN' }
-        )
+        const titleTranslations = skipTranslation 
+            ? new Map()
+            : await translateUniqueMap(
+                nokautRows.map((row) => row.nazwa || ''),
+                { sourceLang: 'PL', targetLang: 'EN' }
+            )
 
-        const descriptionTranslations = await translateUniqueMap(
-            nokautRows.map((row) => normalizeForTranslation(row.opis)),
-            { sourceLang: 'PL', targetLang: 'EN' }
-        )
+        const descriptionTranslations = skipTranslation
+            ? new Map()
+            : await translateUniqueMap(
+                nokautRows.map((row) => normalizeForTranslation(row.opis)),
+                { sourceLang: 'PL', targetLang: 'EN' }
+            )
 
-        const categoryTranslations = await translateUniqueMap(
-            categoryLeafNames,
-            { sourceLang: 'PL', targetLang: 'EN' }
-        )
+        const categoryTranslations = skipTranslation
+            ? new Map()
+            : await translateUniqueMap(
+                categoryLeafNames,
+                { sourceLang: 'PL', targetLang: 'EN' }
+            )
 
         const categoryIdByPath = await upsertCategories(supabase, allCategoryPaths, categoryTranslations)
 
