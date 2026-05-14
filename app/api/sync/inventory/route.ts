@@ -22,10 +22,19 @@ type InfoFeedRow = {
     waga: number | null
 }
 
-type HouseholdFeedRow = {
-    sku: string
-    quantity: number
-    ean13: string | null
+type E24OfferRow = {
+    co: string | null
+    nazwa: string | null
+    opis: string | null
+    url_produktu: string | null
+    zdjecie_glowne: string | null
+    zdjecia_produktu_pozostale: string[]
+    sku_nokaut: string | null
+    brand: string | null
+    category_path: string | null
+    quantity: number | null
+    netto: number | null
+    brutto: number | null
 }
 
 type NokautOfferRow = {
@@ -72,8 +81,8 @@ type ParseInfoResult = {
     skippedRows: number
 }
 
-type ParseHouseholdResult = {
-    rows: HouseholdFeedRow[]
+type ParseE24Result = {
+    rows: E24OfferRow[]
     skippedRows: number
 }
 
@@ -83,7 +92,7 @@ type ProductInsert = Database['public']['Tables']['products']['Insert']
 const DEFAULT_NOKAUT_FEED_URL = 'https://sklep757254.shoparena.pl/console/integration/execute/name/Nokaut'
 const DEFAULT_STOCK_FEED_URL = 'https://vpn.gwalento.ovh/stany.txt'
 const DEFAULT_INFO_FEED_URL = 'https://vpn.gwalento.ovh/b2b/info.txt'
-const DEFAULT_HOUSEHOLD_FEED_URL = 'https://prajo.eu/pl/module/an_export/generator?id_profile=55&token=cbca835e01c150c774866b66cfd1ac3d'
+const DEFAULT_E24_FEED_URL = 'https://e24files.com/saly-prajo-prod/offer/product/e0b71484-450a-43f4-ae3d-616e8f182905.xml'
 const INVENTORY_LOCK_NAME = 'inventory_sync'
 const INVENTORY_LOCK_TTL_SECONDS = 600
 const FEED_FETCH_TIMEOUT_MS = 60000
@@ -203,15 +212,6 @@ function extractTagCdataValue(source: string, tagName: string): string | null {
     }
 
     return extractTagValue(source, tagName)
-}
-
-function extractAttributeValue(source: string, attributeName: string): string | null {
-    const regex = new RegExp(`${attributeName}=["']([^"']*)["']`, 'i')
-    const match = source.match(regex)
-    if (!match) return null
-
-    const value = match[1]?.trim()
-    return value ? decodeXmlEntities(value) : null
 }
 
 function extractPropertyValue(source: string, propertyName: string): string | null {
@@ -358,33 +358,57 @@ function parseInfoFeed(content: string): ParseInfoResult {
     }
 }
 
-function parseHouseholdFeed(content: string): ParseHouseholdResult {
-    const rows: HouseholdFeedRow[] = []
+function parseE24Feed(content: string): ParseE24Result {
+    const rows: E24OfferRow[] = []
     let skippedRows = 0
-    const products = Array.from(stripBom(content).matchAll(/<Product\b([^>]*)\/>/gi))
+    const offers = Array.from(content.matchAll(/<product>([\s\S]*?)<\/product>/gi))
 
-    for (const productMatch of products) {
-        const attributes = productMatch[1] || ''
-        const sku = extractAttributeValue(attributes, 'reference')
-        const quantity = normalizeInteger(extractAttributeValue(attributes, 'quantity') || '')
-        const ean13 = extractAttributeValue(attributes, 'ean13')
+    for (const match of offers) {
+        const productXml = match[1] || ''
+        const co = extractTagValue(productXml, 'product_id')
+        const nazwa = extractTagValue(productXml, 'name')
+        const opisRaw = extractTagCdataValue(productXml, 'description') || extractTagValue(productXml, 'description')
+        const sku = extractTagValue(productXml, 'sku')
+        const ean = extractTagValue(productXml, 'ean')
+        const category = extractTagValue(productXml, 'category_name')
+        const brand = extractTagValue(productXml, 'manufacturer_name')
+        const qtyRaw = extractTagValue(productXml, 'quantity') || null
+        const priceNetRaw = extractTagValue(productXml, 'price_net') || extractTagValue(productXml, 'purchase_price') || null
+        const priceGrossRaw = extractTagValue(productXml, 'price') || null
 
-        if (!sku || quantity === null) {
+        const quantity = qtyRaw ? normalizeInteger(String(qtyRaw).replace(',', '.')) : null
+
+        function parseMoney(raw: string | null): number | null {
+            if (!raw) return null
+            const cleaned = String(raw).replace(/[^0-9.,-]/g, '').trim()
+            return normalizeDecimal(cleaned)
+        }
+
+        const netto = parseMoney(priceNetRaw)
+        const brutto = parseMoney(priceGrossRaw)
+
+        if (!sku) {
             skippedRows += 1
             continue
         }
 
         rows.push({
-            sku,
-            quantity: Math.max(0, quantity),
-            ean13,
+            co,
+            nazwa,
+            opis: opisRaw,
+            url_produktu: null,
+            zdjecie_glowne: null,
+            zdjecia_produktu_pozostale: [],
+            sku_nokaut: sku,
+            brand,
+            category_path: category,
+            quantity,
+            netto,
+            brutto,
         })
     }
 
-    return {
-        rows,
-        skippedRows,
-    }
+    return { rows, skippedRows }
 }
 
 async function upsertCategories(
@@ -603,7 +627,7 @@ async function runSync(request: NextRequest) {
     const stockFeedUrl = process.env.SUPPLIER_STOCK_FEED_URL || sourceConfig.sourceUrls.stock || DEFAULT_STOCK_FEED_URL
     const infoFeedUrl = process.env.SUPPLIER_INFO_FEED_URL || sourceConfig.sourceUrls.info || DEFAULT_INFO_FEED_URL
     const nokautFeedUrl = process.env.SUPPLIER_NOKAUT_FEED_URL || sourceConfig.sourceUrls.nokaut || DEFAULT_NOKAUT_FEED_URL
-    const householdFeedUrl = process.env.SUPPLIER_HOUSEHOLD_FEED_URL || DEFAULT_HOUSEHOLD_FEED_URL
+    const e24FeedUrl = process.env.SUPPLIER_E24_FEED_URL || DEFAULT_E24_FEED_URL
     const requestedMode = (request.nextUrl.searchParams.get('mode') || 'inventory').toLowerCase()
     const isFullSync = requestedMode === 'full'
 
@@ -612,10 +636,10 @@ async function runSync(request: NextRequest) {
     let stockRows: StockFeedRow[] = []
     let infoRows: InfoFeedRow[] = []
     let nokautRows: NokautOfferRow[] = []
-    let householdRows: HouseholdFeedRow[] = []
+    let e24Rows: E24OfferRow[] = []
     let stockRowsSkipped = 0
     let infoRowsSkipped = 0
-    let householdRowsSkipped = 0
+    let e24RowsSkipped = 0
     let updatedRows = 0
     let lockAcquired = false
     let nokautFetchMs = 0
@@ -650,16 +674,17 @@ async function runSync(request: NextRequest) {
             )
         }
 
-        const [nokautFetch, stockFetch, infoFetch, householdFetch] = await Promise.all([
+        const [nokautFetch, stockFetch, infoFetch, e24Fetch] = await Promise.all([
             fetchTextWithRetry(nokautFeedUrl),
             fetchTextWithRetry(stockFeedUrl),
             fetchTextWithRetry(infoFeedUrl),
-            fetchTextWithRetry(householdFeedUrl),
+            fetchTextWithRetry(e24FeedUrl),
         ])
 
         nokautFetchMs = nokautFetch.durationMs
         stockFetchMs = stockFetch.durationMs
         infoFetchMs = infoFetch.durationMs
+        const e24FetchMs = e24Fetch.durationMs
 
         nokautRows = parseNokautFeed(nokautFetch.content)
 
@@ -671,9 +696,24 @@ async function runSync(request: NextRequest) {
         infoRows = infoParseResult.rows
         infoRowsSkipped = infoParseResult.skippedRows
 
-        const householdParseResult = parseHouseholdFeed(householdFetch.content)
-        householdRows = householdParseResult.rows
-        householdRowsSkipped = householdParseResult.skippedRows
+        const e24ParseResult = parseE24Feed(e24Fetch.content)
+        e24Rows = e24ParseResult.rows
+        e24RowsSkipped = e24ParseResult.skippedRows
+
+        // include E24 product offers alongside Nokaut offers for full sync upserts
+        nokautRows = nokautRows.concat(
+            e24Rows.map((r) => ({
+                co: r.co,
+                nazwa: r.nazwa,
+                opis: r.opis,
+                url_produktu: r.url_produktu,
+                zdjecie_glowne: r.zdjecie_glowne,
+                zdjecia_produktu_pozostale: r.zdjecia_produktu_pozostale || [],
+                sku_nokaut: r.sku_nokaut,
+                brand: r.brand,
+                category_path: r.category_path,
+            } as NokautOfferRow))
+        )
 
         const inventoryBySku = new Map<string, {
             sku: string
@@ -691,18 +731,23 @@ async function runSync(request: NextRequest) {
             })
         }
 
-        for (const row of householdRows) {
-            const existing = inventoryBySku.get(row.sku)
+        for (const row of e24Rows) {
+            const sku = row.sku_nokaut || ''
+            if (!sku) continue
+            const existing = inventoryBySku.get(sku)
+            const qty = row.quantity != null && Number.isFinite(Number(row.quantity)) ? Number(row.quantity) : 0
             if (existing) {
-                existing.quantity = row.quantity
+                existing.quantity = qty
+                existing.net_price = existing.net_price ?? row.netto
+                existing.gross_price = existing.gross_price ?? row.brutto
                 continue
             }
 
-            inventoryBySku.set(row.sku, {
-                sku: row.sku,
-                quantity: row.quantity,
-                net_price: null,
-                gross_price: null,
+            inventoryBySku.set(sku, {
+                sku,
+                quantity: qty,
+                net_price: row.netto ?? null,
+                gross_price: row.brutto ?? null,
             })
         }
 
@@ -752,11 +797,11 @@ async function runSync(request: NextRequest) {
                 inventoryRowsParsed: inventoryPayload.length,
                 infoRowsParsed: infoRows.length,
                 nokautRowsParsed: nokautRows.length,
-                householdRowsParsed: householdRows.length,
+                e24RowsParsed: e24Rows.length,
                 skippedRows: {
                     stock: stockRowsSkipped,
                     info: infoRowsSkipped,
-                    household: householdRowsSkipped,
+                    e24: e24RowsSkipped,
                 },
                 lockOwner,
                 syncedAt: new Date().toISOString(),
@@ -914,11 +959,11 @@ async function runSync(request: NextRequest) {
             inventoryRowsParsed: inventoryPayload.length,
             infoRowsParsed: infoRows.length,
             nokautRowsParsed: nokautRows.length,
-            householdRowsParsed: householdRows.length,
+            e24RowsParsed: e24Rows.length,
             skippedRows: {
                 stock: stockRowsSkipped,
                 info: infoRowsSkipped,
-                household: householdRowsSkipped,
+                e24: e24RowsSkipped,
             },
             lockOwner,
             sourceColumns: sourceConfig.columns,
