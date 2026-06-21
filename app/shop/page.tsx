@@ -27,21 +27,7 @@ interface SearchParams {
 
 const PAGE_SIZE = 24
 
-const TOOL_CATEGORY_KEYWORDS = [
-    'tool',
-    'tools',
-    'narzed',
-    'wiert',
-    'pil',
-    'szlifier',
-    'mlot',
-    'warsztat',
-    'spaw',
-    'pomiar',
-    'ogrod',
-    'elektronarzed',
-    'power',
-]
+import { isToolCategory } from '@/utils/categoryGroups'
 
 type LocalizedCategory = {
     id: string
@@ -71,10 +57,7 @@ export default async function ShopPage({
         .select('id, name, slug, name_translations')
         .order('name')
 
-    const isToolCategoryRaw = (category: { slug: string, name: string }) => {
-        const normalized = `${category.slug} ${category.name}`.toLowerCase()
-        return TOOL_CATEGORY_KEYWORDS.some((keyword) => normalized.includes(keyword))
-    }
+    const isToolCategoryRaw = isToolCategory
 
     const groupedCategoriesRaw = (categories || []).reduce(
         (groups, category) => {
@@ -199,11 +182,6 @@ export default async function ShopPage({
             category.name_translations as { en?: string | null, pl?: string | null } | null
         ),
     })) as LocalizedCategory[]
-
-    const isToolCategory = (category: LocalizedCategory) => {
-        const normalized = `${category.slug} ${category.name}`.toLowerCase()
-        return TOOL_CATEGORY_KEYWORDS.some((keyword) => normalized.includes(keyword))
-    }
 
     const groupedCategories = localizedCategories.reduce(
         (groups, category) => {

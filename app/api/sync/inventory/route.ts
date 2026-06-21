@@ -35,6 +35,7 @@ type E24OfferRow = {
     quantity: number | null
     netto: number | null
     brutto: number | null
+    is_promotional: boolean
 }
 
 type NokautOfferRow = {
@@ -47,6 +48,7 @@ type NokautOfferRow = {
     sku_nokaut: string | null
     brand: string | null
     category_path: string | null
+    is_promotional: boolean
 }
 
 type LogSyncRunParams = {
@@ -194,6 +196,83 @@ function smallHash(value: string): string {
     return Math.abs(hash).toString(16).slice(0, 6)
 }
 
+function isPromotionalFlag(value: string | null | undefined): boolean {
+    if (!value) return false
+    return /^(1|true|yes|tak|y)$/i.test(value.trim())
+}
+
+const PROMOTIONAL_XML_TAGS = [
+    'promotional',
+    'promo',
+    'promotion',
+    'is_promotion',
+    'is_promotional',
+    'on_sale',
+    'sale',
+    'promocja',
+    'promocyjny',
+    'wyprzedaz',
+    'is_promo',
+] as const
+
+function detectPromotionalFromXml(xml: string): boolean {
+    for (const tag of PROMOTIONAL_XML_TAGS) {
+        const value = extractTagValue(xml, tag) || extractPropertyValue(xml, tag)
+        if (isPromotionalFlag(value)) {
+            return true
+        }
+    }
+
+    const oldPriceRaw =
+        extractTagValue(xml, 'old_price')
+        || extractTagValue(xml, 'price_old')
+        || extractTagValue(xml, 'regular_price')
+        || extractTagValue(xml, 'price_before')
+        || extractPropertyValue(xml, 'old_price')
+        || extractPropertyValue(xml, 'regular_price')
+
+    const currentPriceRaw =
+        extractTagValue(xml, 'price')
+        || extractTagValue(xml, 'brutto')
+        || extractTagValue(xml, 'price_gross')
+        || extractPropertyValue(xml, 'price')
+
+    if (oldPriceRaw && currentPriceRaw) {
+        const oldPrice = normalizeDecimal(String(oldPriceRaw).replace(/[^0-9.,-]/g, ''))
+        const currentPrice = normalizeDecimal(String(currentPriceRaw).replace(/[^0-9.,-]/g, ''))
+        if (oldPrice !== null && currentPrice !== null && oldPrice > currentPrice) {
+            return true
+        }
+    }
+
+    return false
+}
+
+async function updatePromotionalFlagsBySku(
+    supabase: ReturnType<typeof createServiceClient>,
+    promotionalBySku: Map<string, boolean>
+): Promise<number> {
+    let updated = 0
+    const entries = Array.from(promotionalBySku.entries())
+
+    for (const chunk of chunkArray(entries, 200)) {
+        await Promise.all(
+            chunk.map(async ([sku, isPromotional]) => {
+                const { error } = await supabase
+                    .from('products')
+                    .update({ is_promotional: isPromotional, updated_at: new Date().toISOString() } as never)
+                    .eq('sku', sku)
+
+                if (!error) {
+                    updated += 1
+                }
+            })
+        )
+    }
+
+    return updated
+}
+
 function extractTagValue(source: string, tagName: string): string | null {
     const regex = new RegExp(`<${tagName}>([\\s\\S]*?)<\\/${tagName}>`, 'i')
     const match = source.match(regex)
@@ -272,6 +351,7 @@ function parseNokautFeed(content: string): NokautOfferRow[] {
             sku_nokaut: skuNokaut,
             brand,
             category_path: categoryPath,
+            is_promotional: detectPromotionalFromXml(offerXml),
         })
     }
 
@@ -410,6 +490,7 @@ function parseE24Feed(content: string): ParseE24Result {
             quantity,
             netto,
             brutto,
+            is_promotional: detectPromotionalFromXml(productXml),
         })
     }
 
@@ -718,8 +799,21 @@ async function runSync(request: NextRequest) {
                 sku_nokaut: r.sku_nokaut,
                 brand: r.brand,
                 category_path: r.category_path,
+                is_promotional: r.is_promotional,
             } as NokautOfferRow))
         )
+
+        const promotionalBySku = new Map<string, boolean>()
+        for (const row of nokautRows) {
+            const sku = row.sku_nokaut?.trim()
+            if (!sku) continue
+            promotionalBySku.set(sku, Boolean(row.is_promotional))
+        }
+        for (const row of e24Rows) {
+            const sku = row.sku_nokaut?.trim()
+            if (!sku) continue
+            promotionalBySku.set(sku, Boolean(row.is_promotional))
+        }
 
         const inventoryBySku = new Map<string, {
             sku: string
@@ -778,6 +872,7 @@ async function runSync(request: NextRequest) {
 
             const rpcRows = (data || []) as Array<{ updated_rows: number }>
             updatedRows = rpcRows[0]?.updated_rows || 0
+            updatedRows += await updatePromotionalFlagsBySku(supabase, promotionalBySku)
 
             await logSyncRun(supabase, {
                 p_status: 'success',
@@ -926,6 +1021,7 @@ async function runSync(request: NextRequest) {
                     source_ena: info?.ena || null,
                     source_cn: info?.cn || null,
                     source_waga: info?.waga ?? null,
+                    is_promotional: offer.is_promotional,
                     updated_at: new Date().toISOString(),
                 }
 

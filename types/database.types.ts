@@ -122,6 +122,7 @@ export interface Database {
                     source_waga: number | null
                     title_translations: Json | null
                     description_translations: Json | null
+                    is_promotional: boolean
                     created_at: string
                     updated_at: string
                 }
@@ -155,6 +156,7 @@ export interface Database {
                     source_waga?: number | null
                     title_translations?: Json | null
                     description_translations?: Json | null
+                    is_promotional?: boolean
                     created_at?: string
                     updated_at?: string
                 }
@@ -170,6 +172,7 @@ export interface Database {
                     inventory_count?: number
                     category_id?: string
                     specifications?: Json | null
+                    is_promotional?: boolean
                     image_urls?: string[] | null
                     source_co?: string | null
                     source_nazwa?: string | null

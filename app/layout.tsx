@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import "./globals.css";
 import ConditionalNav from "@/components/ConditionalNav";
 import FatFooter from "@/components/FatFooter";
+import PromoMarquee from "@/components/PromoMarquee";
 import ProfileCompletenessPrompt from "@/components/ProfileCompletenessPrompt";
 import { Providers } from "@/components/Providers";
 import type { Locale } from "@/contexts/LocaleContext";
@@ -40,13 +41,14 @@ export default async function RootLayout({
   return (
     <html lang={locale}>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${bebasNeue.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${bebasNeue.variable} antialiased pb-9`}
       >
         <Providers initialLocale={locale}>
           <ConditionalNav initialLocale={locale} />
           <ProfileCompletenessPrompt />
           {children}
           <FatFooter />
+          <PromoMarquee />
         </Providers>
       </body>
     </html>

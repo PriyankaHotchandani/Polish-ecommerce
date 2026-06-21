@@ -6,10 +6,11 @@ import { useState, useEffect, useLayoutEffect, useRef } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/utils/supabase/client'
 import { useLocaleMessages } from '@/contexts/LocaleContext'
+import { getProductPriceBreakdown } from '@/utils/pricing'
 import { getLocalizedBrandName, getLocalizedProductTitle } from '@/utils/productLocalization'
 
 export default function CartPage() {
-    const { items, updateQuantity, removeItem, clearCart, getItemCount, getSubtotal } = useCart()
+    const { items, updateQuantity, removeItem, clearCart, getItemCount, getCartTotals } = useCart()
     const searchParams = useSearchParams()
     const [userRole, setUserRole] = useState<'b2c_customer' | 'b2b_customer' | null>(null)
     const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -103,10 +104,8 @@ export default function CartPage() {
         }, 300)
     }
 
-    const subtotal = getSubtotal(userRole)
-    const vatRate = 0.23 // 23% VAT
-    const vat = subtotal * vatRate
-    const total = subtotal + vat
+    const cartTotals = getCartTotals(userRole)
+    const { totalNet, totalVat, totalGross, discountPercent, discountAmount, finalTotal } = cartTotals
 
     if (loading) {
         return (
@@ -178,8 +177,12 @@ export default function CartPage() {
                     <div className="lg:col-span-2">
                         <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_8px_26px_rgba(15,23,42,0.06)] divide-y divide-gray-100">
                             {items.map((item) => {
-                                const price = userRole === 'b2b_customer' ? item.product.price_wholesale : item.product.price_retail
-                                const itemTotal = Number(price) * item.quantity
+                                const basePrice = userRole === 'b2b_customer'
+                                    ? Number(item.product.price_wholesale)
+                                    : Number(item.product.price_retail)
+                                const breakdown = getProductPriceBreakdown(basePrice, item.product.category ?? null)
+                                const itemTotal = breakdown.gross * item.quantity
+                                const unitPrice = breakdown.gross
                                 const isRemoving = removingItems.has(item.product.id)
                                 const localizedTitle = getLocalizedProductTitle(item.product.title, item.product.slug, locale)
                                 const localizedBrand = getLocalizedBrandName(item.product.brand, locale)
@@ -263,11 +266,16 @@ export default function CartPage() {
                                                             }).replace('PLN', 'PLN ')}
                                                         </p>
                                                         <p className="text-sm text-gray-600">
-                                                            {Number(price).toLocaleString(numberLocale, {
+                                                            {unitPrice.toLocaleString(numberLocale, {
                                                                 style: 'currency',
                                                                 currency: 'PLN',
                                                                 currencyDisplay: 'code'
                                                             }).replace('PLN', 'PLN ')} {messages.cartPage.each}
+                                                        </p>
+                                                        <p className="text-xs text-gray-400 mt-0.5">
+                                                            {locale === 'pl' ? 'Netto' : 'Net'}: {breakdown.net.toLocaleString(numberLocale, { style: 'currency', currency: 'PLN', currencyDisplay: 'code' }).replace('PLN', 'PLN ')}
+                                                            {' · '}
+                                                            VAT: {breakdown.vat.toLocaleString(numberLocale, { style: 'currency', currency: 'PLN', currencyDisplay: 'code' }).replace('PLN', 'PLN ')}
                                                         </p>
                                                         {userRole === 'b2b_customer' && Number(item.product.price_retail) > Number(item.product.price_wholesale) && (
                                                             <p className="text-xs text-[#163579]">
@@ -316,9 +324,9 @@ export default function CartPage() {
 
                             <div className="space-y-3 mb-6">
                                 <div className="flex justify-between text-gray-700">
-                                    <span>{messages.cart.subtotal}</span>
+                                    <span>{locale === 'pl' ? 'Netto' : 'Subtotal (excl. VAT)'}</span>
                                     <span>
-                                        {subtotal.toLocaleString(numberLocale, {
+                                        {totalNet.toLocaleString(numberLocale, {
                                             style: 'currency',
                                             currency: 'PLN',
                                             currencyDisplay: 'code'
@@ -328,17 +336,43 @@ export default function CartPage() {
                                 <div className="flex justify-between text-gray-700">
                                     <span>VAT (23%)</span>
                                     <span>
-                                        {vat.toLocaleString(numberLocale, {
+                                        {totalVat.toLocaleString(numberLocale, {
                                             style: 'currency',
                                             currency: 'PLN',
                                             currencyDisplay: 'code'
                                         }).replace('PLN', 'PLN ')}
                                     </span>
                                 </div>
+                                <div className="flex justify-between text-gray-700">
+                                    <span>{messages.cart.subtotal}</span>
+                                    <span>
+                                        {totalGross.toLocaleString(numberLocale, {
+                                            style: 'currency',
+                                            currency: 'PLN',
+                                            currencyDisplay: 'code'
+                                        }).replace('PLN', 'PLN ')}
+                                    </span>
+                                </div>
+                                {discountPercent > 0 && (
+                                    <div className="flex justify-between text-emerald-700 font-medium">
+                                        <span>
+                                            {locale === 'pl'
+                                                ? `Rabat wolumenowy (${discountPercent}%)`
+                                                : `Volume discount (${discountPercent}%)`}
+                                        </span>
+                                        <span>
+                                            -{discountAmount.toLocaleString(numberLocale, {
+                                                style: 'currency',
+                                                currency: 'PLN',
+                                                currencyDisplay: 'code'
+                                            }).replace('PLN', 'PLN ')}
+                                        </span>
+                                    </div>
+                                )}
                                 <div className="border-t pt-3 flex justify-between text-lg font-bold text-gray-900">
                                     <span>{messages.cart.total}</span>
                                     <span>
-                                        {total.toLocaleString(numberLocale, {
+                                        {finalTotal.toLocaleString(numberLocale, {
                                             style: 'currency',
                                             currency: 'PLN',
                                             currencyDisplay: 'code'

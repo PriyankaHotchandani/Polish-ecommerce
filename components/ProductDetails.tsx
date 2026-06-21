@@ -245,6 +245,11 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
                 <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight mb-4 leading-tight">
                     {localizedTitle}
                 </h1>
+                {product.is_promotional && (
+                    <span className="inline-flex mb-3 rounded-full bg-rose-500 px-3 py-1 text-xs font-bold uppercase tracking-wider text-white">
+                        {locale === 'pl' ? 'Promocja' : 'On Sale'}
+                    </span>
+                )}
 
                 <div className="flex items-center gap-3 text-[13px] font-medium text-slate-500 uppercase tracking-widest">
                     {localizedBrandName && (
@@ -262,6 +267,8 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
                     <PriceDisplay
                         price_retail={Number(product.price_retail)}
                         price_wholesale={Number(product.price_wholesale)}
+                        category={product.category}
+                        showBreakdown
                     />
                 </div>
 

@@ -6,6 +6,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import Link from 'next/link'
 import { useLocaleMessages } from '@/contexts/LocaleContext'
+import { getProductPriceBreakdown } from '@/utils/pricing'
 
 interface ShippingAddress {
     fullName: string
@@ -79,7 +80,7 @@ function mapSavedToBillingAddress(address: SavedAddress, email: string): Billing
 
 export default function CheckoutPage() {
     const router = useRouter()
-    const { items, getSubtotal, clearCart } = useCart()
+    const { items, getCartTotals, clearCart } = useCart()
     const [userRole, setUserRole] = useState<'b2c_customer' | 'b2b_customer' | null>(null)
     const [user, setUser] = useState<any>(null)
     const [loading, setLoading] = useState(true)
@@ -206,11 +207,10 @@ export default function CheckoutPage() {
         }
     }, [items, loading, router, orderSuccess, submitting])
 
-    const subtotal = useMemo(() => getSubtotal(userRole), [getSubtotal, userRole])
-    const vatRate = 0.23
-    const vat = useMemo(() => subtotal * vatRate, [subtotal])
-    const shippingCost = useMemo(() => (subtotal >= 500 ? 0 : 25), [subtotal]) // Free shipping over 500 PLN
-    const total = useMemo(() => subtotal + vat + shippingCost, [subtotal, vat, shippingCost])
+    const cartTotals = useMemo(() => getCartTotals(userRole), [getCartTotals, userRole])
+    const { totalNet, totalVat, totalGross, discountPercent, discountAmount, finalTotal: cartFinalTotal } = cartTotals
+    const shippingCost = useMemo(() => (totalGross >= 500 ? 0 : 25), [totalGross])
+    const total = useMemo(() => cartFinalTotal + shippingCost, [cartFinalTotal, shippingCost])
     const shippingSavedAddresses = useMemo(
         () => savedAddresses.filter(
             (address) => address.address_type === 'shipping' || address.address_type === 'both'
@@ -324,14 +324,15 @@ export default function CheckoutPage() {
 
             // Prepare order items for atomic order creation with inventory check
             const orderItems = items.map(item => {
-                const price = userRole === 'b2b_customer'
-                    ? item.product.price_wholesale
-                    : item.product.price_retail
+                const basePrice = userRole === 'b2b_customer'
+                    ? Number(item.product.price_wholesale)
+                    : Number(item.product.price_retail)
+                const breakdown = getProductPriceBreakdown(basePrice, item.product.category ?? null)
 
                 return {
                     product_id: item.product.id,
                     quantity: item.quantity,
-                    price_at_purchase: Number(price)
+                    price_at_purchase: breakdown.gross
                 }
             })
 
@@ -907,10 +908,11 @@ export default function CheckoutPage() {
                                 {/* Items */}
                                 <div className="space-y-4 mb-6 max-h-60 overflow-y-auto">
                                     {items.map((item) => {
-                                        const price = userRole === 'b2b_customer'
-                                            ? item.product.price_wholesale
-                                            : item.product.price_retail
-                                        const itemTotal = Number(price) * item.quantity
+                                        const basePrice = userRole === 'b2b_customer'
+                                            ? Number(item.product.price_wholesale)
+                                            : Number(item.product.price_retail)
+                                        const breakdown = getProductPriceBreakdown(basePrice, item.product.category ?? null)
+                                        const itemTotal = breakdown.gross * item.quantity
 
                                         return (
                                             <div key={item.product.id} className="flex gap-3">
@@ -948,9 +950,9 @@ export default function CheckoutPage() {
                                 {/* Totals */}
                                 <div className="border-t pt-4 space-y-2">
                                     <div className="flex justify-between text-gray-700">
-                                        <span>{messages.cart.subtotal}</span>
+                                        <span>{locale === 'pl' ? 'Netto' : 'Subtotal (excl. VAT)'}</span>
                                         <span>
-                                            {subtotal.toLocaleString(numberLocale, {
+                                            {totalNet.toLocaleString(numberLocale, {
                                                 style: 'currency',
                                                 currency: 'PLN',
                                                 currencyDisplay: 'code'
@@ -960,13 +962,39 @@ export default function CheckoutPage() {
                                     <div className="flex justify-between text-gray-700">
                                         <span>VAT (23%)</span>
                                         <span>
-                                            {vat.toLocaleString('en-US', {
+                                            {totalVat.toLocaleString(numberLocale, {
                                                 style: 'currency',
                                                 currency: 'PLN',
                                                 currencyDisplay: 'code'
                                             }).replace('PLN', 'PLN ')}
                                         </span>
                                     </div>
+                                    <div className="flex justify-between text-gray-700">
+                                        <span>{messages.cart.subtotal}</span>
+                                        <span>
+                                            {totalGross.toLocaleString(numberLocale, {
+                                                style: 'currency',
+                                                currency: 'PLN',
+                                                currencyDisplay: 'code'
+                                            }).replace('PLN', 'PLN ')}
+                                        </span>
+                                    </div>
+                                    {discountPercent > 0 && (
+                                        <div className="flex justify-between text-emerald-700 font-medium">
+                                            <span>
+                                                {locale === 'pl'
+                                                    ? `Rabat wolumenowy (${discountPercent}%)`
+                                                    : `Volume discount (${discountPercent}%)`}
+                                            </span>
+                                            <span>
+                                                -{discountAmount.toLocaleString(numberLocale, {
+                                                    style: 'currency',
+                                                    currency: 'PLN',
+                                                    currencyDisplay: 'code'
+                                                }).replace('PLN', 'PLN ')}
+                                            </span>
+                                        </div>
+                                    )}
                                     <div className="flex justify-between text-gray-700">
                                         <span>{messages.invoice.shipping}</span>
                                         <span>

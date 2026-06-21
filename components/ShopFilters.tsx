@@ -15,21 +15,7 @@ interface ShopFiltersProps {
     activeFiltersCount: number
 }
 
-const TOOL_CATEGORY_KEYWORDS = [
-    'tool',
-    'tools',
-    'narzed',
-    'wiert',
-    'pil',
-    'szlifier',
-    'mlot',
-    'warsztat',
-    'spaw',
-    'pomiar',
-    'ogrod',
-    'elektronarzed',
-    'power',
-]
+import { isToolCategory } from '@/utils/categoryGroups'
 
 export default function ShopFilters({ categories, activeFiltersCount }: ShopFiltersProps) {
     const router = useRouter()
@@ -66,10 +52,7 @@ export default function ShopFilters({ categories, activeFiltersCount }: ShopFilt
     const groupedCategories = useMemo(() => {
         return categories.reduce(
             (groups, category) => {
-                const normalized = `${category.slug} ${category.name}`.toLowerCase()
-                const isToolCategory = TOOL_CATEGORY_KEYWORDS.some((keyword) => normalized.includes(keyword))
-
-                if (isToolCategory) {
+                if (isToolCategory(category)) {
                     groups.tools.push(category)
                 } else {
                     groups.household.push(category)

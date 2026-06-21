@@ -56,6 +56,11 @@ export default function ProductCard({ product, variant = 'default' }: ProductCar
         <div className={isFeatured ? 'product-card product-card-featured' : 'product-card product-card-default'}>
             <Link href={`/product/${product.slug}`} prefetch={false} className={isFeatured ? 'product-card-image-link product-card-image-link-featured' : ''}>
                 <div className={isFeatured ? 'product-card-image-wrap product-card-image-wrap-featured' : 'aspect-square bg-gray-200 relative'}>
+                    {product.is_promotional && (
+                        <span className="absolute top-2 left-2 z-10 rounded-full bg-rose-500 px-2.5 py-1 text-[0.65rem] font-bold uppercase tracking-wider text-white shadow-sm">
+                            {locale === 'pl' ? 'Promocja' : 'Sale'}
+                        </span>
+                    )}
                     {imageUrl ? (
                         <img
                             src={imageUrl}
@@ -89,6 +94,7 @@ export default function ProductCard({ product, variant = 'default' }: ProductCar
                     <PriceDisplay
                         price_retail={Number(product.price_retail)}
                         price_wholesale={Number(product.price_wholesale)}
+                        category={product.category ?? null}
                         variant={isFeatured ? 'featured' : 'default'}
                     />
                 </div>
