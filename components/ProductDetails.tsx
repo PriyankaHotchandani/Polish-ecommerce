@@ -266,7 +266,6 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
                 <div className="mb-4">
                     <PriceDisplay
                         price_retail={Number(product.price_retail)}
-                        price_wholesale={Number(product.price_wholesale)}
                         category={product.category}
                         showBreakdown
                     />

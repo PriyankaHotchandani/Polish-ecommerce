@@ -101,19 +101,6 @@ const PL_PRODUCT_DESCRIPTION_BY_SLUG: Record<string, string> = {
     'orbital-sander-300w-with-dust-collection': 'Ergonomiczna szlifierka oscylacyjna z systemem mikrofiltracji pylu. Plynna regulacja predkosci do precyzyjnego szlifowania drewna, metalu i tworzyw sztucznych.',
 }
 
-const PL_BRAND_NAME_BY_VALUE: Record<string, string> = {
-    KitchenPro: 'KuchniaPro',
-    ChefMaster: 'SzefKuchni',
-    BladeArt: 'SztukaOstrza',
-    BlendMax: 'BlendMaks',
-    CafeBrew: 'KawiarniaParzenie',
-    PowerPro: 'MocPro',
-    ToolForce: 'SilaNarzedzi',
-    ProBuild: 'ProBud',
-    CutMaster: 'MistrzCiecia',
-    FinishPro: 'WykonczeniePro',
-}
-
 export function getLocalizedCategoryName(categoryName: string, categorySlug: string | null | undefined, locale: Locale): string {
     if (locale === 'en') {
         return toTitleCaseWords(categoryName)
@@ -197,17 +184,12 @@ export function getLocalizedProductDescription(
     return fromTranslations
 }
 
+// Brand names are proper nouns and must render identically in every locale;
+// the locale parameter is kept for call-site compatibility.
 export function getLocalizedBrandName(
     brandName: string | null,
     locale: Locale
 ): string | null {
-    if (!brandName) {
-        return null
-    }
-
-    if (locale === 'pl' && PL_BRAND_NAME_BY_VALUE[brandName]) {
-        return PL_BRAND_NAME_BY_VALUE[brandName]
-    }
-
-    return brandName
+    void locale
+    return brandName || null
 }

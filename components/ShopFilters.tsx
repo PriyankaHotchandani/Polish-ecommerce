@@ -16,6 +16,7 @@ interface ShopFiltersProps {
 }
 
 import { isToolCategory } from '@/utils/categoryGroups'
+import { HOUSEHOLD_BRANDS, TOOL_BRANDS, isKnownBrand } from '@/utils/brands'
 
 export default function ShopFilters({ categories, activeFiltersCount }: ShopFiltersProps) {
     const router = useRouter()
@@ -27,12 +28,15 @@ export default function ShopFilters({ categories, activeFiltersCount }: ShopFilt
     const currentSearch = searchParams.get('search') || ''
     const currentCategory = searchParams.get('category') || ''
     const currentGroup = searchParams.get('group') || ''
+    const currentBrandParam = searchParams.get('brand') || ''
+    const currentBrand = isKnownBrand(currentBrandParam) ? currentBrandParam : ''
     const currentMinPrice = searchParams.get('minPrice') || ''
     const currentMaxPrice = searchParams.get('maxPrice') || ''
     const currentInStock = searchParams.get('inStock') === 'true'
     const currentSort = searchParams.get('sort') || 'newest'
-    const [openMenu, setOpenMenu] = useState<'category' | 'sort' | null>(null)
+    const [openMenu, setOpenMenu] = useState<'category' | 'brand' | 'sort' | null>(null)
     const [selectedCategory, setSelectedCategory] = useState(currentCategory)
+    const [selectedBrand, setSelectedBrand] = useState(currentBrand)
     const [selectedSort, setSelectedSort] = useState(currentSort)
     const dropdownShellRef = useRef<HTMLFormElement | null>(null)
     const hasActiveFilters = activeFiltersCount > 0
@@ -67,8 +71,9 @@ export default function ShopFilters({ categories, activeFiltersCount }: ShopFilt
         )
     }, [categories])
 
-    const householdHeading = messages.nav?.household || 'Household Products'
-    const toolsHeading = 'Tools & Categories'
+    const householdHeading = messages.nav.household
+    const toolsHeading = messages.nav.tools
+    const selectedBrandLabel = selectedBrand || messages.shopFilters.allBrands
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -92,6 +97,7 @@ export default function ShopFilters({ categories, activeFiltersCount }: ShopFilt
 
         const params = new URLSearchParams()
         const category = formData.get('category') as string
+        const brand = formData.get('brand') as string
         const minPrice = formData.get('minPrice') as string
         const maxPrice = formData.get('maxPrice') as string
         const inStock = formData.get('inStock') as string
@@ -100,6 +106,7 @@ export default function ShopFilters({ categories, activeFiltersCount }: ShopFilt
         if (currentSearch) params.set('search', currentSearch)
         if (category) params.set('category', category)
         if (!category && currentGroup) params.set('group', currentGroup)
+        if (brand && isKnownBrand(brand)) params.set('brand', brand)
         if (minPrice) params.set('minPrice', minPrice)
         if (maxPrice) params.set('maxPrice', maxPrice)
         if (inStock) params.set('inStock', 'true')
@@ -177,6 +184,7 @@ export default function ShopFilters({ categories, activeFiltersCount }: ShopFilt
 
                                 <form ref={dropdownShellRef} onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-5 pb-24 pt-4">
                                     <input type="hidden" name="category" value={selectedCategory} />
+                                    <input type="hidden" name="brand" value={selectedBrand} />
                                     <input type="hidden" name="sort" value={selectedSort} />
 
                                     <div className="border-b border-gray-100 pb-4">
@@ -253,6 +261,84 @@ export default function ShopFilters({ categories, activeFiltersCount }: ShopFilt
                                                             >
                                                                 <span>{cat.name}</span>
                                                                 {selectedCategory === cat.slug && <span aria-hidden="true">•</span>}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <div className="border-b border-gray-100 py-4">
+                                        <label htmlFor="brand" className="mb-2 block text-xs font-semibold uppercase tracking-wider text-gray-500">
+                                            {messages.shop.brands}
+                                        </label>
+                                        <div className="relative">
+                                            <button
+                                                type="button"
+                                                onClick={() => setOpenMenu(openMenu === 'brand' ? null : 'brand')}
+                                                className="flex w-full items-center justify-between rounded-lg border border-gray-200 bg-white px-3.5 py-2.5 text-left text-slate-900 transition hover:border-slate-300"
+                                            >
+                                                <span>{selectedBrandLabel}</span>
+                                                <svg
+                                                    className={`h-4 w-4 text-slate-400 transition-transform ${openMenu === 'brand' ? 'rotate-180' : ''}`}
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    viewBox="0 0 24 24"
+                                                    aria-hidden="true"
+                                                >
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                                </svg>
+                                            </button>
+
+                                            {openMenu === 'brand' && (
+                                                <div className="absolute z-30 mt-2 w-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-[0_14px_30px_rgba(15,23,42,0.12)]">
+                                                    <div className="max-h-56 overflow-auto py-1.5">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setSelectedBrand('')
+                                                                setOpenMenu(null)
+                                                            }}
+                                                            className={`flex w-full items-center justify-between px-3.5 py-2.5 text-left text-sm transition ${selectedBrand === '' ? 'bg-[#163579]/8 text-[#163579]' : 'text-slate-700 hover:bg-slate-50'}`}
+                                                        >
+                                                            <span>{messages.shopFilters.allBrands}</span>
+                                                            {selectedBrand === '' && <span aria-hidden="true">•</span>}
+                                                        </button>
+
+                                                        <div className="px-3.5 pb-1 pt-2 text-[0.7rem] font-semibold uppercase tracking-[0.14em] text-slate-400">
+                                                            {toolsHeading}
+                                                        </div>
+                                                        {TOOL_BRANDS.map((brand) => (
+                                                            <button
+                                                                key={`tools-${brand}`}
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    setSelectedBrand(brand)
+                                                                    setOpenMenu(null)
+                                                                }}
+                                                                className={`flex w-full items-center justify-between px-6 py-2.5 text-left text-sm transition ${selectedBrand === brand ? 'bg-[#163579]/8 text-[#163579]' : 'text-slate-700 hover:bg-slate-50'}`}
+                                                            >
+                                                                <span>{brand}</span>
+                                                                {selectedBrand === brand && <span aria-hidden="true">•</span>}
+                                                            </button>
+                                                        ))}
+
+                                                        <div className="px-3.5 pb-1 pt-3 text-[0.7rem] font-semibold uppercase tracking-[0.14em] text-slate-400">
+                                                            {householdHeading}
+                                                        </div>
+                                                        {HOUSEHOLD_BRANDS.map((brand) => (
+                                                            <button
+                                                                key={`household-${brand}`}
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    setSelectedBrand(brand)
+                                                                    setOpenMenu(null)
+                                                                }}
+                                                                className={`flex w-full items-center justify-between px-6 py-2.5 text-left text-sm transition ${selectedBrand === brand ? 'bg-[#163579]/8 text-[#163579]' : 'text-slate-700 hover:bg-slate-50'}`}
+                                                            >
+                                                                <span>{brand}</span>
+                                                                {selectedBrand === brand && <span aria-hidden="true">•</span>}
                                                             </button>
                                                         ))}
                                                     </div>

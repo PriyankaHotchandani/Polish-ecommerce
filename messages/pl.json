@@ -44,9 +44,9 @@
             "specialOffers": "Oferty specjalne"
         },
         "partner": {
-            "title": "Portal Partnera",
-            "applyAccount": "Załóż konto firmowe",
-            "login": "Logowanie partnera",
+            "title": "Twoje konto",
+            "applyAccount": "Załóż konto",
+            "login": "Zaloguj się",
             "bulkOrdering": "Zamówienia hurtowe",
             "volumeDiscounts": "Rabaty wolumenowe"
         },
@@ -110,7 +110,11 @@
         "productsFoundLabel": "znalezionych produktów",
         "noProducts": "Nie znaleziono produktów",
         "noProductsHint": "Spróbuj zmienić filtry lub frazę wyszukiwania",
-        "productsFound": "Znaleziono {count} produktów"
+        "productsFound": "Znaleziono {count} produktów",
+        "loadError": "Nie udało się teraz załadować pełnej listy produktów. Odśwież stronę.",
+        "previousPage": "Poprzednia",
+        "nextPage": "Następna",
+        "pageOf": "Strona {current} z {total}"
     },
     "auth": {
         "signIn": "Zaloguj się",
@@ -164,16 +168,16 @@
         "rememberMe30Days": "Zapamiętaj mnie na 30 dni",
         "loginPanelEyebrow": "Witamy ponownie",
         "loginPanelTitle": "Wróć dokładnie tam, gdzie skończyłeś.",
-        "loginPanelSubtitle": "Zaloguj się, aby przejść do panelu konta, historii zamówień i narzędzi cen partnerskich.",
+        "loginPanelSubtitle": "Zaloguj się, aby przejść do panelu konta, historii zamówień i automatycznych rabatów wolumenowych.",
         "loginBenefitDashboard": "Szybki dostęp do panelu konta.",
         "loginBenefitOrders": "Śledzenie bieżących i wcześniejszych zamówień.",
-        "loginBenefitPricing": "Dostęp do funkcji cen partnerskich i hurtowych.",
+        "loginBenefitPricing": "Automatyczne rabaty wolumenowe przy większych zamówieniach.",
         "signupPanelEyebrow": "Zacznij",
         "signupPanelTitle": "Kupuj mądrzej, zamawiaj szybciej.",
-        "signupPanelSubtitle": "Utwórz konto, aby przyspieszyć zakupy i wygodnie obsługiwać zamówienia detaliczne oraz hurtowe.",
+        "signupPanelSubtitle": "Utwórz konto, aby przyspieszyć zakupy i korzystać z automatycznych rabatów wolumenowych.",
         "signupBenefitCheckout": "Szybkie finalizowanie zakupów dzięki zapisanym danym.",
         "signupBenefitTracking": "Śledzenie wszystkich zamówień w jednym panelu.",
-        "signupBenefitPricing": "Dostęp do ekskluzywnych cen partnerskich i hurtowych."
+        "signupBenefitPricing": "Oszczędności na poziomie hurtowym dzięki automatycznym rabatom wolumenowym."
     },
     "authErrors": {
         "unexpected": "Wystąpił nieoczekiwany błąd",
@@ -264,14 +268,14 @@
         "featuredSubheading": "Poznaj wyjątkowe produkty wybrane pod kątem jakości, wykończenia i codziennej funkcjonalności.",
         "featuredCta": "Zobacz pełen katalog",
         "b2b": {
-            "badge": "Dla firm",
-            "heading": "Ceny hurtowe dla klientów B2B",
-            "subtext": "Zarejestruj się jako klient biznesowy, aby odblokować ekskluzywne ceny hurtowe, uproszczone fakturowanie i priorytetową logistykę dla cyklicznych zamówień.",
-            "cta": "Dowiedz się więcej o B2B",
+            "badge": "Dla każdego klienta",
+            "heading": "Korzyści hurtowe na Twoim standardowym koncie",
+            "subtext": "Zaloguj się na standardowe konto, aby korzystać z automatycznych rabatów wolumenowych, wygodnego fakturowania i priorytetowej logistyki — bez specjalnego konta.",
+            "cta": "Załóż darmowe konto",
             "cards": {
                 "wholesale": {
                     "title": "Ceny hurtowe",
-                    "description": "Korzystaj z atrakcyjnych rabatów przy zamówieniach zbiorczych dzięki przejrzystym cenom netto dla biznesu."
+                    "description": "Każde konto automatycznie otrzymuje progowe rabaty wolumenowe — 2%, 4% lub 6% wraz ze wzrostem wartości koszyka."
                 },
                 "vat": {
                     "title": "Faktury VAT",
@@ -451,10 +455,10 @@
         "each": "za szt.",
         "wholesalePricing": "Cena hurtowa",
         "orderSummary": "Podsumowanie zamówienia",
-        "wholesaleBanner": "Korzystasz z cen hurtowych",
+        "wholesaleBanner": "Ceny hurtowe odblokowane — wartość zamówienia kwalifikuje się do rabatu",
         "bulkImportSuccess": "Pozycje z zamówienia hurtowego zostały dodane do koszyka.",
         "loginPrompt": "Masz już konto?",
-        "loginPromptSuffix": "aby szybciej finalizować zakupy i skorzystać z cen hurtowych.",
+        "loginPromptSuffix": "aby szybciej finalizować zakupy i korzystać z automatycznych rabatów wolumenowych.",
         "secureCheckout": "Bezpieczne zakupy",
         "added": "Dodano!",
         "dismiss": "Zamknij"
@@ -502,6 +506,7 @@
     },
     "checkout": {
         "title": "Kasa",
+        "loading": "Ładowanie kasy...",
         "successTitle": "Zamówienie złożone pomyślnie!",
         "redirecting": "Przekierowanie do strony potwierdzenia...",
         "billingAddress": "Adres rozliczeniowy",
@@ -509,7 +514,7 @@
         "requireInvoice": "Wymagaj faktury VAT",
         "orderSummary": "Podsumowanie zamówienia",
         "freeShippingLabel": "GRATIS",
-        "wholesaleApplied": "Zastosowano cenę hurtową",
+        "wholesaleApplied": "Zastosowano ceny hurtowe — rabat wolumenowy aktywny",
         "freeShippingHint": "Darmowa dostawa dla zamówień powyżej 500 PLN",
         "processingOrder": "Przetwarzanie zamówienia...",
         "placeOrder": "Złóż zamówienie",
@@ -592,8 +597,12 @@
         "previousImage": "Poprzednie zdjęcie",
         "nextImage": "Następne zdjęcie"
     },
+    "promoMarquee": {
+        "discountTiers": "Wydaj ponad 2000 i odbierz 2% rabatu | Wydaj ponad 4000 i odbierz 4% rabatu | Wydaj ponad 6000 i odbierz 6% rabatu"
+    },
     "shopFilters": {
         "filterProducts": "Filtruj produkty",
+        "allBrands": "Wszystkie marki",
         "min": "Min",
         "max": "Maks",
         "sortByNameDesc": "Nazwa: Z-A",

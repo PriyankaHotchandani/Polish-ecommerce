@@ -165,7 +165,7 @@ export default async function Home() {
 
             <div className="mt-9">
               <Link
-                href="/b2b"
+                href="/auth/signup"
                 className="inline-flex items-center rounded-full border border-white/80 bg-white px-8 py-4 text-base font-bold text-slate-900 shadow-[0_10px_40px_rgba(255,255,255,0.18)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-slate-100"
               >
                 {homeCopy.b2b.cta}

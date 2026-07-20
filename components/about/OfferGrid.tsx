@@ -111,7 +111,7 @@ export default function OfferGrid({ copy }: OfferGridProps) {
             title: copy.offer.b2bTitle,
             description: copy.offer.b2bDescription,
             cta: copy.offerCtas.b2b,
-            href: '/b2b',
+            href: '/auth/signup',
             Icon: B2BIcon,
         },
     ]

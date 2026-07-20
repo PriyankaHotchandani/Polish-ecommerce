@@ -18,6 +18,7 @@ interface SearchParams {
     search?: string
     category?: string
     group?: string
+    brand?: string
     minPrice?: string
     maxPrice?: string
     inStock?: string
@@ -28,6 +29,7 @@ interface SearchParams {
 const PAGE_SIZE = 24
 
 import { isToolCategory } from '@/utils/categoryGroups'
+import { isKnownBrand } from '@/utils/brands'
 
 type LocalizedCategory = {
     id: string
@@ -101,6 +103,12 @@ export default async function ShopPage({
         }
     }
 
+    // Apply brand filter
+    const selectedBrand = isKnownBrand(params.brand) ? params.brand : null
+    if (selectedBrand) {
+        query = query.eq('brand', selectedBrand)
+    }
+
     // Apply price range filter
     if (params.minPrice) {
         query = query.gte('price_retail', parseFloat(params.minPrice))
@@ -147,6 +155,7 @@ export default async function ShopPage({
         params.search,
         params.category,
         params.group,
+        selectedBrand,
         params.minPrice,
         params.maxPrice,
         params.inStock,
@@ -210,8 +219,8 @@ export default async function ShopPage({
     const selectedIsHouseholdMain = selectedIsHouseholdCategory
     const selectedIsToolsMain = selectedIsToolCategory
 
-    const householdHeading = locale === 'pl' ? 'Artykuly gospodarstwa domowego' : 'Household Products'
-    const toolsHeading = locale === 'pl' ? 'Narzedzia i kategorie' : 'Tools & Categories'
+    const householdHeading = navCopy.household
+    const toolsHeading = navCopy.tools
 
     const selectedCategory = (categories || []).find((category) => category.slug === params.category)
     const dynamicHeading = selectedCategory
@@ -242,6 +251,7 @@ export default async function ShopPage({
         } else if (preserveCurrentGroup && params.group && !nextCategory) {
             nextParams.set('group', params.group)
         }
+        if (selectedBrand) nextParams.set('brand', selectedBrand)
         if (params.minPrice) nextParams.set('minPrice', params.minPrice)
         if (params.maxPrice) nextParams.set('maxPrice', params.maxPrice)
         if (params.inStock) nextParams.set('inStock', params.inStock)
@@ -380,6 +390,7 @@ export default async function ShopPage({
                                 <form method="GET" action="/shop" className="flex-1">
                                     <input type="hidden" name="category" value={params.category || ''} />
                                     <input type="hidden" name="group" value={params.group || ''} />
+                                    <input type="hidden" name="brand" value={selectedBrand || ''} />
                                     <input type="hidden" name="minPrice" value={params.minPrice || ''} />
                                     <input type="hidden" name="maxPrice" value={params.maxPrice || ''} />
                                     <input type="hidden" name="inStock" value={params.inStock || ''} />
@@ -423,7 +434,7 @@ export default async function ShopPage({
 
                         {fetchErrorMessage && (
                             <div className="mb-6 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-                                Could not load full product list right now. Try refreshing the page.
+                                {shopCopy.loadError}
                             </div>
                         )}
 
@@ -464,16 +475,18 @@ export default async function ShopPage({
                                         href={previousPageHref}
                                         className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
                                     >
-                                        Previous
+                                        {shopCopy.previousPage}
                                     </Link>
                                 ) : (
                                     <span className="rounded-lg border border-slate-200 bg-slate-100 px-4 py-2 text-sm text-slate-400">
-                                        Previous
+                                        {shopCopy.previousPage}
                                     </span>
                                 )}
 
                                 <span className="text-sm text-slate-600">
-                                    Page {currentPage} of {totalPages}
+                                    {shopCopy.pageOf
+                                        .replace('{current}', String(currentPage))
+                                        .replace('{total}', String(totalPages))}
                                 </span>
 
                                 {hasNextPage ? (
@@ -481,11 +494,11 @@ export default async function ShopPage({
                                         href={nextPageHref}
                                         className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
                                     >
-                                        Next
+                                        {shopCopy.nextPage}
                                     </Link>
                                 ) : (
                                     <span className="rounded-lg border border-slate-200 bg-slate-100 px-4 py-2 text-sm text-slate-400">
-                                        Next
+                                        {shopCopy.nextPage}
                                     </span>
                                 )}
                             </nav>

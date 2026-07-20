@@ -12,7 +12,6 @@ import { getLocalizedBrandName, getLocalizedProductTitle } from '@/utils/product
 export default function CartPage() {
     const { items, updateQuantity, removeItem, clearCart, getItemCount, getCartTotals } = useCart()
     const searchParams = useSearchParams()
-    const [userRole, setUserRole] = useState<'b2c_customer' | 'b2b_customer' | null>(null)
     const [isAuthenticated, setIsAuthenticated] = useState(false)
     const [removingItems, setRemovingItems] = useState<Set<string>>(new Set())
     const [showBulkBanner, setShowBulkBanner] = useState(false)
@@ -23,27 +22,15 @@ export default function CartPage() {
     const previousTopById = useRef(new Map<string, number>())
 
     useEffect(() => {
-        async function fetchUserRole() {
+        async function fetchAuthState() {
             const supabase = createClient()
             const { data: { user } } = await supabase.auth.getUser()
 
-            if (user) {
-                setIsAuthenticated(true)
-                const { data: userData } = await supabase
-                    .from('users')
-                    .select('role')
-                    .eq('id', user.id)
-                    .maybeSingle()
-
-                setUserRole(userData?.role || 'b2c_customer')
-            } else {
-                setIsAuthenticated(false)
-                setUserRole('b2c_customer')
-            }
+            setIsAuthenticated(Boolean(user))
             setLoading(false)
         }
 
-        fetchUserRole()
+        fetchAuthState()
     }, [])
 
     useEffect(() => {
@@ -104,8 +91,9 @@ export default function CartPage() {
         }, 300)
     }
 
-    const cartTotals = getCartTotals(userRole)
+    const cartTotals = getCartTotals()
     const { totalNet, totalVat, totalGross, discountPercent, discountAmount, finalTotal } = cartTotals
+    const hasVolumeDiscount = discountPercent > 0
 
     if (loading) {
         return (
@@ -177,9 +165,7 @@ export default function CartPage() {
                     <div className="lg:col-span-2">
                         <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_8px_26px_rgba(15,23,42,0.06)] divide-y divide-gray-100">
                             {items.map((item) => {
-                                const basePrice = userRole === 'b2b_customer'
-                                    ? Number(item.product.price_wholesale)
-                                    : Number(item.product.price_retail)
+                                const basePrice = Number(item.product.price_retail)
                                 const breakdown = getProductPriceBreakdown(basePrice, item.product.category ?? null)
                                 const itemTotal = breakdown.gross * item.quantity
                                 const unitPrice = breakdown.gross
@@ -277,7 +263,7 @@ export default function CartPage() {
                                                             {' · '}
                                                             VAT: {breakdown.vat.toLocaleString(numberLocale, { style: 'currency', currency: 'PLN', currencyDisplay: 'code' }).replace('PLN', 'PLN ')}
                                                         </p>
-                                                        {userRole === 'b2b_customer' && Number(item.product.price_retail) > Number(item.product.price_wholesale) && (
+                                                        {hasVolumeDiscount && (
                                                             <p className="text-xs text-[#163579]">
                                                                 {messages.cartPage.wholesalePricing}
                                                             </p>
@@ -381,7 +367,7 @@ export default function CartPage() {
                                 </div>
                             </div>
 
-                            {userRole === 'b2b_customer' && (
+                            {hasVolumeDiscount && (
                                 <div className="bg-[#163579]/[0.06] border border-[#163579]/20 rounded-lg p-3 mb-6">
                                     <p className="text-sm text-[#163579] font-medium">
                                         {messages.cartPage.wholesaleBanner}

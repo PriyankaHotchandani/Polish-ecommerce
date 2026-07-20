@@ -93,7 +93,6 @@ export default function ProductCard({ product, variant = 'default' }: ProductCar
                 <div className={isFeatured ? 'product-card-price-wrap' : 'mt-4'}>
                     <PriceDisplay
                         price_retail={Number(product.price_retail)}
-                        price_wholesale={Number(product.price_wholesale)}
                         category={product.category ?? null}
                         variant={isFeatured ? 'featured' : 'default'}
                     />

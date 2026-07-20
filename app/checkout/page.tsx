@@ -207,7 +207,7 @@ export default function CheckoutPage() {
         }
     }, [items, loading, router, orderSuccess, submitting])
 
-    const cartTotals = useMemo(() => getCartTotals(userRole), [getCartTotals, userRole])
+    const cartTotals = useMemo(() => getCartTotals(), [getCartTotals])
     const { totalNet, totalVat, totalGross, discountPercent, discountAmount, finalTotal: cartFinalTotal } = cartTotals
     const shippingCost = useMemo(() => (totalGross >= 500 ? 0 : 25), [totalGross])
     const total = useMemo(() => cartFinalTotal + shippingCost, [cartFinalTotal, shippingCost])
@@ -324,9 +324,7 @@ export default function CheckoutPage() {
 
             // Prepare order items for atomic order creation with inventory check
             const orderItems = items.map(item => {
-                const basePrice = userRole === 'b2b_customer'
-                    ? Number(item.product.price_wholesale)
-                    : Number(item.product.price_retail)
+                const basePrice = Number(item.product.price_retail)
                 const breakdown = getProductPriceBreakdown(basePrice, item.product.category ?? null)
 
                 return {
@@ -420,7 +418,7 @@ export default function CheckoutPage() {
     if (loading) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <p className="text-gray-600">Loading checkout...</p>
+                <p className="text-gray-600">{messages.checkout.loading}</p>
             </div>
         )
     }
@@ -908,9 +906,7 @@ export default function CheckoutPage() {
                                 {/* Items */}
                                 <div className="space-y-4 mb-6 max-h-60 overflow-y-auto">
                                     {items.map((item) => {
-                                        const basePrice = userRole === 'b2b_customer'
-                                            ? Number(item.product.price_wholesale)
-                                            : Number(item.product.price_retail)
+                                        const basePrice = Number(item.product.price_retail)
                                         const breakdown = getProductPriceBreakdown(basePrice, item.product.category ?? null)
                                         const itemTotal = breakdown.gross * item.quantity
 
@@ -1017,7 +1013,7 @@ export default function CheckoutPage() {
                                     </div>
                                 </div>
 
-                                {userRole === 'b2b_customer' && (
+                                {discountPercent > 0 && (
                                     <div className="bg-green-50 border border-green-200 rounded-lg p-3 mt-4">
                                         <p className="text-sm text-green-800 font-medium">
                                             {messages.checkout.wholesaleApplied}

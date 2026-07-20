@@ -60,12 +60,21 @@ export function LocaleProvider({ initialLocale, children }: { initialLocale: Loc
     }, [])
 
     useEffect(() => {
-        const fromStorage = typeof window !== 'undefined' ? localStorage.getItem('locale') : null
+        // The cookie is the single source of truth: it is what the server used to
+        // render this page. Preferring stale localStorage over it caused mixed
+        // EN/PL screens (server HTML in one language, client strings in another).
         const fromCookie = getCookieLocale()
-        const resolved: Locale = fromStorage === 'pl' || fromCookie === 'pl' ? 'pl' : 'en'
+        const fromStorage = typeof window !== 'undefined' ? localStorage.getItem('locale') : null
+        const storageLocale: Locale | null = fromStorage === 'pl' || fromStorage === 'en' ? fromStorage : null
+        const resolved: Locale = fromCookie ?? storageLocale ?? locale
 
         if (resolved !== locale) {
             setLocaleState(resolved)
+        }
+
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('locale', resolved)
+            document.cookie = `locale=${resolved}; path=/; max-age=31536000; samesite=lax`
         }
 
         document.documentElement.lang = resolved
@@ -75,7 +84,9 @@ export function LocaleProvider({ initialLocale, children }: { initialLocale: Loc
         const syncLocale = (event?: Event) => {
             const eventLocale = (event as CustomEvent<Locale> | undefined)?.detail
             const cookieLocale = getCookieLocale()
-            const nextLocale: Locale = eventLocale === 'pl' || cookieLocale === 'pl' ? 'pl' : 'en'
+            const nextLocale: Locale = eventLocale === 'pl' || eventLocale === 'en'
+                ? eventLocale
+                : cookieLocale ?? 'en'
             runLocaleTransitionEffect()
             setLocaleState(nextLocale)
             document.documentElement.lang = nextLocale

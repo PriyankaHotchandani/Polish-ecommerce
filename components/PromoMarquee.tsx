@@ -1,7 +1,10 @@
 'use client'
 
+import { useLocaleMessages } from '@/contexts/LocaleContext'
+
 export default function PromoMarquee() {
-    const text = 'Spend over 2000 for 2% off | Spend over 4000 for 4% off | Spend over 6000 for 6% off'
+    const { messages } = useLocaleMessages()
+    const text = messages.promoMarquee.discountTiers
 
     return (
         <div

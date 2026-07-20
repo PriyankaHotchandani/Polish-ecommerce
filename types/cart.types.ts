@@ -15,6 +15,6 @@ export interface Cart {
     updateQuantity: (productId: string, quantity: number) => void
     clearCart: () => void
     getItemCount: () => number
-    getSubtotal: (userRole: 'b2c_customer' | 'b2b_customer' | null) => number
-    getCartTotals: (userRole: 'b2c_customer' | 'b2b_customer' | null) => CartTotals
+    getSubtotal: () => number
+    getCartTotals: () => CartTotals
 }

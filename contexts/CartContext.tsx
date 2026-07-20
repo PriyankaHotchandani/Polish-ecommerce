@@ -106,12 +106,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
         return items.reduce((total, item) => total + item.quantity, 0)
     }, [items])
 
-    const getSubtotal = useCallback((userRole: 'b2c_customer' | 'b2b_customer' | null) => {
-        return calculateCartTotals(items, userRole).totalGross
+    const getSubtotal = useCallback(() => {
+        return calculateCartTotals(items).totalGross
     }, [items])
 
-    const getCartTotals = useCallback((userRole: 'b2c_customer' | 'b2b_customer' | null) => {
-        return calculateCartTotals(items, userRole)
+    const getCartTotals = useCallback(() => {
+        return calculateCartTotals(items)
     }, [items])
 
     const value = useMemo<Cart>(() => ({

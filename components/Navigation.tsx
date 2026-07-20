@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/utils/supabase/client'
 import type { User } from '@supabase/supabase-js'
@@ -16,7 +16,7 @@ export default function Navigation({ initialLocale }: NavigationProps) {
     const [user, setUser] = useState<User | null>(null)
     const [displayName, setDisplayName] = useState('')
     const { locale, setLocale, messages } = useLocaleMessages()
-    const supabase = createClient()
+    const supabase = useMemo(() => createClient(), [])
     const router = useRouter()
     const { getItemCount } = useCart()
     const itemCount = getItemCount()
@@ -87,10 +87,15 @@ export default function Navigation({ initialLocale }: NavigationProps) {
 
         getUser()
 
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+        // IMPORTANT: this callback must stay synchronous. supabase-js holds its auth
+        // lock while notifying subscribers, so awaiting another Supabase call here
+        // deadlocks signInWithPassword (the login button hangs forever).
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
             const sessionUser = session?.user ?? null
             setUser(sessionUser)
-            await resolveDisplayName(sessionUser)
+            setTimeout(() => {
+                void resolveDisplayName(sessionUser)
+            }, 0)
         })
 
         return () => subscription.unsubscribe()
@@ -129,9 +134,7 @@ export default function Navigation({ initialLocale }: NavigationProps) {
                         BM SP. Z O.O.
                     </Link>
                     <div className="nav-links">
-                        <Link href="/shop" className="nav-link">{messages.nav.shop}</Link>
-                        <Link href="/b2b" className="nav-link">{messages.nav.b2b}</Link>
-                        <Link href="/about" className="nav-link">{messages.nav.about}</Link>
+                        <Link href="/shop" className="nav-link nav-link-primary">{messages.nav.shop}</Link>
                     </div>
                 </div>
 
@@ -164,7 +167,7 @@ export default function Navigation({ initialLocale }: NavigationProps) {
                     )}
 
                     {/* Cart */}
-                    <Link href="/cart" className="nav-cart" aria-label="Cart">
+                    <Link href="/cart" className="nav-cart" aria-label={messages.nav.cart}>
                         <svg
                             width="20"
                             height="20"
@@ -200,6 +203,8 @@ export default function Navigation({ initialLocale }: NavigationProps) {
                             </Link>
                         </div>
                     )}
+
+                    <Link href="/about" className="nav-link nav-link-about">{messages.nav.about}</Link>
                 </div>
             </div>
         </nav>

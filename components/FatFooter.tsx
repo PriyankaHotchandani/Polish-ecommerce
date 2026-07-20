@@ -24,8 +24,8 @@ export default function FatFooter() {
     const portalLinks = [
         { href: '/auth/signup', label: footer.partner.applyAccount },
         { href: '/auth/login', label: footer.partner.login },
-        { href: '/b2b', label: footer.partner.bulkOrdering },
-        { href: '/b2b', label: footer.partner.volumeDiscounts },
+        { href: '/shop', label: footer.partner.bulkOrdering },
+        { href: '/shop', label: footer.partner.volumeDiscounts },
     ]
 
     const supportLinks = [

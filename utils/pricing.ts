@@ -67,23 +67,17 @@ export function calculateCartTotals(
     items: Array<{
         product: {
             price_retail: number
-            price_wholesale: number
             category?: { slug: string; name: string } | null
         }
         quantity: number
-    }>,
-    userRole: 'b2c_customer' | 'b2b_customer' | null
+    }>
 ): CartTotals {
     let totalNet = 0
     let totalVat = 0
     let totalGross = 0
 
-    const isWholesale = userRole === 'b2b_customer'
-
     for (const item of items) {
-        const basePrice = isWholesale
-            ? Number(item.product.price_wholesale)
-            : Number(item.product.price_retail)
+        const basePrice = Number(item.product.price_retail)
         const breakdown = getProductPriceBreakdown(basePrice, item.product.category ?? null)
 
         totalNet += breakdown.net * item.quantity

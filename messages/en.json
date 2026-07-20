@@ -44,9 +44,9 @@
             "specialOffers": "Special Offers"
         },
         "partner": {
-            "title": "Partner Portal",
-            "applyAccount": "Apply for Account",
-            "login": "Partner Login",
+            "title": "Your Account",
+            "applyAccount": "Create an Account",
+            "login": "Sign In",
             "bulkOrdering": "Bulk Ordering",
             "volumeDiscounts": "Volume Discounts"
         },
@@ -110,7 +110,11 @@
         "productsFoundLabel": "products found",
         "noProducts": "No products found",
         "noProductsHint": "Try adjusting your filters or search terms",
-        "productsFound": "{count} products found"
+        "productsFound": "{count} products found",
+        "loadError": "Could not load full product list right now. Try refreshing the page.",
+        "previousPage": "Previous",
+        "nextPage": "Next",
+        "pageOf": "Page {current} of {total}"
     },
     "auth": {
         "signIn": "Sign In",
@@ -164,16 +168,16 @@
         "rememberMe30Days": "Remember me for 30 days",
         "loginPanelEyebrow": "Welcome Back",
         "loginPanelTitle": "Pick up right where you left off.",
-        "loginPanelSubtitle": "Sign in to access your account dashboard, order history, and partner pricing tools.",
+        "loginPanelSubtitle": "Sign in to access your account dashboard, order history, and automatic volume savings.",
         "loginBenefitDashboard": "Access your account dashboard instantly.",
         "loginBenefitOrders": "Track current and past orders in one place.",
-        "loginBenefitPricing": "Unlock partner and wholesale pricing features.",
+        "loginBenefitPricing": "Unlock automatic volume discounts on larger orders.",
         "signupPanelEyebrow": "Get Started",
         "signupPanelTitle": "Shop smarter, order faster.",
-        "signupPanelSubtitle": "Create your account to unlock a faster, smarter shopping workflow for retail and wholesale orders.",
+        "signupPanelSubtitle": "Create your account to unlock a faster, smarter shopping workflow with automatic volume savings.",
         "signupBenefitCheckout": "Fast checkout with saved account details.",
         "signupBenefitTracking": "Track every order in one clean dashboard.",
-        "signupBenefitPricing": "Access exclusive partner and wholesale pricing."
+        "signupBenefitPricing": "Unlock wholesale-level savings through automatic volume discounts."
     },
     "authErrors": {
         "unexpected": "An unexpected error occurred",
@@ -264,14 +268,14 @@
         "featuredSubheading": "Discover standout essentials selected for quality, finish, and daily performance.",
         "featuredCta": "Explore Full Catalog",
         "b2b": {
-            "badge": "For Businesses",
-            "heading": "Wholesale Pricing for B2B Customers",
-            "subtext": "Register as a business customer to unlock exclusive wholesale rates, streamlined invoicing, and priority logistics tailored for recurring procurement.",
-            "cta": "Learn More About B2B",
+            "badge": "For Every Customer",
+            "heading": "Wholesale Advantages with Your Standard Account",
+            "subtext": "Sign in with your standard account to unlock automatic volume discounts, streamlined invoicing, and priority logistics — no special account required.",
+            "cta": "Create Your Free Account",
             "cards": {
                 "wholesale": {
                     "title": "Wholesale Pricing",
-                    "description": "Enjoy significant discounts on bulk orders with transparent net pricing built for business scale."
+                    "description": "Every account automatically earns tiered volume discounts — 2%, 4%, or 6% off as your cart total grows."
                 },
                 "vat": {
                     "title": "VAT Invoices",
@@ -451,10 +455,10 @@
         "each": "each",
         "wholesalePricing": "Wholesale pricing",
         "orderSummary": "Order Summary",
-        "wholesaleBanner": "You're receiving wholesale pricing",
+        "wholesaleBanner": "Wholesale pricing unlocked — your order volume qualifies for a discount",
         "bulkImportSuccess": "Bulk order items were added to your cart successfully.",
         "loginPrompt": "Already have an account?",
-        "loginPromptSuffix": "for faster checkout and wholesale pricing.",
+        "loginPromptSuffix": "for faster checkout and automatic volume savings.",
         "secureCheckout": "Secure checkout",
         "added": "Added!",
         "dismiss": "Dismiss"
@@ -502,6 +506,7 @@
     },
     "checkout": {
         "title": "Checkout",
+        "loading": "Loading checkout...",
         "successTitle": "Order Placed Successfully!",
         "redirecting": "Redirecting to confirmation page...",
         "billingAddress": "Billing Address",
@@ -509,7 +514,7 @@
         "requireInvoice": "Require VAT invoice",
         "orderSummary": "Order Summary",
         "freeShippingLabel": "FREE",
-        "wholesaleApplied": "Wholesale pricing applied",
+        "wholesaleApplied": "Wholesale pricing applied — volume discount active",
         "freeShippingHint": "Free shipping on orders over 500 PLN",
         "processingOrder": "Processing Order...",
         "placeOrder": "Place Order",
@@ -592,8 +597,12 @@
         "previousImage": "Previous image",
         "nextImage": "Next image"
     },
+    "promoMarquee": {
+        "discountTiers": "Spend over 2000 for 2% off | Spend over 4000 for 4% off | Spend over 6000 for 6% off"
+    },
     "shopFilters": {
         "filterProducts": "Filter Products",
+        "allBrands": "All Brands",
         "min": "Min",
         "max": "Max",
         "sortByNameDesc": "Name: Z to A",
