@@ -70,7 +70,15 @@ export default function HeroCenterPanel({ locale }: HeroCenterPanelProps) {
             <div className="relative z-10 flex h-full flex-col items-center justify-center px-6 py-14 text-center text-white sm:px-8 sm:py-16">
                 <div className="hero-main-content">
                     <p className="hero-brand-kicker">{copy.centerKicker}</p>
-                    <div className="hero-brand-name">BM SP. Z O.O.</div>
+                    <div className="hero-brand-name">
+                        <span className="hero-brand-logo-badge">
+                            <img
+                                src="/logos/bmspzoo-trim.png"
+                                alt="BM Sp. z o.o."
+                                className="hero-brand-logo-badge-img"
+                            />
+                        </span>
+                    </div>
                     <div className="hero-center-divider" aria-hidden="true" />
 
                     <h2 className="hero-headline">{copy.centerHeadline}</h2>

@@ -23,3 +23,6 @@ UPDATE products SET brand = 'Klausberg' WHERE brand IS NULL AND title ~* '\mKB-?
 UPDATE products SET brand = 'Kinghoff'  WHERE brand ILIKE 'kinghoff'  AND brand <> 'Kinghoff';
 UPDATE products SET brand = 'Klausberg' WHERE brand ILIKE 'klausberg' AND brand <> 'Klausberg';
 UPDATE products SET brand = 'Kassel'    WHERE brand ILIKE 'kassel'    AND brand <> 'Kassel';
+
+-- Any remaining product with no identifiable brand defaults to Alpenburg.
+UPDATE products SET brand = 'Alpenburg' WHERE brand IS NULL OR btrim(brand) = '';

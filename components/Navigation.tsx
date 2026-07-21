@@ -26,9 +26,18 @@ export default function Navigation({ initialLocale }: NavigationProps) {
             return rawLocale?.toLowerCase() === 'pl' ? 'pl' : 'en'
         }
 
-        const resolveDisplayName = async (authUser: User | null) => {
+        // Synchronous best-guess name from the user object itself (metadata, then
+        // the email local-part). Setting this in the same render as setUser avoids
+        // the flash where the full email briefly shows before the profile resolves.
+        const initialNameFor = (authUser: User): string => {
+            const metadataName = (authUser.user_metadata?.full_name as string | undefined)
+                || `${authUser.user_metadata?.first_name || ''} ${authUser.user_metadata?.last_name || ''}`.trim()
+            return metadataName || authUser.email?.split('@')[0] || 'User'
+        }
+
+        // Async refinement: replace the initial name with the profile name if present.
+        const refineDisplayName = async (authUser: User | null) => {
             if (!authUser) {
-                setDisplayName('')
                 return
             }
 
@@ -40,15 +49,11 @@ export default function Navigation({ initialLocale }: NavigationProps) {
                     .single()
 
                 const nameFromProfile = `${profile?.first_name || ''} ${profile?.last_name || ''}`.trim()
-                const nameFromMetadata = (authUser.user_metadata?.full_name as string | undefined)
-                    || `${authUser.user_metadata?.first_name || ''} ${authUser.user_metadata?.last_name || ''}`.trim()
-
-                setDisplayName(nameFromProfile || nameFromMetadata || authUser.email?.split('@')[0] || 'User')
+                if (nameFromProfile) {
+                    setDisplayName(nameFromProfile)
+                }
             } catch {
-                const nameFromMetadata = (authUser.user_metadata?.full_name as string | undefined)
-                    || `${authUser.user_metadata?.first_name || ''} ${authUser.user_metadata?.last_name || ''}`.trim()
-
-                setDisplayName(nameFromMetadata || authUser.email?.split('@')[0] || 'User')
+                // Keep the initial name on failure.
             }
         }
 
@@ -76,8 +81,11 @@ export default function Navigation({ initialLocale }: NavigationProps) {
                     }
                 }
 
+                // Set user and a resolved name together so the header never flashes
+                // the raw email between the two updates.
                 setUser(data.user)
-                await resolveDisplayName(data.user)
+                setDisplayName(data.user ? initialNameFor(data.user) : '')
+                await refineDisplayName(data.user)
             } catch {
                 await supabase.auth.signOut()
                 setUser(null)
@@ -89,12 +97,14 @@ export default function Navigation({ initialLocale }: NavigationProps) {
 
         // IMPORTANT: this callback must stay synchronous. supabase-js holds its auth
         // lock while notifying subscribers, so awaiting another Supabase call here
-        // deadlocks signInWithPassword (the login button hangs forever).
+        // deadlocks signInWithPassword (the login button hangs forever). The name is
+        // set synchronously from the user object; the profile refine is deferred.
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
             const sessionUser = session?.user ?? null
             setUser(sessionUser)
+            setDisplayName(sessionUser ? initialNameFor(sessionUser) : '')
             setTimeout(() => {
-                void resolveDisplayName(sessionUser)
+                void refineDisplayName(sessionUser)
             }, 0)
         })
 
@@ -129,9 +139,12 @@ export default function Navigation({ initialLocale }: NavigationProps) {
             <div className="nav-inner">
                 {/* Left: brand + nav links */}
                 <div className="nav-left">
-                    <Link href="/" className="nav-brand">
-                        <span className="nav-brand-dot" aria-hidden="true" />
-                        BM SP. Z O.O.
+                    <Link href="/" className="nav-brand-badge" aria-label="BM Sp. z o.o.">
+                        <img
+                            src="/logos/bmspzoo-trim.png"
+                            alt="BM Sp. z o.o."
+                            className="nav-brand-badge-img"
+                        />
                     </Link>
                     <div className="nav-links">
                         <Link href="/shop" className="nav-link nav-link-primary">{messages.nav.shop}</Link>
@@ -140,6 +153,8 @@ export default function Navigation({ initialLocale }: NavigationProps) {
 
                 {/* Right: account links, cart, auth */}
                 <div className="nav-right">
+                    <Link href="/about" className="nav-link nav-link-about">{messages.nav.about}</Link>
+
                     <div className="nav-lang-toggle" role="group" aria-label={messages.nav.languageSelector}>
                         <button
                             type="button"
@@ -203,8 +218,6 @@ export default function Navigation({ initialLocale }: NavigationProps) {
                             </Link>
                         </div>
                     )}
-
-                    <Link href="/about" className="nav-link nav-link-about">{messages.nav.about}</Link>
                 </div>
             </div>
         </nav>

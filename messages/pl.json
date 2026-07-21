@@ -600,6 +600,16 @@
     "promoMarquee": {
         "discountTiers": "Wydaj ponad 2000 i odbierz 2% rabatu | Wydaj ponad 4000 i odbierz 4% rabatu | Wydaj ponad 6000 i odbierz 6% rabatu"
     },
+    "admin": {
+        "panel": "Panel administratora",
+        "dashboard": "Pulpit",
+        "orders": "Zamówienia",
+        "products": "Produkty",
+        "categories": "Kategorie",
+        "users": "Użytkownicy",
+        "viewStore": "Zobacz sklep",
+        "signOut": "Wyloguj się"
+    },
     "shopFilters": {
         "filterProducts": "Filtruj produkty",
         "allBrands": "Wszystkie marki",

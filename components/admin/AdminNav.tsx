@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
+import { useLocaleMessages, type Locale } from '@/contexts/LocaleContext'
 
 interface AdminNavProps {
     userEmail: string
@@ -13,11 +14,19 @@ export default function AdminNav({ userEmail }: AdminNavProps) {
     const pathname = usePathname()
     const router = useRouter()
     const supabase = createClient()
+    const { locale, setLocale, messages } = useLocaleMessages()
+    const adminCopy = messages.admin
+
+    const handleLocaleChange = (nextLocale: Locale) => {
+        if (nextLocale === locale) return
+        setLocale(nextLocale)
+        router.refresh()
+    }
 
     const navItems = [
         {
             href: '/admin',
-            label: 'Dashboard',
+            label: adminCopy.dashboard,
             icon: (
                 <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" aria-hidden="true">
                     <path d="M4 13h6v7H4v-7Zm10-9h6v16h-6V4ZM4 4h6v5H4V4Z" strokeLinecap="round" strokeLinejoin="round" />
@@ -26,7 +35,7 @@ export default function AdminNav({ userEmail }: AdminNavProps) {
         },
         {
             href: '/admin/orders',
-            label: 'Orders',
+            label: adminCopy.orders,
             icon: (
                 <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" aria-hidden="true">
                     <path d="M4 7h16M7 4h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" strokeLinecap="round" strokeLinejoin="round" />
@@ -36,7 +45,7 @@ export default function AdminNav({ userEmail }: AdminNavProps) {
         },
         {
             href: '/admin/products',
-            label: 'Products',
+            label: adminCopy.products,
             icon: (
                 <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" aria-hidden="true">
                     <path d="M4 9 12 4l8 5-8 5-8-5Z" strokeLinecap="round" strokeLinejoin="round" />
@@ -46,7 +55,7 @@ export default function AdminNav({ userEmail }: AdminNavProps) {
         },
         {
             href: '/admin/categories',
-            label: 'Categories',
+            label: adminCopy.categories,
             icon: (
                 <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" aria-hidden="true">
                     <path d="M3 7.5A1.5 1.5 0 0 1 4.5 6h4l1.5 2H19.5A1.5 1.5 0 0 1 21 9.5v8A1.5 1.5 0 0 1 19.5 19h-15A1.5 1.5 0 0 1 3 17.5v-10Z" strokeLinecap="round" strokeLinejoin="round" />
@@ -55,7 +64,7 @@ export default function AdminNav({ userEmail }: AdminNavProps) {
         },
         {
             href: '/admin/users',
-            label: 'Users',
+            label: adminCopy.users,
             icon: (
                 <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" aria-hidden="true">
                     <path d="M16 19v-1a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v1" strokeLinecap="round" strokeLinejoin="round" />
@@ -88,7 +97,7 @@ export default function AdminNav({ userEmail }: AdminNavProps) {
                                     <circle cx="12" cy="12" r="3" />
                                 </svg>
                             </span>
-                            Admin Panel
+                            {adminCopy.panel}
                         </Link>
                         <div className="hidden sm:ml-8 sm:flex sm:space-x-6">
                             {navItems.map((item) => {
@@ -114,11 +123,29 @@ export default function AdminNav({ userEmail }: AdminNavProps) {
 
                     {/* Right: User Menu */}
                     <div className="flex items-center space-x-4">
+                        <div className="inline-flex items-center overflow-hidden rounded-md border border-slate-200" role="group" aria-label={messages.nav.languageSelector}>
+                            <button
+                                type="button"
+                                onClick={() => handleLocaleChange('en')}
+                                aria-pressed={locale === 'en'}
+                                className={`px-2.5 py-1.5 text-xs font-semibold transition-colors ${locale === 'en' ? 'bg-[#163579] text-white' : 'bg-white text-slate-600 hover:bg-slate-100'}`}
+                            >
+                                EN
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => handleLocaleChange('pl')}
+                                aria-pressed={locale === 'pl'}
+                                className={`px-2.5 py-1.5 text-xs font-semibold transition-colors ${locale === 'pl' ? 'bg-[#163579] text-white' : 'bg-white text-slate-600 hover:bg-slate-100'}`}
+                            >
+                                PL
+                            </button>
+                        </div>
                         <Link
                             href="/"
                             className="inline-flex items-center rounded-md border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm font-semibold text-slate-700 transition-colors hover:border-[#163579] hover:text-[#163579]"
                         >
-                            View Store
+                            {adminCopy.viewStore}
                         </Link>
                         <div className="flex items-center space-x-3">
                             <span className="rounded-md border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-700">{userEmail}</span>
@@ -126,7 +153,7 @@ export default function AdminNav({ userEmail }: AdminNavProps) {
                                 onClick={handleSignOut}
                                 className="inline-flex items-center rounded-md border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm font-semibold text-slate-700 transition-colors hover:border-[#163579] hover:bg-[#163579] hover:text-white"
                             >
-                                Sign Out
+                                {adminCopy.signOut}
                             </button>
                         </div>
                     </div>

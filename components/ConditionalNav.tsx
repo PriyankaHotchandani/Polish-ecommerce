@@ -79,7 +79,7 @@ export default function ConditionalNav({ initialLocale }: ConditionalNavProps) {
             {isAdmin && (
                 <Link
                     href="/admin"
-                    className="fixed bottom-6 right-6 z-50 px-6 py-3 bg-[#163579] text-white rounded-full shadow-lg hover:bg-[#122d67] transition-all hover:scale-105 flex items-center gap-2 font-semibold"
+                    className="fixed bottom-14 right-6 z-50 px-6 py-3 bg-[#163579] text-white rounded-full shadow-lg hover:bg-[#122d67] transition-all hover:scale-105 flex items-center gap-2 font-semibold"
                 >
                     <svg
                         className="w-5 h-5"

@@ -228,10 +228,61 @@ body.locale-switching * {
   position: relative;
   z-index: 1;
   display: flex;
-  max-width: 22rem;
+  flex-direction: column;
+  max-width: 24rem;
   align-items: center;
   justify-content: center;
+  gap: 1.4rem;
   text-align: center;
+}
+
+/* Brand logos overlaid on each hero panel, below the panel heading. */
+.hero-brand-badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+}
+
+.hero-brand-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 34px;
+  padding: 0 0.7rem;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 4px 14px rgba(8, 15, 35, 0.28);
+  backdrop-filter: blur(2px);
+}
+
+.hero-brand-badge.is-dark {
+  background: rgba(12, 14, 20, 0.94);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+}
+
+.hero-brand-badge-img {
+  height: 18px;
+  width: auto;
+  display: block;
+}
+
+/* Company logo inside the hero center panel (replaces the plain brand text). */
+.hero-brand-logo-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 0.9rem;
+  border-radius: 10px;
+  background: #ffffff;
+  box-shadow: 0 6px 22px rgba(8, 15, 35, 0.32);
+}
+
+.hero-brand-logo-badge-img {
+  height: 30px;
+  width: auto;
+  display: block;
 }
 
 .hero-panel-heading {
@@ -1102,6 +1153,28 @@ body.locale-switching * {
   -webkit-text-fill-color: initial;
 }
 
+.nav-brand-badge {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  background: #ffffff;
+  border-radius: 9px;
+  padding: 5px 11px;
+  box-shadow: 0 2px 12px rgba(10, 20, 50, 0.28);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.nav-brand-badge:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(10, 20, 50, 0.34);
+}
+
+.nav-brand-badge-img {
+  height: 22px;
+  width: auto;
+  display: block;
+}
+
 .nav-links {
   display: flex;
   align-items: center;
@@ -1150,7 +1223,7 @@ body.locale-switching * {
 }
 
 .nav-link-about {
-  margin-left: 0.4rem;
+  margin-right: 0.4rem;
   flex-shrink: 0;
 }
 
@@ -1356,9 +1429,16 @@ body.locale-switching * {
     gap: 0.9rem;
   }
 
-  .nav-brand {
-    font-size: 0.72rem;
-    letter-spacing: 0.11em;
+  .nav-brand-badge {
+    padding: 4px 8px;
+  }
+
+  .nav-brand-badge-img {
+    height: 17px;
+  }
+
+  .nav-link-about {
+    display: none;
   }
 
   .nav-link,
@@ -1410,12 +1490,80 @@ body.locale-switching * {
     transform: translateX(0);
   }
   100% {
+    /* The track renders the phrase an even number of times; shifting by exactly
+       half the track width swaps the first half for the identical second half,
+       producing a continuous, gap-free loop on any viewport width. */
     transform: translateX(-50%);
   }
 }
 
 .animate-marquee {
-  animation: marquee 28s linear infinite;
+  animation: marquee 60s linear infinite;
+  will-change: transform;
+}
+
+/* Global navigation loading cue */
+body.app-navigating,
+body.app-navigating * {
+  cursor: wait !important;
+}
+
+.app-nav-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  z-index: 100;
+  background: rgba(22, 53, 121, 0.14);
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.app-nav-progress-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 40%;
+  background: linear-gradient(90deg, transparent, rgba(80, 132, 255, 0.95), rgba(52, 96, 210, 0.95), transparent);
+  animation: navProgressSlide 1.1s ease-in-out infinite;
+}
+
+@keyframes navProgressSlide {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(320%);
+  }
+}
+
+/* Brand filter logo chips (airline-style logo + name rows) */
+.brand-filter-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 26px;
+  width: 58px;
+  flex-shrink: 0;
+  border-radius: 6px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: #ffffff;
+  overflow: hidden;
+}
+
+.brand-filter-logo.is-dark {
+  background: #0c0e14;
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.brand-filter-logo-img {
+  max-height: 16px;
+  max-width: 50px;
+  width: auto;
+  object-fit: contain;
+  display: block;
 }
 
 @media (max-width: 639px) {

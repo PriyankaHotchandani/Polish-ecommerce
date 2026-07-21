@@ -29,7 +29,7 @@ interface SearchParams {
 const PAGE_SIZE = 24
 
 import { isToolCategory } from '@/utils/categoryGroups'
-import { isKnownBrand } from '@/utils/brands'
+import { isKnownBrand, DEFAULT_BRAND } from '@/utils/brands'
 
 type LocalizedCategory = {
     id: string
@@ -103,9 +103,12 @@ export default async function ShopPage({
         }
     }
 
-    // Apply brand filter
+    // Apply brand filter. Products with a null/empty brand default to Alpenburg,
+    // so the Alpenburg filter must also match those rows.
     const selectedBrand = isKnownBrand(params.brand) ? params.brand : null
-    if (selectedBrand) {
+    if (selectedBrand === DEFAULT_BRAND) {
+        query = query.or('brand.eq.Alpenburg,brand.is.null,brand.eq.')
+    } else if (selectedBrand) {
         query = query.eq('brand', selectedBrand)
     }
 

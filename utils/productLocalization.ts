@@ -1,3 +1,6 @@
+import { CATEGORY_EN_BY_PL } from '@/utils/categoryTranslations'
+import { normalizeBrand } from '@/utils/brands'
+
 type Locale = 'en' | 'pl'
 
 type TranslationMap = {
@@ -132,20 +135,36 @@ export function getLocalizedCategoryNameWithTranslations(
     locale: Locale,
     translations?: TranslationMap
 ): string {
-    const fromTranslations = getTranslationFromMap(categoryName, translations, locale)
-    if (fromTranslations) {
-        return toTitleCaseWords(fromTranslations)
+    const base = (categoryName || '').trim()
+
+    if (locale === 'pl') {
+        const pl = (translations?.pl || base).trim()
+        return toTitleCaseWords(pl)
     }
 
-    if (locale === 'en') {
-        return toTitleCaseWords(categoryName)
+    // English. The imported categories have `name_translations.en` populated with
+    // Polish text (en === pl), so a translation is only "real" when it differs
+    // from the Polish name. Otherwise fall back to the curated English dictionary.
+    const en = (translations?.en || '').trim()
+    const pl = (translations?.pl || base).trim()
+    const enIsReal = Boolean(en)
+        && en.toLowerCase() !== pl.toLowerCase()
+        && en.toLowerCase() !== base.toLowerCase()
+
+    if (enIsReal) {
+        return toTitleCaseWords(en)
+    }
+
+    const dictionaryEn = CATEGORY_EN_BY_PL[base] || CATEGORY_EN_BY_PL[pl]
+    if (dictionaryEn) {
+        return dictionaryEn
     }
 
     if (categorySlug && CATEGORY_NAME_BY_SLUG[categorySlug]) {
-        return toTitleCaseWords(CATEGORY_NAME_BY_SLUG[categorySlug].pl)
+        return CATEGORY_NAME_BY_SLUG[categorySlug].en
     }
 
-    return toTitleCaseWords(categoryName)
+    return toTitleCaseWords(base)
 }
 
 export function getLocalizedProductTitle(
@@ -185,11 +204,12 @@ export function getLocalizedProductDescription(
 }
 
 // Brand names are proper nouns and must render identically in every locale;
-// the locale parameter is kept for call-site compatibility.
+// the locale parameter is kept for call-site compatibility. A null/empty brand
+// defaults to Alpenburg, so this always returns a brand name.
 export function getLocalizedBrandName(
     brandName: string | null,
     locale: Locale
-): string | null {
+): string {
     void locale
-    return brandName || null
+    return normalizeBrand(brandName)
 }

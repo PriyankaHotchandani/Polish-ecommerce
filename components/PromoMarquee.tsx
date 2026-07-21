@@ -16,7 +16,9 @@ export default function PromoMarquee() {
                     <div className="absolute inset-y-0 left-0 w-12 bg-gradient-to-r from-[#0f172a] to-transparent z-10" />
                     <div className="absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-[#0f172a] to-transparent z-10" />
                     <div className="flex animate-marquee whitespace-nowrap">
-                        {[0, 1].map((copy) => (
+                        {/* Even number of identical copies so the -50% keyframe loops
+                            seamlessly; enough copies to exceed any viewport width. */}
+                        {[0, 1, 2, 3, 4, 5].map((copy) => (
                             <span
                                 key={copy}
                                 className="mx-8 text-[0.72rem] font-medium tracking-[0.12em] uppercase text-slate-300/90"

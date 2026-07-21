@@ -16,7 +16,7 @@ interface ShopFiltersProps {
 }
 
 import { isToolCategory } from '@/utils/categoryGroups'
-import { HOUSEHOLD_BRANDS, TOOL_BRANDS, isKnownBrand } from '@/utils/brands'
+import { HOUSEHOLD_BRANDS, TOOL_BRANDS, isKnownBrand, getBrandInfo } from '@/utils/brands'
 
 export default function ShopFilters({ categories, activeFiltersCount }: ShopFiltersProps) {
     const router = useRouter()
@@ -309,38 +309,54 @@ export default function ShopFilters({ categories, activeFiltersCount }: ShopFilt
                                                         <div className="px-3.5 pb-1 pt-2 text-[0.7rem] font-semibold uppercase tracking-[0.14em] text-slate-400">
                                                             {toolsHeading}
                                                         </div>
-                                                        {TOOL_BRANDS.map((brand) => (
-                                                            <button
-                                                                key={`tools-${brand}`}
-                                                                type="button"
-                                                                onClick={() => {
-                                                                    setSelectedBrand(brand)
-                                                                    setOpenMenu(null)
-                                                                }}
-                                                                className={`flex w-full items-center justify-between px-6 py-2.5 text-left text-sm transition ${selectedBrand === brand ? 'bg-[#163579]/8 text-[#163579]' : 'text-slate-700 hover:bg-slate-50'}`}
-                                                            >
-                                                                <span>{brand}</span>
-                                                                {selectedBrand === brand && <span aria-hidden="true">•</span>}
-                                                            </button>
-                                                        ))}
+                                                        {TOOL_BRANDS.map((brand) => {
+                                                            const info = getBrandInfo(brand)
+                                                            return (
+                                                                <button
+                                                                    key={`tools-${brand}`}
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        setSelectedBrand(brand)
+                                                                        setOpenMenu(null)
+                                                                    }}
+                                                                    className={`flex w-full items-center justify-between px-3.5 py-2 text-left text-sm transition ${selectedBrand === brand ? 'bg-[#163579]/8 text-[#163579]' : 'text-slate-700 hover:bg-slate-50'}`}
+                                                                >
+                                                                    <span className="flex items-center gap-3">
+                                                                        <span className={`brand-filter-logo${info.dark ? ' is-dark' : ''}`}>
+                                                                            {info.logo && <img src={info.logo} alt="" className="brand-filter-logo-img" />}
+                                                                        </span>
+                                                                        <span>{brand}</span>
+                                                                    </span>
+                                                                    {selectedBrand === brand && <span aria-hidden="true">•</span>}
+                                                                </button>
+                                                            )
+                                                        })}
 
                                                         <div className="px-3.5 pb-1 pt-3 text-[0.7rem] font-semibold uppercase tracking-[0.14em] text-slate-400">
                                                             {householdHeading}
                                                         </div>
-                                                        {HOUSEHOLD_BRANDS.map((brand) => (
-                                                            <button
-                                                                key={`household-${brand}`}
-                                                                type="button"
-                                                                onClick={() => {
-                                                                    setSelectedBrand(brand)
-                                                                    setOpenMenu(null)
-                                                                }}
-                                                                className={`flex w-full items-center justify-between px-6 py-2.5 text-left text-sm transition ${selectedBrand === brand ? 'bg-[#163579]/8 text-[#163579]' : 'text-slate-700 hover:bg-slate-50'}`}
-                                                            >
-                                                                <span>{brand}</span>
-                                                                {selectedBrand === brand && <span aria-hidden="true">•</span>}
-                                                            </button>
-                                                        ))}
+                                                        {HOUSEHOLD_BRANDS.map((brand) => {
+                                                            const info = getBrandInfo(brand)
+                                                            return (
+                                                                <button
+                                                                    key={`household-${brand}`}
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        setSelectedBrand(brand)
+                                                                        setOpenMenu(null)
+                                                                    }}
+                                                                    className={`flex w-full items-center justify-between px-3.5 py-2 text-left text-sm transition ${selectedBrand === brand ? 'bg-[#163579]/8 text-[#163579]' : 'text-slate-700 hover:bg-slate-50'}`}
+                                                                >
+                                                                    <span className="flex items-center gap-3">
+                                                                        <span className={`brand-filter-logo${info.dark ? ' is-dark' : ''}`}>
+                                                                            {info.logo && <img src={info.logo} alt="" className="brand-filter-logo-img" />}
+                                                                        </span>
+                                                                        <span>{brand}</span>
+                                                                    </span>
+                                                                    {selectedBrand === brand && <span aria-hidden="true">•</span>}
+                                                                </button>
+                                                            )
+                                                        })}
                                                     </div>
                                                 </div>
                                             )}

@@ -68,8 +68,8 @@ export default function FatFooter() {
                 <div className="py-14">
                     <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
                         <div>
-                            <Link href="/" className="inline-block text-xl font-bold tracking-[0.12em] text-white">
-                                BM SP. Z O.O.
+                            <Link href="/" className="inline-flex items-center rounded-lg bg-white px-3.5 py-2 shadow-sm" aria-label="BM Sp. z o.o.">
+                                <img src="/logos/bmspzoo-trim.png" alt="BM Sp. z o.o." className="h-6 w-auto" />
                             </Link>
                             <p className="mt-4 max-w-sm text-sm leading-relaxed text-slate-300">
                                 {footer.brand.description}

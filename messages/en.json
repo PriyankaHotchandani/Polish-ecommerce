@@ -600,6 +600,16 @@
     "promoMarquee": {
         "discountTiers": "Spend over 2000 for 2% off | Spend over 4000 for 4% off | Spend over 6000 for 6% off"
     },
+    "admin": {
+        "panel": "Admin Panel",
+        "dashboard": "Dashboard",
+        "orders": "Orders",
+        "products": "Products",
+        "categories": "Categories",
+        "users": "Users",
+        "viewStore": "View Store",
+        "signOut": "Sign Out"
+    },
     "shopFilters": {
         "filterProducts": "Filter Products",
         "allBrands": "All Brands",

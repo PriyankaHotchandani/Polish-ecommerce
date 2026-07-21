@@ -7,6 +7,7 @@ import { cookies } from 'next/headers'
 import enMessages from '@/messages/en.json'
 import plMessages from '@/messages/pl.json'
 import type { Product, Category } from '@/types/database.types'
+import { HOUSEHOLD_BRANDS, TOOL_BRANDS, getBrandInfo } from '@/utils/brands'
 
 type Locale = 'en' | 'pl'
 
@@ -73,6 +74,16 @@ export default async function Home() {
                     </span>
                   ))}
                 </h2>
+                <div className="hero-brand-badges">
+                  {HOUSEHOLD_BRANDS.map((brand) => {
+                    const info = getBrandInfo(brand)
+                    return (
+                      <span key={brand} className={`hero-brand-badge${info.dark ? ' is-dark' : ''}`}>
+                        <img src={info.logo} alt={brand} className="hero-brand-badge-img" />
+                      </span>
+                    )
+                  })}
+                </div>
               </div>
             </div>
           </Link>
@@ -105,6 +116,16 @@ export default async function Home() {
                     </span>
                   ))}
                 </h2>
+                <div className="hero-brand-badges">
+                  {TOOL_BRANDS.map((brand) => {
+                    const info = getBrandInfo(brand)
+                    return (
+                      <span key={brand} className={`hero-brand-badge${info.dark ? ' is-dark' : ''}`}>
+                        <img src={info.logo} alt={brand} className="hero-brand-badge-img" />
+                      </span>
+                    )
+                  })}
+                </div>
               </div>
             </div>
           </Link>
