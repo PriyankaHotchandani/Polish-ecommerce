@@ -6,7 +6,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import Link from 'next/link'
 import { useLocaleMessages } from '@/contexts/LocaleContext'
-import { getProductPriceBreakdown } from '@/utils/pricing'
+import { getProductPriceBreakdown, getShippingCost } from '@/utils/pricing'
 
 interface ShippingAddress {
     fullName: string
@@ -37,7 +37,7 @@ interface SavedAddress {
     is_default: boolean
 }
 
-type PaymentMethod = 'card' | 'transfer' | 'cash_on_delivery'
+type PaymentMethod = 'transfer' | 'cash_on_delivery'
 
 function normalizeAddressValue(value: string | undefined): string {
     return (value || '').trim()
@@ -119,7 +119,8 @@ export default function CheckoutPage() {
         nipNumber: ''
     })
 
-    const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(null)
+    // Bank Transfer (Proforma) is the primary and default payment method.
+    const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('transfer')
     const [requireInvoice, setRequireInvoice] = useState(false)
 
     const fetchUserData = useCallback(async () => {
@@ -209,7 +210,8 @@ export default function CheckoutPage() {
 
     const cartTotals = useMemo(() => getCartTotals(), [getCartTotals])
     const { totalNet, totalVat, totalGross, discountPercent, discountAmount, finalTotal: cartFinalTotal } = cartTotals
-    const shippingCost = useMemo(() => (totalGross >= 500 ? 0 : 25), [totalGross])
+    // Flat shipping per payment method (28 PLN transfer, 30 PLN COD). No free-shipping threshold.
+    const shippingCost = useMemo(() => getShippingCost(paymentMethod), [paymentMethod])
     const total = useMemo(() => cartFinalTotal + shippingCost, [cartFinalTotal, shippingCost])
     const shippingSavedAddresses = useMemo(
         () => savedAddresses.filter(
@@ -854,41 +856,34 @@ export default function CheckoutPage() {
                                 <h2 className="text-xl font-bold text-gray-900 mb-6">{messages.invoice.paymentMethod}</h2>
 
                                 <div className="space-y-3">
-                                    <label className="flex items-center p-4 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
-                                        <input
-                                            type="radio"
-                                            name="payment"
-                                            value="card"
-                                            checked={paymentMethod === 'card'}
-                                            onChange={() => setPaymentMethod('card')}
-                                            required={!paymentMethod}
-                                            className="w-4 h-4 text-green-600 border-gray-300 focus:ring-green-500"
-                                        />
-                                        <span className="ml-3 text-gray-900 font-medium">{messages.checkout.payment.card}</span>
-                                    </label>
-
-                                    <label className="flex items-center p-4 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
+                                    <label className="flex items-start p-4 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 has-[:checked]:border-[#163579] has-[:checked]:bg-[#163579]/[0.04]">
                                         <input
                                             type="radio"
                                             name="payment"
                                             value="transfer"
                                             checked={paymentMethod === 'transfer'}
                                             onChange={() => setPaymentMethod('transfer')}
-                                            className="w-4 h-4 text-green-600 border-gray-300 focus:ring-green-500"
+                                            className="mt-0.5 w-4 h-4 text-[#163579] border-gray-300 focus:ring-[#163579]"
                                         />
-                                        <span className="ml-3 text-gray-900 font-medium">{messages.checkout.payment.transfer}</span>
+                                        <span className="ml-3">
+                                            <span className="block text-gray-900 font-medium">{messages.checkout.payment.transfer}</span>
+                                            <span className="block text-sm text-gray-500">{messages.checkout.payment.transferHint}</span>
+                                        </span>
                                     </label>
 
-                                    <label className="flex items-center p-4 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
+                                    <label className="flex items-start p-4 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 has-[:checked]:border-[#163579] has-[:checked]:bg-[#163579]/[0.04]">
                                         <input
                                             type="radio"
                                             name="payment"
                                             value="cash_on_delivery"
                                             checked={paymentMethod === 'cash_on_delivery'}
                                             onChange={() => setPaymentMethod('cash_on_delivery')}
-                                            className="w-4 h-4 text-green-600 border-gray-300 focus:ring-green-500"
+                                            className="mt-0.5 w-4 h-4 text-[#163579] border-gray-300 focus:ring-[#163579]"
                                         />
-                                        <span className="ml-3 text-gray-900 font-medium">{messages.checkout.payment.cod}</span>
+                                        <span className="ml-3">
+                                            <span className="block text-gray-900 font-medium">{messages.checkout.payment.cod}</span>
+                                            <span className="block text-sm text-gray-500">{messages.checkout.payment.codHint}</span>
+                                        </span>
                                     </label>
                                 </div>
 
@@ -979,8 +974,8 @@ export default function CheckoutPage() {
                                         <div className="flex justify-between text-emerald-700 font-medium">
                                             <span>
                                                 {locale === 'pl'
-                                                    ? `Rabat wolumenowy (${discountPercent}%)`
-                                                    : `Volume discount (${discountPercent}%)`}
+                                                    ? `Próg rabatowy (${discountPercent}%)`
+                                                    : `Discount Tier (${discountPercent}%)`}
                                             </span>
                                             <span>
                                                 -{discountAmount.toLocaleString(numberLocale, {
@@ -994,11 +989,11 @@ export default function CheckoutPage() {
                                     <div className="flex justify-between text-gray-700">
                                         <span>{messages.invoice.shipping}</span>
                                         <span>
-                                            {shippingCost === 0 ? messages.checkout.freeShippingLabel : `${shippingCost.toLocaleString(numberLocale, {
+                                            {shippingCost.toLocaleString(numberLocale, {
                                                 style: 'currency',
                                                 currency: 'PLN',
                                                 currencyDisplay: 'code'
-                                            }).replace('PLN', 'PLN ')}`}
+                                            }).replace('PLN', 'PLN ')}
                                         </span>
                                     </div>
                                     <div className="border-t pt-2 flex justify-between text-lg font-bold text-gray-900">
@@ -1021,10 +1016,10 @@ export default function CheckoutPage() {
                                     </div>
                                 )}
 
-                                {shippingCost === 0 && (
+                                {paymentMethod === 'transfer' && (
                                     <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-4">
                                         <p className="text-sm text-blue-800">
-                                            {messages.checkout.freeShippingHint}
+                                            {messages.checkout.proformaNotice}
                                         </p>
                                     </div>
                                 )}

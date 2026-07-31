@@ -4,6 +4,8 @@ import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
 import enMessages from '@/messages/en.json'
 import plMessages from '@/messages/pl.json'
+import { getShippingCost } from '@/utils/pricing'
+import { COMPANY_DETAILS } from '@/utils/companyDetails'
 
 type Locale = 'en' | 'pl'
 
@@ -117,18 +119,32 @@ export default async function OrderConfirmationPage({ params }: { params: Promis
                         ))}
                     </div>
 
-                    <div className="border-t pt-4 space-y-2">
-                        <div className="flex justify-between text-lg font-bold text-gray-900">
-                            <span>{messages.order.total}</span>
-                            <span>
-                                {Number(order.total_amount).toLocaleString(numberLocale, {
-                                    style: 'currency',
-                                    currency: 'PLN',
-                                    currencyDisplay: 'code',
-                                }).replace('PLN', 'PLN ')}
-                            </span>
-                        </div>
-                    </div>
+                    {(() => {
+                        const itemsTotal = (order.order_items as Array<{ price_at_purchase: number; quantity: number }>).reduce(
+                            (sum, it) => sum + Number(it.price_at_purchase) * it.quantity,
+                            0
+                        )
+                        const shippingCost = getShippingCost(order.payment_method)
+                        const fmt = (n: number) => n.toLocaleString(numberLocale, {
+                            style: 'currency', currency: 'PLN', currencyDisplay: 'code',
+                        }).replace('PLN', 'PLN ')
+                        return (
+                            <div className="border-t pt-4 space-y-2">
+                                <div className="flex justify-between text-gray-700">
+                                    <span>{messages.cart.subtotal}</span>
+                                    <span>{fmt(itemsTotal)}</span>
+                                </div>
+                                <div className="flex justify-between text-gray-700">
+                                    <span>{messages.invoice.shipping}</span>
+                                    <span>{fmt(shippingCost)}</span>
+                                </div>
+                                <div className="flex justify-between text-lg font-bold text-gray-900 border-t pt-2">
+                                    <span>{messages.order.total}</span>
+                                    <span>{fmt(Number(order.total_amount))}</span>
+                                </div>
+                            </div>
+                        )
+                    })()}
 
                     {order.is_b2b_invoice_required && (
                         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-6">
@@ -136,6 +152,34 @@ export default async function OrderConfirmationPage({ params }: { params: Promis
                         </div>
                     )}
                 </div>
+
+                {order.payment_method === 'transfer' && (
+                    <div className="bg-white rounded-lg shadow-sm p-8 mb-8 border-l-4 border-[#163579]">
+                        <h2 className="text-xl font-bold text-gray-900 mb-2">{messages.orderConfirmation.bank.title}</h2>
+                        <p className="text-sm text-gray-600 mb-5">{messages.orderConfirmation.bank.intro}</p>
+                        <dl className="grid grid-cols-1 sm:grid-cols-[180px_1fr] gap-x-4 gap-y-2 text-sm">
+                            <dt className="text-gray-500">{messages.orderConfirmation.bank.accountHolder}</dt>
+                            <dd className="font-semibold text-gray-900">{COMPANY_DETAILS.bank.accountHolder}</dd>
+                            <dt className="text-gray-500">{messages.orderConfirmation.bank.bankName}</dt>
+                            <dd className="text-gray-900">{COMPANY_DETAILS.bank.bankName}</dd>
+                            <dt className="text-gray-500">{messages.orderConfirmation.bank.iban}</dt>
+                            <dd className="font-mono font-semibold text-gray-900 tracking-wide">{COMPANY_DETAILS.bank.iban}</dd>
+                            <dt className="text-gray-500">{messages.orderConfirmation.bank.swift}</dt>
+                            <dd className="font-mono text-gray-900">{COMPANY_DETAILS.bank.swift}</dd>
+                            <dt className="text-gray-500">{messages.orderConfirmation.bank.reference}</dt>
+                            <dd className="font-semibold text-gray-900">#{order.id.slice(0, 8).toUpperCase()}</dd>
+                            <dt className="text-gray-500">{messages.orderConfirmation.bank.amount}</dt>
+                            <dd className="font-bold text-[#163579]">
+                                {Number(order.total_amount).toLocaleString(numberLocale, {
+                                    style: 'currency', currency: 'PLN', currencyDisplay: 'code',
+                                }).replace('PLN', 'PLN ')}
+                            </dd>
+                        </dl>
+                        <p className="mt-5 rounded-lg bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-900">
+                            {messages.orderConfirmation.bank.note}
+                        </p>
+                    </div>
+                )}
 
                 <div className="bg-white rounded-lg shadow-sm p-8 mb-8">
                     <h2 className="text-xl font-bold text-gray-900 mb-4">{messages.orderConfirmation.nextTitle}</h2>

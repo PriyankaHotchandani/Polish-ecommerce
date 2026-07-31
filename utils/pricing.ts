@@ -2,6 +2,18 @@ import { isToolCategory } from '@/utils/categoryGroups'
 
 export const VAT_RATE = 0.23
 
+// Flat shipping rates per payment method (standard packages under 30 kg).
+// Bank transfer is the primary method; cash on delivery costs slightly more.
+// There is intentionally no free-shipping threshold.
+export const SHIPPING_COST_TRANSFER = 28
+export const SHIPPING_COST_COD = 30
+
+export type ShippingPaymentMethod = 'transfer' | 'cash_on_delivery'
+
+export function getShippingCost(paymentMethod: ShippingPaymentMethod | string | null | undefined): number {
+    return paymentMethod === 'cash_on_delivery' ? SHIPPING_COST_COD : SHIPPING_COST_TRANSFER
+}
+
 export type PriceBreakdown = {
     net: number
     vat: number

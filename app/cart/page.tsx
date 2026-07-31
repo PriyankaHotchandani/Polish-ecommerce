@@ -14,6 +14,9 @@ export default function CartPage() {
     const searchParams = useSearchParams()
     const [isAuthenticated, setIsAuthenticated] = useState(false)
     const [removingItems, setRemovingItems] = useState<Set<string>>(new Set())
+    // In-progress text for manually-typed quantities, keyed by product id. Lets the
+    // field be temporarily empty while typing without mutating cart state.
+    const [quantityDrafts, setQuantityDrafts] = useState<Record<string, string>>({})
     const [showBulkBanner, setShowBulkBanner] = useState(false)
     const [loading, setLoading] = useState(true)
     const { messages, locale } = useLocaleMessages()
@@ -72,6 +75,48 @@ export default function CartPage() {
         }
 
         rowRefs.current.set(productId, element)
+    }
+
+    const clearDraft = (productId: string) => {
+        setQuantityDrafts((prev) => {
+            if (!(productId in prev)) return prev
+            const next = { ...prev }
+            delete next[productId]
+            return next
+        })
+    }
+
+    // Called on every keystroke in the quantity input. Keeps digits only, allows
+    // an empty field mid-edit, and commits any valid value (clamped to stock).
+    const handleQuantityInput = (productId: string, rawValue: string, maxStock: number) => {
+        const cleaned = rawValue.replace(/[^\d]/g, '')
+        setQuantityDrafts((prev) => ({ ...prev, [productId]: cleaned }))
+
+        if (cleaned === '') return
+        let next = parseInt(cleaned, 10)
+        if (!Number.isFinite(next) || next < 1) return // wait for blur to normalise 0/empty
+        if (maxStock > 0 && next > maxStock) {
+            next = maxStock
+            setQuantityDrafts((prev) => ({ ...prev, [productId]: String(next) }))
+        }
+        updateQuantity(productId, next)
+    }
+
+    // On blur, normalise anything invalid (empty, 0) up to a minimum of 1 so the
+    // cart never ends up with a broken quantity, and drop the draft override.
+    const handleQuantityBlur = (productId: string, maxStock: number) => {
+        const draft = quantityDrafts[productId]
+        clearDraft(productId)
+        if (draft === undefined) return
+        let next = parseInt(draft, 10)
+        if (!Number.isFinite(next) || next < 1) next = 1
+        if (maxStock > 0 && next > maxStock) next = maxStock
+        updateQuantity(productId, next)
+    }
+
+    const handleStep = (productId: string, nextQuantity: number) => {
+        clearDraft(productId)
+        updateQuantity(productId, nextQuantity)
     }
 
     const handleRemoveItem = (productId: string) => {
@@ -226,15 +271,29 @@ export default function CartPage() {
                                                     {/* Quantity Controls */}
                                                     <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white p-1">
                                                         <button
-                                                            onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
+                                                            type="button"
+                                                            aria-label={messages.cart.quantity + ' -'}
+                                                            onClick={() => handleStep(item.product.id, item.quantity - 1)}
                                                             disabled={item.quantity <= 1}
                                                             className="w-8 h-8 rounded-md bg-gray-100 text-slate-700 flex items-center justify-center transition-colors hover:bg-gray-200 disabled:bg-gray-100 disabled:text-gray-300 disabled:cursor-not-allowed"
                                                         >
                                                             -
                                                         </button>
-                                                        <span className="w-10 text-center font-medium text-slate-900">{item.quantity}</span>
+                                                        <input
+                                                            type="number"
+                                                            min={1}
+                                                            max={item.product.inventory_count || undefined}
+                                                            inputMode="numeric"
+                                                            aria-label={messages.cart.quantity}
+                                                            value={quantityDrafts[item.product.id] ?? String(item.quantity)}
+                                                            onChange={(e) => handleQuantityInput(item.product.id, e.target.value, item.product.inventory_count)}
+                                                            onBlur={() => handleQuantityBlur(item.product.id, item.product.inventory_count)}
+                                                            className="w-12 text-center font-medium text-slate-900 rounded-md border border-transparent bg-transparent outline-none focus:border-[#163579]/40 focus:bg-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                                        />
                                                         <button
-                                                            onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
+                                                            type="button"
+                                                            aria-label={messages.cart.quantity + ' +'}
+                                                            onClick={() => handleStep(item.product.id, item.quantity + 1)}
                                                             disabled={item.quantity >= item.product.inventory_count}
                                                             className="w-8 h-8 rounded-md bg-gray-100 text-slate-700 flex items-center justify-center transition-colors hover:bg-gray-200 disabled:bg-gray-100 disabled:text-gray-300 disabled:cursor-not-allowed"
                                                         >
@@ -343,8 +402,8 @@ export default function CartPage() {
                                     <div className="flex justify-between text-emerald-700 font-medium">
                                         <span>
                                             {locale === 'pl'
-                                                ? `Rabat wolumenowy (${discountPercent}%)`
-                                                : `Volume discount (${discountPercent}%)`}
+                                                ? `Próg rabatowy (${discountPercent}%)`
+                                                : `Discount Tier (${discountPercent}%)`}
                                         </span>
                                         <span>
                                             -{discountAmount.toLocaleString(numberLocale, {

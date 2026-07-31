@@ -332,6 +332,10 @@
         "thankYou": "Thank you for your business!",
         "nip": "NIP",
         "companyName": "Company Name",
+        "bankDetailsTitle": "Payment Details",
+        "bankAccountHolder": "Account Holder",
+        "bankName": "Bank",
+        "bankReference": "Payment Title",
         "paymentMethods": {
             "card": "Card",
             "transfer": "Bank Transfer",
@@ -513,18 +517,18 @@
         "sameAsShipping": "Same as shipping address",
         "requireInvoice": "Require VAT invoice",
         "orderSummary": "Order Summary",
-        "freeShippingLabel": "FREE",
-        "wholesaleApplied": "Wholesale pricing applied — volume discount active",
-        "freeShippingHint": "Free shipping on orders over 500 PLN",
+        "wholesaleApplied": "Wholesale pricing applied — Discount Tier active",
         "processingOrder": "Processing Order...",
         "placeOrder": "Place Order",
         "backToCart": "Back to Cart",
         "payment": {
-            "card": "Credit/Debit Card",
-            "transfer": "Bank Transfer",
-            "cod": "Cash on Delivery"
+            "transfer": "Bank Transfer (Proforma)",
+            "transferHint": "Pay by bank transfer using the proforma invoice we e-mail you. (28 PLN shipping)",
+            "cod": "Cash on Delivery",
+            "codHint": "Pay in cash when your order is delivered. (30 PLN shipping)"
         },
-        "paymentHint": "Payment processing will be implemented in the next phase. Your order will be marked as pending.",
+        "paymentHint": "Bank Transfer (Proforma): after you place the order we e-mail you a proforma invoice with our bank details. Your order is confirmed immediately; we ship once payment is received.",
+        "proformaNotice": "Our bank account details will be shown on the next screen and sent to you as a proforma invoice by e-mail.",
         "countries": {
             "poland": "Poland",
             "germany": "Germany",
@@ -585,6 +589,17 @@
         "orderNumberLabel": "Order Number",
         "orderDetailsTitle": "Order Details",
         "invoiceNotice": "VAT invoice will be uploaded by our admin team and sent to your email.",
+        "bank": {
+            "title": "Bank Transfer Details",
+            "intro": "Please transfer the total amount to the account below and use your order number as the payment title.",
+            "accountHolder": "Account holder",
+            "bankName": "Bank",
+            "iban": "IBAN",
+            "swift": "SWIFT/BIC",
+            "reference": "Payment title",
+            "amount": "Amount to transfer",
+            "note": "Your order is confirmed. We'll ship it as soon as we receive your payment. A proforma invoice has been sent to your e-mail."
+        },
         "nextTitle": "What's Next?",
         "nextSteps": [
             "You'll receive an order confirmation email shortly.",

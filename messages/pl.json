@@ -332,6 +332,10 @@
         "thankYou": "Dziękujemy za współpracę!",
         "nip": "NIP",
         "companyName": "Nazwa firmy",
+        "bankDetailsTitle": "Dane do płatności",
+        "bankAccountHolder": "Odbiorca",
+        "bankName": "Bank",
+        "bankReference": "Tytuł przelewu",
         "paymentMethods": {
             "card": "Karta",
             "transfer": "Przelew bankowy",
@@ -513,18 +517,18 @@
         "sameAsShipping": "Taki sam jak adres dostawy",
         "requireInvoice": "Wymagaj faktury VAT",
         "orderSummary": "Podsumowanie zamówienia",
-        "freeShippingLabel": "GRATIS",
-        "wholesaleApplied": "Zastosowano ceny hurtowe — rabat wolumenowy aktywny",
-        "freeShippingHint": "Darmowa dostawa dla zamówień powyżej 500 PLN",
+        "wholesaleApplied": "Zastosowano ceny hurtowe — próg rabatowy aktywny",
         "processingOrder": "Przetwarzanie zamówienia...",
         "placeOrder": "Złóż zamówienie",
         "backToCart": "Powrót do koszyka",
         "payment": {
-            "card": "Karta kredytowa/debetowa",
-            "transfer": "Przelew bankowy",
-            "cod": "Płatność przy odbiorze"
+            "transfer": "Przelew bankowy (Proforma)",
+            "transferHint": "Zapłać przelewem na podstawie faktury proforma, którą wyślemy e-mailem. (28 PLN dostawa)",
+            "cod": "Płatność przy odbiorze",
+            "codHint": "Zapłać gotówką przy odbiorze zamówienia. (30 PLN dostawa)"
         },
-        "paymentHint": "Obsługa płatności zostanie wdrożona w kolejnym etapie. Zamówienie zostanie oznaczone jako oczekujące.",
+        "paymentHint": "Przelew bankowy (Proforma): po złożeniu zamówienia wyślemy e-mailem fakturę proforma z naszymi danymi do przelewu. Zamówienie jest potwierdzane od razu; wysyłamy je po zaksięgowaniu wpłaty.",
+        "proformaNotice": "Dane do przelewu pokażemy na następnym ekranie oraz wyślemy e-mailem w postaci faktury proforma.",
         "countries": {
             "poland": "Polska",
             "germany": "Niemcy",
@@ -585,6 +589,17 @@
         "orderNumberLabel": "Numer zamówienia",
         "orderDetailsTitle": "Szczegóły zamówienia",
         "invoiceNotice": "Faktura VAT zostanie przesłana przez administratora i wysłana na Twój email.",
+        "bank": {
+            "title": "Dane do przelewu",
+            "intro": "Prosimy o przelew całej kwoty na poniższe konto, wpisując numer zamówienia jako tytuł przelewu.",
+            "accountHolder": "Odbiorca",
+            "bankName": "Bank",
+            "iban": "IBAN",
+            "swift": "SWIFT/BIC",
+            "reference": "Tytuł przelewu",
+            "amount": "Kwota do przelewu",
+            "note": "Twoje zamówienie jest potwierdzone. Wyślemy je zaraz po zaksięgowaniu wpłaty. Faktura proforma została wysłana na Twój e-mail."
+        },
         "nextTitle": "Co dalej?",
         "nextSteps": [
             "Wkrótce otrzymasz email z potwierdzeniem zamówienia.",

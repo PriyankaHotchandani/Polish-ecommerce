@@ -148,6 +148,13 @@ interface InvoiceData {
     additionalCharges?: InvoiceCharge[]
     total: number
     paymentMethod: string
+    bankDetails?: {
+        bankName: string
+        accountHolder: string
+        iban: string
+        swift: string
+        reference?: string
+    }
 }
 
 interface InvoiceDocumentProps {
@@ -255,6 +262,35 @@ export const InvoiceDocument = ({ data, locale = 'pl' }: InvoiceDocumentProps) =
                         <Text style={styles.totalLabel}>{data.total.toFixed(2)} PLN</Text>
                     </View>
                 </View>
+
+                {/* Bank transfer / payment details */}
+                {data.bankDetails && (
+                    <View style={styles.section}>
+                        <Text style={styles.sectionTitle}>{t.bankDetailsTitle}</Text>
+                        <View style={styles.row}>
+                            <Text style={styles.label}>{t.bankAccountHolder}:</Text>
+                            <Text style={styles.value}>{data.bankDetails.accountHolder}</Text>
+                        </View>
+                        <View style={styles.row}>
+                            <Text style={styles.label}>{t.bankName}:</Text>
+                            <Text style={styles.value}>{data.bankDetails.bankName}</Text>
+                        </View>
+                        <View style={styles.row}>
+                            <Text style={styles.label}>IBAN:</Text>
+                            <Text style={styles.value}>{data.bankDetails.iban}</Text>
+                        </View>
+                        <View style={styles.row}>
+                            <Text style={styles.label}>SWIFT/BIC:</Text>
+                            <Text style={styles.value}>{data.bankDetails.swift}</Text>
+                        </View>
+                        {data.bankDetails.reference && (
+                            <View style={styles.row}>
+                                <Text style={styles.label}>{t.bankReference}:</Text>
+                                <Text style={styles.value}>{data.bankDetails.reference}</Text>
+                            </View>
+                        )}
+                    </View>
+                )}
 
                 {/* Footer */}
                 <View style={styles.footer}>
