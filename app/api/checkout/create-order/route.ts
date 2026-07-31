@@ -128,6 +128,11 @@ async function sendProformaEmail(params: {
     const { supabase, orderId, paymentMethod, total, buyerEmail, shipping, billing, locale } = params
     const isPl = locale === 'pl'
 
+    if (!buyerEmail || !buyerEmail.trim()) {
+        console.error(`[create-order] No recipient e-mail for order ${orderId}; skipping proforma dispatch.`)
+        return
+    }
+
     const { data: itemRows, error } = await supabase
         .from('order_items')
         .select('quantity, price_at_purchase, product:products(sku,title)')
@@ -217,7 +222,15 @@ async function sendProformaEmail(params: {
             : undefined,
     }
 
-    const pdf = await generateInvoicePDF(invoiceData, locale)
+    let pdf: Buffer
+    try {
+        console.log(`[create-order] Generating proforma PDF for order ${shortId} (recipient=${buyerEmail}, items=${items.length})`)
+        pdf = await generateInvoicePDF(invoiceData, locale)
+        console.log(`[create-order] Proforma PDF generated for order ${shortId} (${pdf.length} bytes)`)
+    } catch (pdfError) {
+        console.error(`[create-order] Proforma PDF generation FAILED for order ${shortId}:`, pdfError)
+        throw pdfError
+    }
 
     const bank = COMPANY_DETAILS.bank
     const bankBlock = paymentMethod === 'transfer'
@@ -263,12 +276,14 @@ async function sendProformaEmail(params: {
         <p style="color:#777;font-size:12px;margin-top:24px;">${COMPANY_DETAILS.name} · ${COMPANY_DETAILS.email}</p>
       </div>`
 
+    console.log(`[create-order] Dispatching proforma e-mail for order ${shortId} to ${buyerEmail}`)
     await sendMail({
         to: buyerEmail,
         subject: `${isPl ? 'Faktura proforma' : 'Proforma invoice'} PROFORMA-${shortId}`,
         html,
         attachments: [{ filename: `proforma-${shortId}.pdf`, content: pdf, contentType: 'application/pdf' }],
     })
+    console.log(`[create-order] Proforma e-mail dispatch complete for order ${shortId} (recipient=${buyerEmail})`)
 }
 
 export async function POST(request: NextRequest) {
@@ -354,6 +369,10 @@ export async function POST(request: NextRequest) {
         // SMTP/rendering error is logged and swallowed.
         try {
             const locale = request.cookies.get('locale')?.value === 'pl' ? 'pl' : 'en'
+            console.log(
+                `[create-order] Order ${data.order_id} created; preparing proforma e-mail`,
+                { recipient: user.email, paymentMethod }
+            )
             if (user.email && data.order_id) {
                 await sendProformaEmail({
                     supabase,
@@ -365,9 +384,14 @@ export async function POST(request: NextRequest) {
                     billing: billingAddress as CheckoutAddressPayload & { nipNumber?: string },
                     locale,
                 })
+            } else {
+                console.error('[create-order] Skipping proforma e-mail: missing user.email or order id', {
+                    hasEmail: Boolean(user.email),
+                    orderId: data.order_id,
+                })
             }
         } catch (mailError) {
-            console.error('Proforma e-mail dispatch failed (order still completed):', mailError)
+            console.error('[create-order] Proforma e-mail dispatch failed (order still completed):', mailError)
         }
 
         return NextResponse.json({ success: true, orderId: data.order_id })

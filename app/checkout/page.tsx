@@ -7,6 +7,7 @@ import { createClient } from '@/utils/supabase/client'
 import Link from 'next/link'
 import { useLocaleMessages } from '@/contexts/LocaleContext'
 import { getProductPriceBreakdown, getShippingCost } from '@/utils/pricing'
+import { isBlank, isValidEmailFormat, isValidPhoneNumber, isValidPolishPostalCode } from '@/utils/validation'
 
 interface ShippingAddress {
     fullName: string
@@ -118,6 +119,39 @@ export default function CheckoutPage() {
         companyName: '',
         nipNumber: ''
     })
+
+    // Inline regex-validation errors for the manually-entered shipping address.
+    const [shippingErrors, setShippingErrors] = useState<Record<string, string>>({})
+
+    const clearShippingError = useCallback((field: string) => {
+        setShippingErrors((prev) => {
+            if (!(field in prev)) return prev
+            const next = { ...prev }
+            delete next[field]
+            return next
+        })
+    }, [])
+
+    // Validates the manual shipping form. Returns a field→message map (empty = ok).
+    const validateManualShipping = useCallback((address: ShippingAddress): Record<string, string> => {
+        const v = messages.checkout.validation
+        const errors: Record<string, string> = {}
+
+        if (isBlank(address.fullName)) errors.fullName = v.required
+        if (!isValidEmailFormat(address.email)) errors.email = v.emailInvalid
+        if (!isValidPhoneNumber(address.phone)) errors.phone = v.phoneInvalid
+        if (isBlank(address.street)) errors.street = v.required
+        if (isBlank(address.city)) errors.city = v.required
+
+        const isPoland = address.country === messages.checkout.countries.poland
+        if (isPoland) {
+            if (!isValidPolishPostalCode(address.postalCode)) errors.postalCode = v.postalCodeInvalid
+        } else if (isBlank(address.postalCode)) {
+            errors.postalCode = v.required
+        }
+
+        return errors
+    }, [messages])
 
     // Bank Transfer (Proforma) is the primary and default payment method.
     const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('transfer')
@@ -290,6 +324,18 @@ export default function CheckoutPage() {
                 throw new Error(messages.checkout.errors.selectPayment)
             }
 
+            // Strict regex validation for the manually-entered shipping address.
+            if (!useSavedShippingAddress) {
+                const validationErrors = validateManualShipping(shippingAddress)
+                if (Object.keys(validationErrors).length > 0) {
+                    setShippingErrors(validationErrors)
+                    setError(messages.checkout.validation.fixErrors)
+                    setSubmitting(false)
+                    return
+                }
+                setShippingErrors({})
+            }
+
             const selectedShippingAddress = useSavedShippingAddress
                 ? shippingSavedAddresses.find((address) => address.id === selectedShippingAddressId)
                 : null
@@ -414,7 +460,9 @@ export default function CheckoutPage() {
         saveAddressIfNew,
         clearCart,
         router,
-        orderSuccess
+        orderSuccess,
+        messages,
+        validateManualShipping
     ])
 
     if (loading) {
@@ -541,9 +589,10 @@ export default function CheckoutPage() {
                                                 type="text"
                                                 required={!useSavedShippingAddress}
                                                 value={shippingAddress.fullName}
-                                                onChange={(e) => setShippingAddress({ ...shippingAddress, fullName: e.target.value })}
-                                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                                onChange={(e) => { setShippingAddress({ ...shippingAddress, fullName: e.target.value }); clearShippingError('fullName') }}
+                                                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent ${shippingErrors.fullName ? 'border-red-400' : 'border-gray-300'}`}
                                             />
+                                            {shippingErrors.fullName && <p className="mt-1 text-sm text-red-600">{shippingErrors.fullName}</p>}
                                         </div>
 
                                         <div>
@@ -554,9 +603,10 @@ export default function CheckoutPage() {
                                                 type="email"
                                                 required={!useSavedShippingAddress}
                                                 value={shippingAddress.email}
-                                                onChange={(e) => setShippingAddress({ ...shippingAddress, email: e.target.value })}
-                                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                                onChange={(e) => { setShippingAddress({ ...shippingAddress, email: e.target.value }); clearShippingError('email') }}
+                                                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent ${shippingErrors.email ? 'border-red-400' : 'border-gray-300'}`}
                                             />
+                                            {shippingErrors.email && <p className="mt-1 text-sm text-red-600">{shippingErrors.email}</p>}
                                         </div>
 
                                         <div>
@@ -567,9 +617,10 @@ export default function CheckoutPage() {
                                                 type="tel"
                                                 required={!useSavedShippingAddress}
                                                 value={shippingAddress.phone}
-                                                onChange={(e) => setShippingAddress({ ...shippingAddress, phone: e.target.value })}
-                                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                                onChange={(e) => { setShippingAddress({ ...shippingAddress, phone: e.target.value }); clearShippingError('phone') }}
+                                                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent ${shippingErrors.phone ? 'border-red-400' : 'border-gray-300'}`}
                                             />
+                                            {shippingErrors.phone && <p className="mt-1 text-sm text-red-600">{shippingErrors.phone}</p>}
                                         </div>
 
                                         <div className="md:col-span-2">
@@ -580,9 +631,10 @@ export default function CheckoutPage() {
                                                 type="text"
                                                 required={!useSavedShippingAddress}
                                                 value={shippingAddress.street}
-                                                onChange={(e) => setShippingAddress({ ...shippingAddress, street: e.target.value })}
-                                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                                onChange={(e) => { setShippingAddress({ ...shippingAddress, street: e.target.value }); clearShippingError('street') }}
+                                                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent ${shippingErrors.street ? 'border-red-400' : 'border-gray-300'}`}
                                             />
+                                            {shippingErrors.street && <p className="mt-1 text-sm text-red-600">{shippingErrors.street}</p>}
                                         </div>
 
                                         <div>
@@ -593,9 +645,10 @@ export default function CheckoutPage() {
                                                 type="text"
                                                 required={!useSavedShippingAddress}
                                                 value={shippingAddress.city}
-                                                onChange={(e) => setShippingAddress({ ...shippingAddress, city: e.target.value })}
-                                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                                onChange={(e) => { setShippingAddress({ ...shippingAddress, city: e.target.value }); clearShippingError('city') }}
+                                                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent ${shippingErrors.city ? 'border-red-400' : 'border-gray-300'}`}
                                             />
+                                            {shippingErrors.city && <p className="mt-1 text-sm text-red-600">{shippingErrors.city}</p>}
                                         </div>
 
                                         <div>
@@ -604,11 +657,14 @@ export default function CheckoutPage() {
                                             </label>
                                             <input
                                                 type="text"
+                                                inputMode="numeric"
+                                                placeholder="00-001"
                                                 required={!useSavedShippingAddress}
                                                 value={shippingAddress.postalCode}
-                                                onChange={(e) => setShippingAddress({ ...shippingAddress, postalCode: e.target.value })}
-                                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                                onChange={(e) => { setShippingAddress({ ...shippingAddress, postalCode: e.target.value }); clearShippingError('postalCode') }}
+                                                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent ${shippingErrors.postalCode ? 'border-red-400' : 'border-gray-300'}`}
                                             />
+                                            {shippingErrors.postalCode && <p className="mt-1 text-sm text-red-600">{shippingErrors.postalCode}</p>}
                                         </div>
 
                                         <div className="md:col-span-2">

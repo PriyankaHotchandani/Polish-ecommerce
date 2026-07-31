@@ -162,6 +162,8 @@
         "passwordResetSuccess": "Password updated successfully. Redirecting to login...",
         "invalidResetLink": "This reset link is invalid or has expired.",
         "backToLogin": "Back to login",
+        "checkEmailToConfirm": "Account created! Please check your email to confirm your address, then sign in below.",
+        "emailConfirmedSignIn": "Your email is confirmed. Please sign in to continue.",
         "wholesalePricingAndBulk": "Wholesale pricing & bulk orders",
         "showPassword": "Show password",
         "hidePassword": "Hide password",
@@ -534,6 +536,13 @@
             "germany": "Germany",
             "czechRepublic": "Czech Republic",
             "slovakia": "Slovakia"
+        },
+        "validation": {
+            "fixErrors": "Please correct the highlighted fields before continuing.",
+            "required": "This field is required",
+            "emailInvalid": "Please enter a valid email address",
+            "phoneInvalid": "Please enter a valid phone number",
+            "postalCodeInvalid": "Enter a valid postal code (e.g. 00-001)"
         },
         "errors": {
             "selectPayment": "Please select a payment method to continue.",

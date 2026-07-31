@@ -48,8 +48,11 @@ export default function LoginPage() {
                     .eq('id', authData.user.id)
                     .single()
 
-                // Redirect based on role
-                if (userData?.role === 'admin') {
+                // Honour an explicit redirect target, otherwise route by role.
+                const redirectParam = searchParams.get('redirect')
+                if (redirectParam) {
+                    router.push(redirectParam)
+                } else if (userData?.role === 'admin') {
                     router.push('/admin')
                 } else {
                     router.push('/')
@@ -117,6 +120,18 @@ export default function LoginPage() {
                         {searchParams.get('reset') === 'success' && (
                             <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
                                 {messages.auth.passwordResetSuccess}
+                            </div>
+                        )}
+
+                        {searchParams.get('registered') === '1' && (
+                            <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                                {messages.auth.checkEmailToConfirm}
+                            </div>
+                        )}
+
+                        {searchParams.get('confirmed') === '1' && (
+                            <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                                {messages.auth.emailConfirmedSignIn}
                             </div>
                         )}
 

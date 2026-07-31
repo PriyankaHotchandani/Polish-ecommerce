@@ -29,6 +29,10 @@ export function getTransport(): Transporter {
             user: SMTP_USER,
             pass: SMTP_PASS,
         },
+        // Fail fast instead of hanging the request if wp.pl is unreachable.
+        connectionTimeout: 10000,
+        greetingTimeout: 10000,
+        socketTimeout: 20000,
     })
 
     return cachedTransport
@@ -49,19 +53,47 @@ export interface SendMailOptions {
 }
 
 /**
- * Sends an e-mail over the configured SMTP transport. Throws on failure so the
- * caller can decide how to handle it — checkout completion must never be blocked
- * by a mail error, so callers wrap this in try/catch and only log the failure.
+ * Sends an e-mail over the configured SMTP transport. Verifies the SMTP
+ * connection first (so auth/connectivity problems surface with a clear log),
+ * then sends. Throws on failure so the caller can decide how to handle it —
+ * checkout completion must never be blocked by a mail error, so callers wrap
+ * this in try/catch and only log the failure.
  */
 export async function sendMail(options: SendMailOptions): Promise<void> {
+    if (!options.to || !options.to.trim()) {
+        throw new Error('sendMail called without a recipient address')
+    }
+
     const transport = getTransport()
 
-    await transport.sendMail({
-        from: MAIL_FROM,
-        to: options.to,
-        subject: options.subject,
-        html: options.html,
-        text: options.text,
-        attachments: options.attachments,
-    })
+    // Verify the SMTP connection/credentials up front so wp.pl auth, TLS or
+    // timeout errors are logged explicitly rather than surfacing as an opaque
+    // send failure.
+    try {
+        await transport.verify()
+        console.log(`[mailer] SMTP connection verified (${SMTP_HOST}:${SMTP_PORT}, secure=${SMTP_SECURE}, user=${SMTP_USER})`)
+    } catch (verifyError) {
+        console.error(
+            `[mailer] SMTP verification FAILED for ${SMTP_HOST}:${SMTP_PORT} (secure=${SMTP_SECURE}, user=${SMTP_USER}):`,
+            verifyError
+        )
+        throw verifyError
+    }
+
+    try {
+        const info = await transport.sendMail({
+            from: MAIL_FROM,
+            to: options.to,
+            subject: options.subject,
+            html: options.html,
+            text: options.text,
+            attachments: options.attachments,
+        })
+        console.log(
+            `[mailer] E-mail sent to ${options.to} (from=${MAIL_FROM}, messageId=${info.messageId}, response=${info.response})`
+        )
+    } catch (sendError) {
+        console.error(`[mailer] Failed to send e-mail to ${options.to} (from=${MAIL_FROM}):`, sendError)
+        throw sendError
+    }
 }

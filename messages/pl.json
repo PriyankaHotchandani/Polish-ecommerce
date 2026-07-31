@@ -162,6 +162,8 @@
         "passwordResetSuccess": "Hasło zostało zaktualizowane. Przekierowanie do logowania...",
         "invalidResetLink": "Ten link resetujący jest nieprawidłowy lub wygasł.",
         "backToLogin": "Powrót do logowania",
+        "checkEmailToConfirm": "Konto utworzone! Sprawdź swój e-mail, aby potwierdzić adres, a następnie zaloguj się poniżej.",
+        "emailConfirmedSignIn": "Twój adres e-mail został potwierdzony. Zaloguj się, aby kontynuować.",
         "wholesalePricingAndBulk": "Ceny hurtowe i zamówienia zbiorcze",
         "showPassword": "Pokaż hasło",
         "hidePassword": "Ukryj hasło",
@@ -534,6 +536,13 @@
             "germany": "Niemcy",
             "czechRepublic": "Czechy",
             "slovakia": "Słowacja"
+        },
+        "validation": {
+            "fixErrors": "Popraw zaznaczone pola, aby kontynuować.",
+            "required": "To pole jest wymagane",
+            "emailInvalid": "Podaj prawidłowy adres e-mail",
+            "phoneInvalid": "Podaj prawidłowy numer telefonu",
+            "postalCodeInvalid": "Podaj prawidłowy kod pocztowy (np. 00-001)"
         },
         "errors": {
             "selectPayment": "Wybierz metodę płatności, aby kontynuować.",

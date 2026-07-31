@@ -1,3 +1,27 @@
+// --- Checkout / address field validators (boolean form) ---
+
+// Returns true when the value is empty or only whitespace.
+export function isBlank(value: string | null | undefined): boolean {
+    return !value || value.trim().length === 0
+}
+
+// Standard email shape check (also used by the boolean-style validators below).
+export function isValidEmailFormat(value: string | null | undefined): boolean {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((value || '').trim())
+}
+
+// Polish postal code: two digits, a hyphen, then three digits (e.g. 00-001).
+export function isValidPolishPostalCode(value: string | null | undefined): boolean {
+    return /^[0-9]{2}-[0-9]{3}$/.test((value || '').trim())
+}
+
+// Phone number: strip spaces, hyphens, parentheses and a leading +, then require
+// a plausible PL/EU digit sequence (9–15 digits).
+export function isValidPhoneNumber(value: string | null | undefined): boolean {
+    const digits = (value || '').replace(/[\s\-().]/g, '').replace(/^\+/, '')
+    return /^[0-9]{9,15}$/.test(digits)
+}
+
 export function validateEmail(email: string): string | null {
     if (!email || email.length === 0) {
         return 'Email is required'

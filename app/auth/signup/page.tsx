@@ -1,11 +1,12 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/utils/supabase/client'
 import Link from 'next/link'
 import type { UserRole } from '@/types/database.types'
 import { useLocaleMessages } from '@/contexts/LocaleContext'
+import { getSiteUrl } from '@/utils/siteUrl'
 
 export default function SignupPage() {
     const [firstName, setFirstName] = useState('')
@@ -22,8 +23,10 @@ export default function SignupPage() {
     const [loading, setLoading] = useState(false)
     const industryDropdownRef = useRef<HTMLDivElement | null>(null)
     const router = useRouter()
+    const searchParams = useSearchParams()
     const supabase = createClient()
     const { messages } = useLocaleMessages()
+    const redirectTarget = searchParams.get('redirect') || '/'
 
     const industryOptions = [
         { value: '', label: messages.auth.industryOptional },
@@ -75,11 +78,16 @@ export default function SignupPage() {
         setLoading(true)
 
         try {
+            // Send the confirmation e-mail back to the production site (or the
+            // configured NEXT_PUBLIC_SITE_URL) instead of localhost.
+            const emailRedirectTo = `${getSiteUrl()}/auth/login?confirmed=1${redirectTarget !== '/' ? `&redirect=${encodeURIComponent(redirectTarget)}` : ''}`
+
             // Sign up the user
             const { data: authData, error: authError } = await supabase.auth.signUp({
                 email,
                 password,
                 options: {
+                    emailRedirectTo,
                     data: {
                         role,
                         first_name: firstName.trim(),
@@ -98,9 +106,19 @@ export default function SignupPage() {
                 return
             }
 
-            if (authData.user) {
-                router.push('/')
+            // If email confirmation is disabled, Supabase returns an active session
+            // and we can log the user straight in. Otherwise there is no session yet,
+            // so send them to the login page with a clear "check your email" notice —
+            // never drop them on the home page unauthenticated.
+            if (authData.session) {
+                router.push(redirectTarget)
                 router.refresh()
+            } else {
+                const params = new URLSearchParams({ registered: '1' })
+                if (redirectTarget !== '/') {
+                    params.set('redirect', redirectTarget)
+                }
+                router.push(`/auth/login?${params.toString()}`)
             }
         } catch (err) {
             console.error('Signup error:', err)
