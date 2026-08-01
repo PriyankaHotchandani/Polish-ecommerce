@@ -4,14 +4,17 @@ import nodemailer, { type Transporter } from 'nodemailer'
 // Defaults target Wirtualna Polska (wp.pl) over implicit TLS (SSL) on port 465,
 // and every value can be overridden with environment variables so the password
 // does not have to live in source control in production.
-const SMTP_HOST = process.env.SMTP_HOST || 'smtp.wp.pl'
+const SMTP_HOST = process.env.SMTP_HOST
 const SMTP_PORT = Number(process.env.SMTP_PORT || '465')
 // Port 465 uses implicit TLS (SSL). `secure` is true unless explicitly disabled.
 const SMTP_SECURE = process.env.SMTP_SECURE
     ? process.env.SMTP_SECURE === 'true'
     : SMTP_PORT === 465
-const SMTP_USER = process.env.SMTP_USER || 'kraftdele-home@wp.pl'
-const SMTP_PASS = process.env.SMTP_PASS || 'Kraftdelewds2026'
+console.log('INFO: SMTP_HOST', SMTP_HOST)
+console.log('INFO: SMTP_PORT', SMTP_PORT)
+console.log('INFO: SMTP_SECURE', SMTP_SECURE)
+const SMTP_USER = process.env.SMTP_USER
+const SMTP_PASS = process.env.SMTP_PASS
 export const MAIL_FROM = process.env.SMTP_FROM || SMTP_USER
 
 let cachedTransport: Transporter | null = null
