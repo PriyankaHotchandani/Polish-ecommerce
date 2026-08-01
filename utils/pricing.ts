@@ -60,6 +60,7 @@ export function getProductPriceBreakdown(
 }
 
 export function getVolumeDiscount(cartGrossTotal: number): VolumeDiscount {
+    if (cartGrossTotal > 8000) return { rate: 0.08, percent: 8 }
     if (cartGrossTotal > 6000) return { rate: 0.06, percent: 6 }
     if (cartGrossTotal > 4000) return { rate: 0.04, percent: 4 }
     if (cartGrossTotal > 2000) return { rate: 0.02, percent: 2 }

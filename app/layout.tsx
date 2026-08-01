@@ -41,7 +41,7 @@ export default async function RootLayout({
   return (
     <html lang={locale}>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${bebasNeue.variable} antialiased pb-9`}
+        className={`${geistSans.variable} ${geistMono.variable} ${bebasNeue.variable} antialiased pb-11`}
       >
         <Providers initialLocale={locale}>
           <ConditionalNav initialLocale={locale} />
