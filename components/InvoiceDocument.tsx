@@ -153,6 +153,7 @@ interface InvoiceData {
         accountHolder: string
         iban: string
         swift: string
+        currency?: string
         reference?: string
     }
 }
@@ -283,6 +284,12 @@ export const InvoiceDocument = ({ data, locale = 'pl' }: InvoiceDocumentProps) =
                             <Text style={styles.label}>SWIFT/BIC:</Text>
                             <Text style={styles.value}>{data.bankDetails.swift}</Text>
                         </View>
+                        {data.bankDetails.currency && (
+                            <View style={styles.row}>
+                                <Text style={styles.label}>{t.bankCurrency}:</Text>
+                                <Text style={styles.value}>{data.bankDetails.currency}</Text>
+                            </View>
+                        )}
                         {data.bankDetails.reference && (
                             <View style={styles.row}>
                                 <Text style={styles.label}>{t.bankReference}:</Text>

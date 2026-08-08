@@ -6,7 +6,7 @@ import { generateInvoicePDF } from '@/utils/generateInvoicePDF'
 import { sendMail } from '@/utils/mailer'
 import type { InvoiceData } from '@/components/InvoiceDocument'
 
-// PDF generation (@react-pdf/renderer) and nodemailer require the Node runtime.
+// PDF generation (@react-pdf/renderer) and the Resend SDK require the Node runtime.
 export const runtime = 'nodejs'
 
 type PaymentMethod = 'transfer' | 'cash_on_delivery'
@@ -217,6 +217,7 @@ async function sendProformaEmail(params: {
                 accountHolder: COMPANY_DETAILS.bank.accountHolder,
                 iban: COMPANY_DETAILS.bank.iban,
                 swift: COMPANY_DETAILS.bank.swift,
+                currency: COMPANY_DETAILS.bank.currency,
                 reference: `#${shortId}`,
             }
             : undefined,
@@ -241,6 +242,7 @@ async function sendProformaEmail(params: {
           <tr><td style="padding:2px 12px 2px 0;color:#555;">${isPl ? 'Bank' : 'Bank'}</td><td>${bank.bankName}</td></tr>
           <tr><td style="padding:2px 12px 2px 0;color:#555;">IBAN</td><td><strong>${bank.iban}</strong></td></tr>
           <tr><td style="padding:2px 12px 2px 0;color:#555;">SWIFT/BIC</td><td>${bank.swift}</td></tr>
+          <tr><td style="padding:2px 12px 2px 0;color:#555;">${isPl ? 'Waluta' : 'Currency'}</td><td>${bank.currency}</td></tr>
           <tr><td style="padding:2px 12px 2px 0;color:#555;">${isPl ? 'Tytuł przelewu' : 'Transfer title'}</td><td><strong>#${shortId}</strong></td></tr>
           <tr><td style="padding:2px 12px 2px 0;color:#555;">${isPl ? 'Kwota' : 'Amount'}</td><td><strong>${money(grand)}</strong></td></tr>
         </table>`

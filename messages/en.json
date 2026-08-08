@@ -337,6 +337,7 @@
         "bankDetailsTitle": "Payment Details",
         "bankAccountHolder": "Account Holder",
         "bankName": "Bank",
+        "bankCurrency": "Currency",
         "bankReference": "Payment Title",
         "paymentMethods": {
             "card": "Card",
@@ -602,9 +603,11 @@
             "title": "Bank Transfer Details",
             "intro": "Please transfer the total amount to the account below and use your order number as the payment title.",
             "accountHolder": "Account holder",
+            "address": "Address",
             "bankName": "Bank",
             "iban": "IBAN",
             "swift": "SWIFT/BIC",
+            "currency": "Currency",
             "reference": "Payment title",
             "amount": "Amount to transfer",
             "note": "Your order is confirmed. We'll ship it as soon as we receive your payment. A proforma invoice has been sent to your e-mail."

@@ -160,12 +160,16 @@ export default async function OrderConfirmationPage({ params }: { params: Promis
                         <dl className="grid grid-cols-1 sm:grid-cols-[180px_1fr] gap-x-4 gap-y-2 text-sm">
                             <dt className="text-gray-500">{messages.orderConfirmation.bank.accountHolder}</dt>
                             <dd className="font-semibold text-gray-900">{COMPANY_DETAILS.bank.accountHolder}</dd>
+                            <dt className="text-gray-500">{messages.orderConfirmation.bank.address}</dt>
+                            <dd className="text-gray-900">{COMPANY_DETAILS.address}, {COMPANY_DETAILS.postalCode} {COMPANY_DETAILS.city}, {COMPANY_DETAILS.country}</dd>
                             <dt className="text-gray-500">{messages.orderConfirmation.bank.bankName}</dt>
                             <dd className="text-gray-900">{COMPANY_DETAILS.bank.bankName}</dd>
                             <dt className="text-gray-500">{messages.orderConfirmation.bank.iban}</dt>
                             <dd className="font-mono font-semibold text-gray-900 tracking-wide">{COMPANY_DETAILS.bank.iban}</dd>
                             <dt className="text-gray-500">{messages.orderConfirmation.bank.swift}</dt>
                             <dd className="font-mono text-gray-900">{COMPANY_DETAILS.bank.swift}</dd>
+                            <dt className="text-gray-500">{messages.orderConfirmation.bank.currency}</dt>
+                            <dd className="text-gray-900">{COMPANY_DETAILS.bank.currency}</dd>
                             <dt className="text-gray-500">{messages.orderConfirmation.bank.reference}</dt>
                             <dd className="font-semibold text-gray-900">#{order.id.slice(0, 8).toUpperCase()}</dd>
                             <dt className="text-gray-500">{messages.orderConfirmation.bank.amount}</dt>

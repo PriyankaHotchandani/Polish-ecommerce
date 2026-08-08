@@ -1,44 +1,24 @@
-import nodemailer, { type Transporter } from 'nodemailer'
+import { Resend } from 'resend'
 
-// SMTP configuration for the automated Bank Transfer / Proforma e-mails.
-// Defaults target Wirtualna Polska (wp.pl) over implicit TLS (SSL) on port 465,
-// and every value can be overridden with environment variables so the password
-// does not have to live in source control in production.
-const SMTP_HOST = process.env.SMTP_HOST
-const SMTP_PORT = Number(process.env.SMTP_PORT || '465')
-// Port 465 uses implicit TLS (SSL). `secure` is true unless explicitly disabled.
-const SMTP_SECURE = process.env.SMTP_SECURE
-    ? process.env.SMTP_SECURE === 'true'
-    : SMTP_PORT === 465
-console.log('INFO: SMTP_HOST', SMTP_HOST)
-console.log('INFO: SMTP_PORT', SMTP_PORT)
-console.log('INFO: SMTP_SECURE', SMTP_SECURE)
-const SMTP_USER = process.env.SMTP_USER
-const SMTP_PASS = process.env.SMTP_PASS
-export const MAIL_FROM = process.env.SMTP_FROM || SMTP_USER
+// Outgoing mail is sent through Resend. The Proforma e-mail always goes out from
+// the branded order address, replies route to the client's WP inbox, and a BCC
+// copy is sent to that same inbox so the client keeps a blind copy of every
+// Proforma PDF for their 5-year archive on the WP server.
+const RESEND_API_KEY = process.env.RESEND_API_KEY
+const MAIL_FROM = process.env.RESEND_FROM_EMAIL || 'zamowienia@kraftdele-home.pl'
+const MAIL_REPLY_TO = process.env.RESEND_REPLY_TO || 'kraftdele-home@wp.pl'
+const MAIL_BCC = process.env.RESEND_BCC || 'kraftdele-home@wp.pl'
 
-let cachedTransport: Transporter | null = null
+let cachedResend: Resend | null = null
 
-export function getTransport(): Transporter {
-    if (cachedTransport) {
-        return cachedTransport
+function getResend(): Resend {
+    if (!RESEND_API_KEY) {
+        throw new Error('RESEND_API_KEY is not configured')
     }
-
-    cachedTransport = nodemailer.createTransport({
-        host: SMTP_HOST,
-        port: SMTP_PORT,
-        secure: SMTP_SECURE,
-        auth: {
-            user: SMTP_USER,
-            pass: SMTP_PASS,
-        },
-        // Fail fast instead of hanging the request if wp.pl is unreachable.
-        connectionTimeout: 10000,
-        greetingTimeout: 10000,
-        socketTimeout: 20000,
-    })
-
-    return cachedTransport
+    if (!cachedResend) {
+        cachedResend = new Resend(RESEND_API_KEY)
+    }
+    return cachedResend
 }
 
 export interface MailAttachment {
@@ -56,47 +36,44 @@ export interface SendMailOptions {
 }
 
 /**
- * Sends an e-mail over the configured SMTP transport. Verifies the SMTP
- * connection first (so auth/connectivity problems surface with a clear log),
- * then sends. Throws on failure so the caller can decide how to handle it —
- * checkout completion must never be blocked by a mail error, so callers wrap
- * this in try/catch and only log the failure.
+ * Sends an e-mail via Resend with the branded sender, a reply-to and a BCC to the
+ * client's inbox, and any attachments (e.g. the Proforma PDF). Logs the Resend
+ * API response/error explicitly so bounce and delivery issues are visible in the
+ * Vercel logs. Throws on failure so the caller can decide how to handle it —
+ * checkout completion must never be blocked by a mail error, so callers wrap this
+ * in try/catch and only log the failure.
  */
 export async function sendMail(options: SendMailOptions): Promise<void> {
     if (!options.to || !options.to.trim()) {
         throw new Error('sendMail called without a recipient address')
     }
 
-    const transport = getTransport()
+    const resend = getResend()
 
-    // Verify the SMTP connection/credentials up front so wp.pl auth, TLS or
-    // timeout errors are logged explicitly rather than surfacing as an opaque
-    // send failure.
-    try {
-        await transport.verify()
-        console.log(`[mailer] SMTP connection verified (${SMTP_HOST}:${SMTP_PORT}, secure=${SMTP_SECURE}, user=${SMTP_USER})`)
-    } catch (verifyError) {
+    const { data, error } = await resend.emails.send({
+        from: MAIL_FROM,
+        to: options.to,
+        replyTo: MAIL_REPLY_TO,
+        bcc: MAIL_BCC,
+        subject: options.subject,
+        html: options.html,
+        text: options.text,
+        attachments: (options.attachments || []).map((attachment) => ({
+            filename: attachment.filename,
+            content: attachment.content,
+            contentType: attachment.contentType,
+        })),
+    })
+
+    if (error) {
         console.error(
-            `[mailer] SMTP verification FAILED for ${SMTP_HOST}:${SMTP_PORT} (secure=${SMTP_SECURE}, user=${SMTP_USER}):`,
-            verifyError
+            `[mailer] Resend API error sending to ${options.to} (from=${MAIL_FROM}, bcc=${MAIL_BCC}):`,
+            error
         )
-        throw verifyError
+        throw new Error(`Resend send failed: ${error.message || JSON.stringify(error)}`)
     }
 
-    try {
-        const info = await transport.sendMail({
-            from: MAIL_FROM,
-            to: options.to,
-            subject: options.subject,
-            html: options.html,
-            text: options.text,
-            attachments: options.attachments,
-        })
-        console.log(
-            `[mailer] E-mail sent to ${options.to} (from=${MAIL_FROM}, messageId=${info.messageId}, response=${info.response})`
-        )
-    } catch (sendError) {
-        console.error(`[mailer] Failed to send e-mail to ${options.to} (from=${MAIL_FROM}):`, sendError)
-        throw sendError
-    }
+    console.log(
+        `[mailer] Resend e-mail queued to ${options.to} (id=${data?.id}, from=${MAIL_FROM}, replyTo=${MAIL_REPLY_TO}, bcc=${MAIL_BCC})`
+    )
 }

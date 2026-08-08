@@ -337,6 +337,7 @@
         "bankDetailsTitle": "Dane do płatności",
         "bankAccountHolder": "Odbiorca",
         "bankName": "Bank",
+        "bankCurrency": "Waluta",
         "bankReference": "Tytuł przelewu",
         "paymentMethods": {
             "card": "Karta",
@@ -602,9 +603,11 @@
             "title": "Dane do przelewu",
             "intro": "Prosimy o przelew całej kwoty na poniższe konto, wpisując numer zamówienia jako tytuł przelewu.",
             "accountHolder": "Odbiorca",
+            "address": "Adres",
             "bankName": "Bank",
             "iban": "IBAN",
             "swift": "SWIFT/BIC",
+            "currency": "Waluta",
             "reference": "Tytuł przelewu",
             "amount": "Kwota do przelewu",
             "note": "Twoje zamówienie jest potwierdzone. Wyślemy je zaraz po zaksięgowaniu wpłaty. Faktura proforma została wysłana na Twój e-mail."
