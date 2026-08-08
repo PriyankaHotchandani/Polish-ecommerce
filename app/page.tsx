@@ -47,7 +47,7 @@ export default async function Home() {
     <div className="min-h-screen bg-gradient-to-b from-white to-gray-50">
       {/* Hero Section */}
       <section>
-        <div className="grid min-h-screen gap-px bg-[#050b25] lg:grid-cols-[1fr_1.08fr_1fr]">
+        <div className="grid gap-px bg-[#050b25] lg:min-h-screen lg:grid-cols-[1fr_1.08fr_1fr]">
           <Link
             href="/shop?group=household"
             className="group relative overflow-hidden bg-slate-900"

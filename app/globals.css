@@ -441,6 +441,7 @@ body.locale-switching * {
   gap: 0.7rem;
   margin-top: 1rem;
   min-width: min(100%, 17.5rem);
+  min-height: 44px;
   padding: 0.82rem 2rem;
   border-radius: 9999px;
   position: relative;
@@ -871,6 +872,7 @@ body.locale-switching * {
   justify-content: center;
   gap: 0.58rem;
   padding: 0.72rem 0;
+  min-height: 44px;
   border-radius: 0;
   border: none;
   color: #0f2f6b;
@@ -1012,8 +1014,29 @@ body.locale-switching * {
     line-height: 1.55;
   }
 
+  /* Featured products become a horizontal, snap-scrolling carousel on mobile. */
+  .featured-products-grid {
+    display: flex;
+    flex-wrap: nowrap;
+    grid-template-columns: none;
+    gap: 1rem;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-padding-left: 0.25rem;
+    padding-bottom: 0.75rem;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .featured-products-grid::-webkit-scrollbar {
+    display: none;
+  }
+
   .featured-product-frame {
-    min-height: 26.3rem;
+    flex: 0 0 78vw;
+    width: 78vw;
+    min-height: auto;
+    scroll-snap-align: start;
   }
 
   .product-card-body-featured {
@@ -1030,6 +1053,59 @@ body.locale-switching * {
 
   .product-card-stock {
     font-size: 0.8rem;
+  }
+
+  /* Dense 2-column product grid (Amazon/Flipkart-style) on the shop page. */
+  .shop-card-reveal .product-card-body-featured {
+    padding: 0.55rem 0.6rem 0.7rem;
+  }
+
+  .shop-card-reveal .product-card-image {
+    object-fit: contain;
+  }
+
+  .shop-card-reveal .product-card-category-featured {
+    font-size: 0.62rem;
+    color: #9ca3af;
+    padding: 0.2rem 0.45rem;
+  }
+
+  .shop-card-reveal .product-card-title-featured {
+    margin-top: 0.35rem;
+    font-size: 0.875rem;
+    line-height: 1.3;
+  }
+
+  .shop-card-reveal .product-card-brand-featured {
+    margin-top: 0.2rem;
+    font-size: 0.72rem;
+    color: #9ca3af;
+  }
+
+  .shop-card-reveal .product-card-price-wrap {
+    padding-top: 0.5rem;
+  }
+
+  .shop-card-reveal .price-value {
+    font-size: 1rem;
+  }
+
+  .shop-card-reveal .product-card-stock-wrap {
+    margin-top: 0.4rem;
+  }
+
+  .shop-card-reveal .product-card-stock {
+    font-size: 0.72rem;
+  }
+
+  .shop-card-reveal .product-card-cta-wrap {
+    margin-top: 0.6rem;
+  }
+
+  .shop-card-reveal .product-card-featured .product-card-cta-wrap button {
+    min-height: 44px;
+    font-size: 0.84rem;
+    border-radius: 0.55rem;
   }
 }
 
@@ -1567,24 +1643,54 @@ body.app-navigating * {
 }
 
 @media (max-width: 639px) {
+  /* Compact hero panels so the primary "Shop All" view fits a single screen. */
   .hero-panel {
-    min-height: 260px;
-    padding: 1.25rem;
+    min-height: 32vh;
+    padding: 1rem;
+  }
+
+  .hero-panel-copy {
+    gap: 0.85rem;
+  }
+
+  .hero-panel-heading {
+    font-size: 1.3rem;
+    letter-spacing: 0.2em;
+    padding-bottom: 0.4em;
+  }
+
+  .hero-brand-badges {
+    gap: 0.4rem;
+  }
+
+  .hero-brand-badge {
+    height: 28px;
+    padding: 0 0.5rem;
+  }
+
+  .hero-brand-badge-img {
+    height: 15px;
+  }
+
+  .hero-center-panel {
+    min-height: 46vh;
   }
 
   .hero-main-content {
     max-width: min(100%, 20rem);
-    transform: translateY(-1.1vh);
-    padding: 1.1rem 1rem 1.2rem;
+    transform: translateY(0);
+    gap: 0.6rem;
+    padding: 1rem 1rem 1.1rem;
   }
 
   .hero-tagline-copy {
-    font-size: 0.95rem;
-    min-height: 3rem;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    min-height: 2.4rem;
   }
 
   .hero-headline {
-    font-size: 2.1rem;
+    font-size: 1.85rem;
   }
 
   .hero-brand-name {
@@ -1592,7 +1698,32 @@ body.app-navigating * {
     white-space: normal;
   }
 
+  .hero-brand-logo-badge-img {
+    height: 24px;
+  }
+
   .hero-brand-kicker {
     font-size: 0.6rem;
+  }
+
+  .hero-cta-btn {
+    margin-top: 0.65rem;
+  }
+}
+
+/* Mobile: prevent any accidental horizontal page scroll. The only intentional
+   horizontal scroll is inside the featured-products carousel, which lives in its
+   own overflow-x:auto container and is unaffected by this. Scoped to mobile so it
+   never interferes with the desktop sticky shop sidebar. */
+@media (max-width: 767px) {
+  html,
+  body {
+    overflow-x: hidden;
+    max-width: 100%;
+  }
+
+  /* Keep the header "Sign Up" pill a comfortable tap target. */
+  .nav-signup-pill {
+    min-height: 40px;
   }
 }

@@ -442,11 +442,11 @@ export default async function ShopPage({
                         )}
 
                         {normalizedProducts.length > 0 ? (
-                            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+                            <div className="grid grid-cols-2 gap-3 md:grid-cols-2 lg:gap-6 xl:grid-cols-3">
                                 {normalizedProducts.map((product, index) => (
                                     <div
                                         key={product.id}
-                                        className="shop-card-reveal [&_.product-card-image-wrap-featured]:h-[20.8rem] lg:[&_.product-card-image-wrap-featured]:h-[22.2rem]"
+                                        className="shop-card-reveal lg:[&_.product-card-image-wrap-featured]:h-[22.2rem]"
                                         style={{ animationDelay: `${index * 70}ms` }}
                                     >
                                         <ProductCard product={product} variant="featured" />

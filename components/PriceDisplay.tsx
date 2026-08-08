@@ -73,7 +73,7 @@ export default function PriceDisplay({
         <div className="flex flex-col gap-2">
             <div className="flex flex-col gap-1">
                 <span className={isFeatured ? 'text-[0.8rem] text-slate-500' : 'text-sm text-gray-600'}>{messages.product.price}</span>
-                <span className={isFeatured ? 'text-[1.12rem] leading-tight font-bold text-slate-900' : 'text-2xl font-bold text-gray-900'}>
+                <span className={isFeatured ? 'price-value text-[1.12rem] leading-tight font-bold text-slate-900' : 'text-2xl font-bold text-gray-900'}>
                     {formatPlnPrice(breakdown.gross, locale)}
                 </span>
             </div>

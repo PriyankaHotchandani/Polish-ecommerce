@@ -28,6 +28,10 @@ const bebasNeue = Bebas_Neue({
 export const metadata: Metadata = {
   title: "BM SP. Z O.O. - Household Products & Professional Tools",
   description: "Your trusted partner for household products and professional tools in Poland. Offering both retail and wholesale pricing.",
+  // The app ships its own EN/PL localization, so browser auto-translation is
+  // redundant AND breaks React (Google Translate rewraps live text nodes such as
+  // the hero typewriter, causing "removeChild ... is not a child" crashes).
+  other: { google: 'notranslate' },
 };
 
 export default async function RootLayout({
@@ -39,7 +43,7 @@ export default async function RootLayout({
   const locale: Locale = cookieStore.get('locale')?.value === 'pl' ? 'pl' : 'en';
 
   return (
-    <html lang={locale}>
+    <html lang={locale} translate="no">
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${bebasNeue.variable} antialiased pb-11`}
       >

@@ -114,7 +114,7 @@ export default function AddToCartButton({
                 onClick={handleAddToCart}
                 disabled={disabled || isOutOfStock || isAdding}
                 type="button"
-                className={`flex-1 bg-slate-900 text-white py-2 px-4 rounded-md hover:bg-slate-950 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors font-semibold ${className}`}
+                className={`flex-1 min-h-[44px] bg-slate-900 text-white py-2 px-4 rounded-md hover:bg-slate-950 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors font-semibold ${className}`}
             >
                 {isAdding ? (
                     <span className="flex items-center justify-center gap-2">

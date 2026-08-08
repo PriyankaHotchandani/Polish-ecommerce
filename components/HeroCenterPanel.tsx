@@ -83,8 +83,11 @@ export default function HeroCenterPanel({ locale }: HeroCenterPanelProps) {
 
                     <h2 className="hero-headline">{copy.centerHeadline}</h2>
 
-                    <p className="hero-tagline-copy hero-typed-copy" aria-live="polite">
-                        {typedText}
+                    {/* translate="no" keeps browser auto-translate from rewrapping this
+                        continuously-updating text node, which would crash React with a
+                        removeChild error. */}
+                    <p className="hero-tagline-copy hero-typed-copy notranslate" aria-live="polite" translate="no">
+                        <span className="notranslate" translate="no">{typedText}</span>
                         <span className={`hero-typed-cursor${isDeleting ? ' is-soft' : ''}`} aria-hidden="true">|</span>
                     </p>
 
