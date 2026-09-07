@@ -11,11 +11,6 @@ import { HOUSEHOLD_BRANDS, TOOL_BRANDS, getBrandInfo } from '@/utils/brands'
 
 type Locale = 'en' | 'pl'
 
-// The hero videos are too large for Cloudflare Workers' static-asset size limit,
-// so they are served from external storage (e.g. an R2 bucket / CDN) via
-// NEXT_PUBLIC_MEDIA_BASE_URL. When unset, falls back to the local /public path.
-const MEDIA_BASE_URL = (process.env.NEXT_PUBLIC_MEDIA_BASE_URL || '').replace(/\/+$/, '')
-
 const MESSAGES = {
   en: enMessages,
   pl: plMessages,
@@ -67,7 +62,7 @@ export default async function Home() {
                 preload="auto"
                 aria-hidden="true"
               >
-                <source src={`${MEDIA_BASE_URL}/household.mp4`} type="video/mp4" />
+                <source src="/household.mp4" type="video/mp4" />
               </video>
               <div className="hero-panel-overlay" />
               <div className="hero-panel-copy">
@@ -109,7 +104,7 @@ export default async function Home() {
                 preload="auto"
                 aria-hidden="true"
               >
-                <source src={`${MEDIA_BASE_URL}/tools.mp4`} type="video/mp4" />
+                <source src="/tools.mp4" type="video/mp4" />
               </video>
               <div className="hero-panel-overlay" />
               <div className="hero-panel-copy">

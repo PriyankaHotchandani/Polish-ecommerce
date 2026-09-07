@@ -16,9 +16,6 @@ node_modules
 .wrangler
 cloudflare-env.d.ts
 
-# large hero videos — hosted on R2/CDN, not bundled (see NEXT_PUBLIC_MEDIA_BASE_URL)
-/media/
-
 # production
 /build
 
