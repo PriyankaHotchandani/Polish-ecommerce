@@ -11,6 +11,15 @@ import { HOUSEHOLD_BRANDS, TOOL_BRANDS, getBrandInfo } from '@/utils/brands'
 
 type Locale = 'en' | 'pl'
 
+// Hero videos are served from Supabase Storage (public "media" bucket) rather than
+// as Cloudflare Workers static assets, because Workers asset serving does not
+// support HTTP Range requests / 206 responses and Safari/iOS refuse to play a
+// <video> without them. Falls back to the local /public path when Supabase isn't
+// configured (e.g. some local dev setups).
+const MEDIA_BASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
+  ? `${process.env.NEXT_PUBLIC_SUPABASE_URL.replace(/\/+$/, '')}/storage/v1/object/public/media`
+  : ''
+
 const MESSAGES = {
   en: enMessages,
   pl: plMessages,
@@ -62,7 +71,7 @@ export default async function Home() {
                 preload="auto"
                 aria-hidden="true"
               >
-                <source src="/household.mp4" type="video/mp4" />
+                <source src={`${MEDIA_BASE_URL}/household.mp4`} type="video/mp4" />
               </video>
               <div className="hero-panel-overlay" />
               <div className="hero-panel-copy">
@@ -104,7 +113,7 @@ export default async function Home() {
                 preload="auto"
                 aria-hidden="true"
               >
-                <source src="/tools.mp4" type="video/mp4" />
+                <source src={`${MEDIA_BASE_URL}/tools.mp4`} type="video/mp4" />
               </video>
               <div className="hero-panel-overlay" />
               <div className="hero-panel-copy">
