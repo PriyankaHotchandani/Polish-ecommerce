@@ -29,11 +29,19 @@ To learn more about Next.js, take a look at the following resources:
 
 You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-## Deploy on Vercel
+## Deploy on Cloudflare Workers
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+This app runs on Cloudflare Workers via the [OpenNext](https://opennext.js.org/cloudflare) adapter.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+From a local machine: `npx wrangler login` then `npm run deploy`.
+
+For the Cloudflare **Workers Builds** Git integration, set:
+
+- **Build command:** `npm run build:cf`  (runs `opennextjs-cloudflare build` → `.open-next/`)
+- **Deploy command:** `npx wrangler deploy`
+
+The deploy command alone is not enough — without the build command the deploy
+fails with `Could not find compiled Open Next config`.
 
 ## Automated Source-of-Truth Product Sync
 
@@ -106,10 +114,8 @@ Inventory sync is scheduled with GitHub Actions every 5 minutes.
 
 Required GitHub repository secrets:
 
-- `SYNC_BASE_URL` (example: `https://your-domain.vercel.app`)
+- `SYNC_BASE_URL` (example: `https://your-worker.workers.dev`)
 - `INVENTORY_SYNC_SECRET` (must match app runtime env var)
-
-Optional fallback: keep Vercel cron in `vercel.json` as a low-frequency backup only.
 
 The endpoint now uses a database lock (`supplier_sync_locks`) so overlapping runs are skipped safely.
 
