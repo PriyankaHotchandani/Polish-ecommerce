@@ -10,6 +10,15 @@ node_modules
 /.next/
 /out/
 
+# cloudflare / opennext
+/.open-next/
+.dev.vars
+.wrangler
+cloudflare-env.d.ts
+
+# large hero videos — hosted on R2/CDN, not bundled (see NEXT_PUBLIC_MEDIA_BASE_URL)
+/media/
+
 # production
 /build
 
