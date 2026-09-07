@@ -39,3 +39,8 @@ const nextConfig: NextConfig = {
 };
 
 export default withNextIntl(nextConfig);
+
+// Cloudflare Workers (OpenNext) local dev support: makes `getCloudflareContext()` and
+// bindings available under `next dev`. No-op in production builds.
+import { initOpenNextCloudflareForDev } from '@opennextjs/cloudflare';
+initOpenNextCloudflareForDev();
