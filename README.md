@@ -43,6 +43,71 @@ For the Cloudflare **Workers Builds** Git integration, set:
 The deploy command alone is not enough — without the build command the deploy
 fails with `Could not find compiled Open Next config`.
 
+### Environment variables on Cloudflare
+
+This is the one thing that does **not** carry over from Vercel, and it silently
+breaks the database if missed.
+
+Next.js replaces every `process.env.NEXT_PUBLIC_*` expression with a literal
+string at **build** time. Vercel injects the project's environment variables into
+the build automatically, so one list covered everything. Cloudflare has two
+separate places, and only one of them is visible to `next build`:
+
+| Where | Cloudflare dashboard location | Visible to |
+| --- | --- | --- |
+| **Build** variables | Workers &rarr; your Worker &rarr; **Settings &rarr; Build** &rarr; *Variables and Secrets* | `next build` (inlined into the browser bundle) |
+| **Runtime** variables & secrets | Workers &rarr; your Worker &rarr; **Settings &rarr; Variables and Secrets** | the Worker on every request (`process.env`) |
+
+Setting a variable in only one place is what produces "no products load" plus
+`Application error: a server-side exception has occurred` on every page.
+
+**Set the two public values in _both_ places:**
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=https://mdwbxwsrbqxyefbuwstr.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_hosted_anon_key
+```
+
+**Set the server-only secrets as _runtime_ variables** (they are never inlined,
+so they do not belong in the build environment):
+
+```bash
+SUPABASE_SERVICE_ROLE_KEY=your_hosted_service_role_key
+INVENTORY_SYNC_SECRET=your_random_secret_value
+CRON_SECRET=same_value_as_INVENTORY_SYNC_SECRET
+RESEND_API_KEY=your_resend_key          # transactional e-mail
+NEXT_PUBLIC_SITE_URL=https://your-domain           # auth e-mail redirect links
+```
+
+Optional, all with working defaults: `DEEPL_API_KEY`, `DEEPL_API_URL`,
+`RESEND_FROM_EMAIL`, `RESEND_REPLY_TO`, `RESEND_BCC`, the `SUPPLIER_*_FEED_URL`
+overrides, and the `COMPANY_*` / `BANK_*` invoice details.
+
+After changing **build** variables you must trigger a new deployment — the values
+are baked into the bundle, so a restart alone does not pick them up.
+
+`utils/publicEnv.ts` falls back to the runtime environment when a public value
+was missing at build time, and the server passes it to the browser, so a
+runtime-only configuration still works. Setting both is still recommended: it
+keeps the values in the bundle and avoids the extra inline script.
+
+Also update, outside Cloudflare:
+
+- **Supabase &rarr; Authentication &rarr; URL Configuration**: set *Site URL* to the new
+  Cloudflare domain and add it to *Redirect URLs*, otherwise confirmation and
+  password-reset links still point at the Vercel domain.
+- **GitHub repository secret `SYNC_BASE_URL`**: point it at the Cloudflare
+  domain so the 5-minute inventory sync keeps running.
+
+### Local development against the Worker runtime
+
+`wrangler dev` does not read `.env`. Put the same values in `.dev.vars`
+(gitignored) to exercise the Worker locally:
+
+```bash
+npm run preview
+```
+
 ## Automated Source-of-Truth Product Sync
 
 The application now synchronizes products using `public/dane.xlsx` as the source-of-truth mapping file.

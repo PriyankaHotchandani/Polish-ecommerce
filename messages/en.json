@@ -647,5 +647,11 @@
         "applying": "Applying...",
         "applyFilters": "Apply Filters",
         "reset": "Reset"
+    },
+    "errorPage": {
+        "title": "Something went wrong",
+        "description": "We couldn't load this page. This is usually temporary \u2014 please try again in a moment.",
+        "retry": "Try again",
+        "home": "Back to Home"
     }
 }
