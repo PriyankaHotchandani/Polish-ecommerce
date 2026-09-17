@@ -169,20 +169,62 @@ SUPPLIER_INFO_FEED_URL=https://vpn.gwalento.ovh/b2b/info.txt
 SUPPLIER_E24_FEED_URL=https://e24files.com/saly-prajo-prod/offer/product/e0b71484-450a-43f4-ae3d-616e8f182905.xml
 ```
 
-### Scheduler
+### Scheduler (Cloudflare Cron Triggers)
 
-Inventory sync is scheduled with GitHub Actions every 5 minutes.
+Inventory sync runs on Cloudflare Cron Triggers, declared in `wrangler.jsonc`:
 
-- Workflow file: `.github/workflows/sync-inventory.yml`
-- Schedule: `*/5 * * * *`
-- Route: `POST /api/sync/inventory`
+| Cron | Mode | What it does |
+| --- | --- | --- |
+| `* * * * *` | `inventory` | Quantity/price refresh from the stock, info and E24 feeds |
+| `15 2 * * *` | `full` | Full catalogue re-import: products, categories, translations |
 
-Required GitHub repository secrets:
+One minute is the shortest interval Cloudflare allows, and Cron Triggers are
+included on the Workers Free plan. Raise the first entry to `*/5 * * * *` if the
+supplier feeds start rate-limiting — every run refetches them.
 
-- `SYNC_BASE_URL` (example: `https://your-worker.workers.dev`)
-- `INVENTORY_SYNC_SECRET` (must match app runtime env var)
+How it is wired:
 
-The endpoint now uses a database lock (`supplier_sync_locks`) so overlapping runs are skipped safely.
+- `worker/index.mjs` is the Worker entrypoint. It re-exports the Worker generated
+  by `opennextjs-cloudflare build` and adds the `scheduled()` handler.
+- `scheduled()` picks the mode from the cron expression (`FULL_SYNC_CRONS` must
+  match the `15 2 * * *` entry in `wrangler.jsonc`), then calls
+  `POST /api/sync/inventory` **in-process** — no public round trip, so it costs no
+  subrequest and does not depend on the site's hostname.
+- It authenticates with `INVENTORY_SYNC_SECRET` (or `CRON_SECRET`) from the
+  Worker's runtime variables. Without one the run logs an error and stops.
+- Overlapping runs are skipped by the `supplier_sync_locks` row lock, so a slow
+  run cannot pile up behind the next tick.
+
+Cron runs and their logs appear under **Workers → your Worker → Logs**, and the
+schedule under **Settings → Triggers → Cron Triggers**. Follow them live with
+`npx wrangler tail`.
+
+Test the schedule locally without waiting for the clock:
+
+```bash
+npx wrangler dev --test-scheduled
+curl "http://localhost:8787/__scheduled?cron=*+*+*+*+*"
+```
+
+#### Workers plan limits
+
+A Worker invocation on the **Free** plan gets 10 ms CPU and 50 subrequests; the
+**Paid** plan gets 30 s CPU (cron: 30 s under an hour interval) and 1,000+
+subrequests. The `inventory` sync now issues roughly five subrequests per run
+(feeds, one lock call, one `sync_supplier_inventory` RPC, one
+`sync_supplier_promotional_flags` RPC, one log call), so the subrequest ceiling is
+not a concern. CPU is the one to watch: parsing the Nokaut and E24 XML catalogues
+can exceed 10 ms, which surfaces as **error 1102 "Worker exceeded CPU time limit"**
+in the logs. If that happens on the free plan, either move to Workers Paid or drop
+the `inventory` cron to a longer interval and let the nightly `full` run do the
+catalogue work.
+
+#### GitHub Actions (manual backup)
+
+`.github/workflows/sync-inventory.yml` still calls the same endpoint but its
+schedule is commented out, so the Cloudflare cron is the only scheduler. Run it by
+hand from the Actions tab if the Worker cron is ever disabled. It needs the repo
+secrets `SYNC_BASE_URL` (the Cloudflare domain) and `INVENTORY_SYNC_SECRET`.
 
 ### Manual Trigger
 

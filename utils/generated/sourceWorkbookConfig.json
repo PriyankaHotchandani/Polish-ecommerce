@@ -1,0 +1,114 @@
+{
+  "columns": [
+    {
+      "key": "co",
+      "header": "CO",
+      "sourceUrl": "LINK",
+      "semanticKey": "ID",
+      "index": 0
+    },
+    {
+      "key": "nazwa",
+      "header": "NAZWA",
+      "sourceUrl": "https://sklep757254.shoparena.pl/console/integration/execute/name/Nokaut",
+      "semanticKey": "name",
+      "index": 1
+    },
+    {
+      "key": "opis",
+      "header": "OPIS",
+      "sourceUrl": "https://sklep757254.shoparena.pl/console/integration/execute/name/Nokaut",
+      "semanticKey": "description",
+      "index": 2
+    },
+    {
+      "key": "url_produktu",
+      "header": "URL PRODUKTU",
+      "sourceUrl": "https://sklep757254.shoparena.pl/console/integration/execute/name/Nokaut",
+      "semanticKey": "url",
+      "index": 3
+    },
+    {
+      "key": "zdjecie_glowne",
+      "header": "ZDJĘCIE GŁÓWNE",
+      "sourceUrl": "https://sklep757254.shoparena.pl/console/integration/execute/name/Nokaut",
+      "semanticKey": "image",
+      "index": 4
+    },
+    {
+      "key": "zdjecia_produktu_pozostale",
+      "header": "ZDJĘCIA PRODUKTU POZOSTŁE",
+      "sourceUrl": "https://sklep757254.shoparena.pl/console/integration/execute/name/Nokaut",
+      "semanticKey": "gallery",
+      "index": 5
+    },
+    {
+      "key": "sku_nokaut",
+      "header": "SKU",
+      "sourceUrl": "https://sklep757254.shoparena.pl/console/integration/execute/name/Nokaut",
+      "semanticKey": "property name=\"mpn\"",
+      "index": 6
+    },
+    {
+      "key": "sku_stan",
+      "header": "SKU",
+      "sourceUrl": "https://vpn.gwalento.ovh/stany.txt",
+      "semanticKey": "PIERWSZA KOLUMNA SEPARATOR |",
+      "index": 7
+    },
+    {
+      "key": "stan",
+      "header": "STAN",
+      "sourceUrl": "https://vpn.gwalento.ovh/stany.txt",
+      "semanticKey": "DRUGA KOLUMNA SEPARATOR |",
+      "index": 8
+    },
+    {
+      "key": "netto",
+      "header": "NETTO",
+      "sourceUrl": "https://vpn.gwalento.ovh/stany.txt",
+      "semanticKey": "TRZECIA KOLUMNA SEPARATOR |",
+      "index": 9
+    },
+    {
+      "key": "brutto",
+      "header": "BRUTTO",
+      "sourceUrl": "https://vpn.gwalento.ovh/stany.txt",
+      "semanticKey": "CZWARTA KOLUMNA SEPARATOR |",
+      "index": 10
+    },
+    {
+      "key": "sku_info",
+      "header": "SKU",
+      "sourceUrl": "https://vpn.gwalento.ovh/b2b/info.txt",
+      "semanticKey": "PIERWSZA KOLUMNA SEPARATOR |",
+      "index": 11
+    },
+    {
+      "key": "ena",
+      "header": "ENA",
+      "sourceUrl": "https://vpn.gwalento.ovh/b2b/info.txt",
+      "semanticKey": "DRUGA KOLUMNA SEPARATOR |",
+      "index": 12
+    },
+    {
+      "key": "cn",
+      "header": "CN",
+      "sourceUrl": "https://vpn.gwalento.ovh/b2b/info.txt",
+      "semanticKey": "TRZECIA KOLUMNA SEPARATOR |",
+      "index": 13
+    },
+    {
+      "key": "waga",
+      "header": "WAGA",
+      "sourceUrl": "https://vpn.gwalento.ovh/b2b/info.txt",
+      "semanticKey": "CZWARTA KOLUMNA SEPARATOR |",
+      "index": 14
+    }
+  ],
+  "sourceUrls": {
+    "nokaut": "https://sklep757254.shoparena.pl/console/integration/execute/name/Nokaut",
+    "stock": "https://vpn.gwalento.ovh/stany.txt",
+    "info": "https://vpn.gwalento.ovh/b2b/info.txt"
+  }
+}

@@ -1,8 +1,15 @@
 name: Sync Inventory
 
+# Scheduling moved to Cloudflare Cron Triggers (see wrangler.jsonc + worker/index.mjs),
+# which run every minute instead of every five and do not depend on GitHub's
+# best-effort scheduler. This workflow is kept as a manual backup: it calls the same
+# endpoint, so it still works if the Worker cron is ever disabled.
+#
+# To re-enable the GitHub schedule, uncomment the `schedule` block below. Concurrent
+# runs are safe either way - `supplier_sync_locks` makes a second run skip.
 on:
-  schedule:
-    - cron: '*/5 * * * *'
+  # schedule:
+  #   - cron: '*/5 * * * *'
   workflow_dispatch:
 
 concurrency:

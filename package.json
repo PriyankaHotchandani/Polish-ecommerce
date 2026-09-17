@@ -4,13 +4,14 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "npm run generate:source-config && next build",
     "start": "next start",
     "lint": "eslint",
-    "build:cf": "opennextjs-cloudflare build",
+    "build:cf": "npm run generate:source-config && opennextjs-cloudflare build",
     "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
-    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts"
+    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
+    "generate:source-config": "node scripts/generate-source-config.mjs"
   },
   "dependencies": {
     "@react-pdf/renderer": "^4.3.2",
