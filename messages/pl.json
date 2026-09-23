@@ -647,5 +647,11 @@
         "applying": "Stosowanie...",
         "applyFilters": "Zastosuj filtry",
         "reset": "Resetuj"
+    },
+    "errorPage": {
+        "title": "Coś poszło nie tak",
+        "description": "Nie udało się załadować tej strony. Zwykle jest to chwilowy problem \u2014 spróbuj ponownie za moment.",
+        "retry": "Spróbuj ponownie",
+        "home": "Powrót do strony głównej"
     }
 }

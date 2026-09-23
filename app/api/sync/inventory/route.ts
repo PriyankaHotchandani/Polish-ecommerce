@@ -252,25 +252,28 @@ async function updatePromotionalFlagsBySku(
     supabase: ReturnType<typeof createServiceClient>,
     promotionalBySku: Map<string, boolean>
 ): Promise<number> {
-    let updated = 0
-    const entries = Array.from(promotionalBySku.entries())
-
-    for (const chunk of chunkArray(entries, 200)) {
-        await Promise.all(
-            chunk.map(async ([sku, isPromotional]) => {
-                const { error } = await supabase
-                    .from('products')
-                    .update({ is_promotional: isPromotional, updated_at: new Date().toISOString() } as never)
-                    .eq('sku', sku)
-
-                if (!error) {
-                    updated += 1
-                }
-            })
-        )
+    if (promotionalBySku.size === 0) {
+        return 0
     }
 
-    return updated
+    // One RPC rather than one PostgREST UPDATE per SKU. The per-SKU version made
+    // as many subrequests as there were products, which exceeds the Cloudflare
+    // Workers limit (50 on the free plan, 1,000 on paid) on any real catalogue.
+    const payload = Array.from(promotionalBySku.entries()).map(([sku, isPromotional]) => ({
+        sku,
+        is_promotional: isPromotional,
+    }))
+
+    const { data, error } = await supabase.rpc('sync_supplier_promotional_flags', {
+        p_flags: payload,
+    } as never)
+
+    if (error) {
+        throw new Error(`Promotional flag RPC failed: ${error.message}`)
+    }
+
+    const rpcRows = (data || []) as Array<{ updated_rows: number }>
+    return rpcRows[0]?.updated_rows || 0
 }
 
 function extractTagValue(source: string, tagName: string): string | null {

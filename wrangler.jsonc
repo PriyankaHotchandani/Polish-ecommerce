@@ -1,7 +1,9 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "polish-ecommerce",
-  "main": ".open-next/worker.js",
+  // Custom entrypoint that re-exports the generated OpenNext worker and adds the
+  // `scheduled` handler used by the Cron Triggers below. See worker/index.mjs.
+  "main": "worker/index.mjs",
   "compatibility_date": "2025-09-07",
   "compatibility_flags": [
     "nodejs_compat",
@@ -10,5 +12,22 @@
   "assets": {
     "directory": ".open-next/assets",
     "binding": "ASSETS"
+  },
+  "observability": {
+    // Keeps cron run logs (console.log/error from worker/index.mjs) in the
+    // dashboard, so a failing sync is visible without `wrangler tail` attached.
+    "enabled": true
+  },
+  "triggers": {
+    "crons": [
+      // Quantity/price refresh. Every minute is the shortest interval Cloudflare
+      // Cron Triggers allow and is free; raise to "*/5 * * * *" if the supplier
+      // feeds rate-limit. Overlapping runs are skipped by the `supplier_sync_locks`
+      // row lock, so a slow run cannot pile up.
+      "* * * * *",
+      // Full catalogue re-import (products, categories, translations). Heavy, so
+      // once a day. Must match FULL_SYNC_CRONS in worker/index.mjs.
+      "15 2 * * *"
+    ]
   }
 }

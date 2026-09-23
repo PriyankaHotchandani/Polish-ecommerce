@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
+import { getPublicEnv } from '@/utils/publicEnv'
 
 const SUPPORTED_LOCALES = ['en', 'pl'] as const
 
@@ -55,11 +56,9 @@ export async function middleware(request: NextRequest) {
         })
     }
 
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
     // If Supabase public env vars are missing, skip session refresh instead of crashing middleware.
-    if (!supabaseUrl || !supabaseAnonKey) {
+    const publicEnv = getPublicEnv()
+    if (!publicEnv) {
         return response
     }
 
@@ -73,8 +72,8 @@ export async function middleware(request: NextRequest) {
 
     // Handle Supabase auth session refresh (prevents "Invalid Refresh Token" errors)
     const supabase = createServerClient(
-        supabaseUrl,
-        supabaseAnonKey,
+        publicEnv.supabaseUrl,
+        publicEnv.supabaseAnonKey,
         {
             cookies: {
                 getAll() {

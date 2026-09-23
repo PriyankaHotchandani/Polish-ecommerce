@@ -43,6 +43,71 @@ For the Cloudflare **Workers Builds** Git integration, set:
 The deploy command alone is not enough — without the build command the deploy
 fails with `Could not find compiled Open Next config`.
 
+### Environment variables on Cloudflare
+
+This is the one thing that does **not** carry over from Vercel, and it silently
+breaks the database if missed.
+
+Next.js replaces every `process.env.NEXT_PUBLIC_*` expression with a literal
+string at **build** time. Vercel injects the project's environment variables into
+the build automatically, so one list covered everything. Cloudflare has two
+separate places, and only one of them is visible to `next build`:
+
+| Where | Cloudflare dashboard location | Visible to |
+| --- | --- | --- |
+| **Build** variables | Workers &rarr; your Worker &rarr; **Settings &rarr; Build** &rarr; *Variables and Secrets* | `next build` (inlined into the browser bundle) |
+| **Runtime** variables & secrets | Workers &rarr; your Worker &rarr; **Settings &rarr; Variables and Secrets** | the Worker on every request (`process.env`) |
+
+Setting a variable in only one place is what produces "no products load" plus
+`Application error: a server-side exception has occurred` on every page.
+
+**Set the two public values in _both_ places:**
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=https://mdwbxwsrbqxyefbuwstr.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_hosted_anon_key
+```
+
+**Set the server-only secrets as _runtime_ variables** (they are never inlined,
+so they do not belong in the build environment):
+
+```bash
+SUPABASE_SERVICE_ROLE_KEY=your_hosted_service_role_key
+INVENTORY_SYNC_SECRET=your_random_secret_value
+CRON_SECRET=same_value_as_INVENTORY_SYNC_SECRET
+RESEND_API_KEY=your_resend_key          # transactional e-mail
+NEXT_PUBLIC_SITE_URL=https://your-domain           # auth e-mail redirect links
+```
+
+Optional, all with working defaults: `DEEPL_API_KEY`, `DEEPL_API_URL`,
+`RESEND_FROM_EMAIL`, `RESEND_REPLY_TO`, `RESEND_BCC`, the `SUPPLIER_*_FEED_URL`
+overrides, and the `COMPANY_*` / `BANK_*` invoice details.
+
+After changing **build** variables you must trigger a new deployment — the values
+are baked into the bundle, so a restart alone does not pick them up.
+
+`utils/publicEnv.ts` falls back to the runtime environment when a public value
+was missing at build time, and the server passes it to the browser, so a
+runtime-only configuration still works. Setting both is still recommended: it
+keeps the values in the bundle and avoids the extra inline script.
+
+Also update, outside Cloudflare:
+
+- **Supabase &rarr; Authentication &rarr; URL Configuration**: set *Site URL* to the new
+  Cloudflare domain and add it to *Redirect URLs*, otherwise confirmation and
+  password-reset links still point at the Vercel domain.
+- **GitHub repository secret `SYNC_BASE_URL`**: point it at the Cloudflare
+  domain so the 5-minute inventory sync keeps running.
+
+### Local development against the Worker runtime
+
+`wrangler dev` does not read `.env`. Put the same values in `.dev.vars`
+(gitignored) to exercise the Worker locally:
+
+```bash
+npm run preview
+```
+
 ## Automated Source-of-Truth Product Sync
 
 The application now synchronizes products using `public/dane.xlsx` as the source-of-truth mapping file.
@@ -104,20 +169,62 @@ SUPPLIER_INFO_FEED_URL=https://vpn.gwalento.ovh/b2b/info.txt
 SUPPLIER_E24_FEED_URL=https://e24files.com/saly-prajo-prod/offer/product/e0b71484-450a-43f4-ae3d-616e8f182905.xml
 ```
 
-### Scheduler
+### Scheduler (Cloudflare Cron Triggers)
 
-Inventory sync is scheduled with GitHub Actions every 5 minutes.
+Inventory sync runs on Cloudflare Cron Triggers, declared in `wrangler.jsonc`:
 
-- Workflow file: `.github/workflows/sync-inventory.yml`
-- Schedule: `*/5 * * * *`
-- Route: `POST /api/sync/inventory`
+| Cron | Mode | What it does |
+| --- | --- | --- |
+| `* * * * *` | `inventory` | Quantity/price refresh from the stock, info and E24 feeds |
+| `15 2 * * *` | `full` | Full catalogue re-import: products, categories, translations |
 
-Required GitHub repository secrets:
+One minute is the shortest interval Cloudflare allows, and Cron Triggers are
+included on the Workers Free plan. Raise the first entry to `*/5 * * * *` if the
+supplier feeds start rate-limiting — every run refetches them.
 
-- `SYNC_BASE_URL` (example: `https://your-worker.workers.dev`)
-- `INVENTORY_SYNC_SECRET` (must match app runtime env var)
+How it is wired:
 
-The endpoint now uses a database lock (`supplier_sync_locks`) so overlapping runs are skipped safely.
+- `worker/index.mjs` is the Worker entrypoint. It re-exports the Worker generated
+  by `opennextjs-cloudflare build` and adds the `scheduled()` handler.
+- `scheduled()` picks the mode from the cron expression (`FULL_SYNC_CRONS` must
+  match the `15 2 * * *` entry in `wrangler.jsonc`), then calls
+  `POST /api/sync/inventory` **in-process** — no public round trip, so it costs no
+  subrequest and does not depend on the site's hostname.
+- It authenticates with `INVENTORY_SYNC_SECRET` (or `CRON_SECRET`) from the
+  Worker's runtime variables. Without one the run logs an error and stops.
+- Overlapping runs are skipped by the `supplier_sync_locks` row lock, so a slow
+  run cannot pile up behind the next tick.
+
+Cron runs and their logs appear under **Workers → your Worker → Logs**, and the
+schedule under **Settings → Triggers → Cron Triggers**. Follow them live with
+`npx wrangler tail`.
+
+Test the schedule locally without waiting for the clock:
+
+```bash
+npx wrangler dev --test-scheduled
+curl "http://localhost:8787/__scheduled?cron=*+*+*+*+*"
+```
+
+#### Workers plan limits
+
+A Worker invocation on the **Free** plan gets 10 ms CPU and 50 subrequests; the
+**Paid** plan gets 30 s CPU (cron: 30 s under an hour interval) and 1,000+
+subrequests. The `inventory` sync now issues roughly five subrequests per run
+(feeds, one lock call, one `sync_supplier_inventory` RPC, one
+`sync_supplier_promotional_flags` RPC, one log call), so the subrequest ceiling is
+not a concern. CPU is the one to watch: parsing the Nokaut and E24 XML catalogues
+can exceed 10 ms, which surfaces as **error 1102 "Worker exceeded CPU time limit"**
+in the logs. If that happens on the free plan, either move to Workers Paid or drop
+the `inventory` cron to a longer interval and let the nightly `full` run do the
+catalogue work.
+
+#### GitHub Actions (manual backup)
+
+`.github/workflows/sync-inventory.yml` still calls the same endpoint but its
+schedule is commented out, so the Cloudflare cron is the only scheduler. Run it by
+hand from the Actions tab if the Worker cron is ever disabled. It needs the repo
+secrets `SYNC_BASE_URL` (the Cloudflare domain) and `INVENTORY_SYNC_SECRET`.
 
 ### Manual Trigger
 

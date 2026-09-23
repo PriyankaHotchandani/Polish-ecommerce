@@ -7,6 +7,7 @@ import FatFooter from "@/components/FatFooter";
 import PromoMarquee from "@/components/PromoMarquee";
 import ProfileCompletenessPrompt from "@/components/ProfileCompletenessPrompt";
 import { Providers } from "@/components/Providers";
+import PublicEnvScript from "@/components/PublicEnvScript";
 import type { Locale } from "@/contexts/LocaleContext";
 
 const geistSans = Geist({
@@ -44,6 +45,9 @@ export default async function RootLayout({
 
   return (
     <html lang={locale} translate="no">
+      <head>
+        <PublicEnvScript />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${bebasNeue.variable} antialiased pb-11`}
       >

@@ -1,0 +1,14 @@
+# Copy to `.dev.vars` (gitignored) to run the Cloudflare Worker locally with
+# `npm run preview`. Unlike `next dev`, `wrangler dev` does not read `.env`.
+#
+# On the deployed Worker these same values go in the Cloudflare dashboard — the
+# two NEXT_PUBLIC_* ones in BOTH "Settings -> Build -> Variables and Secrets"
+# and "Settings -> Variables and Secrets". See README.md.
+
+NEXT_PUBLIC_SUPABASE_URL=https://mdwbxwsrbqxyefbuwstr.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_hosted_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_hosted_service_role_key
+
+NEXT_PUBLIC_SITE_URL=http://localhost:8787
+INVENTORY_SYNC_SECRET=replace_with_long_random_secret
+CRON_SECRET=replace_with_same_value_as_inventory_sync_secret
