@@ -2,7 +2,7 @@
 
 import { useCart } from '@/contexts/CartContext'
 import { useRouter } from 'next/navigation'
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import Link from 'next/link'
 import { useLocaleMessages } from '@/contexts/LocaleContext'
@@ -86,6 +86,12 @@ export default function CheckoutPage() {
     const [user, setUser] = useState<any>(null)
     const [loading, setLoading] = useState(true)
     const [submitting, setSubmitting] = useState(false)
+    // Stable across retries of one checkout attempt (a ref, not state, so it survives
+    // re-renders without itself triggering one). The server uses this to recognize a
+    // retry of an order it already created and return that order instead of creating
+    // a duplicate -- see create_order_with_inventory_check(). Only cleared once the
+    // attempt actually succeeds, so a truly new submission after that gets a fresh key.
+    const idempotencyKeyRef = useRef<string | null>(null)
     const [error, setError] = useState<string | null>(null)
     const [orderSuccess, setOrderSuccess] = useState(false)
     const [billingIsSameAsShipping, setBillingIsSameAsShipping] = useState(true)
@@ -382,6 +388,13 @@ export default function CheckoutPage() {
                 }
             })
 
+            // Reused as-is on a retry of this same attempt (e.g. the "Place order"
+            // button pressed again after a lost/garbled response) so the server can
+            // recognize the retry and avoid creating a duplicate order.
+            if (!idempotencyKeyRef.current) {
+                idempotencyKeyRef.current = crypto.randomUUID()
+            }
+
             // Create order through server API to avoid browser-side RPC hangs.
             const orderResponse = await fetch('/api/checkout/create-order', {
                 method: 'POST',
@@ -395,16 +408,31 @@ export default function CheckoutPage() {
                     billingAddress: effectiveBillingAddress,
                     paymentMethod,
                     orderItems,
+                    idempotencyKey: idempotencyKeyRef.current,
                 }),
             })
 
-            const orderResult = await orderResponse.json()
+            // The response isn't guaranteed to be JSON: a platform-level failure
+            // (e.g. a CPU/timeout limit, or a proxy in front of the app) can substitute
+            // its own HTML error page for the route's response. Parsing that with
+            // .json() throws a SyntaxError ("JSON.parse: unexpected character..."),
+            // which — surfaced directly — looks cryptic and, worse, reads as a
+            // definitive failure when the order may well have been created already.
+            let orderResult: { success?: boolean; error?: string; orderId?: string } | null = null
+            try {
+                orderResult = await orderResponse.json()
+            } catch {
+                throw new Error(messages.checkout.errors.createOrderRetry)
+            }
 
             if (!orderResponse.ok || !orderResult?.success) {
                 throw new Error(orderResult?.error || messages.checkout.errors.createOrder)
             }
 
             const orderId = orderResult.orderId as string
+
+            // This attempt is done; a later, genuinely new order should get its own key.
+            idempotencyKeyRef.current = null
 
             // Show success message - set this BEFORE clearing cart to prevent flashing
             setOrderSuccess(true)

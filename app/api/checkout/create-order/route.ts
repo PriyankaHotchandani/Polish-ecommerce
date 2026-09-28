@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getCloudflareContext } from '@opennextjs/cloudflare'
 import { createClient } from '@/utils/supabase/server'
 import { getShippingCost, VAT_RATE } from '@/utils/pricing'
 import { COMPANY_DETAILS } from '@/utils/companyDetails'
-import { generateInvoicePDF } from '@/utils/generateInvoicePDF'
 import { sendMail } from '@/utils/mailer'
 import type { InvoiceData } from '@/components/InvoiceDocument'
 
@@ -226,6 +226,17 @@ async function sendProformaEmail(params: {
     let pdf: Buffer
     try {
         console.log(`[create-order] Generating proforma PDF for order ${shortId} (recipient=${buyerEmail}, items=${items.length})`)
+        // Imported dynamically, and only from this already-backgrounded, already
+        // try/caught path (see runInBackground below). @react-pdf/renderer is a
+        // static top-level import in most codebases, but on this Worker even
+        // *loading* its module throws ("Failed to load external module
+        // @react-pdf/renderer..."). A static `import` at the top of this file put
+        // that failure in the route's module graph, so it fired on every request to
+        // this endpoint -- before auth, before validation, before anything --
+        // regardless of payment method. Loading it here instead means a real order
+        // still gets created and its response still returns normally even when PDF
+        // generation can't run at all.
+        const { generateInvoicePDF } = await import('@/utils/generateInvoicePDF')
         pdf = await generateInvoicePDF(invoiceData, locale)
         console.log(`[create-order] Proforma PDF generated for order ${shortId} (${pdf.length} bytes)`)
     } catch (pdfError) {
@@ -288,6 +299,35 @@ async function sendProformaEmail(params: {
     console.log(`[create-order] Proforma e-mail dispatch complete for order ${shortId} (recipient=${buyerEmail})`)
 }
 
+/**
+ * Runs a task after the response has been (or is about to be) sent, without the
+ * caller waiting on it. On Cloudflare this uses `ctx.waitUntil` so the Worker is
+ * kept alive to finish the work; outside Cloudflare (e.g. local `next start`) it
+ * falls back to a detached, un-awaited promise.
+ *
+ * Why this exists: @react-pdf/renderer's PDF layout/render is CPU-heavy enough to
+ * risk exceeding a Cloudflare Worker's per-invocation CPU budget. It used to run
+ * inline, awaited, before the JSON response was returned. When it (or the Resend
+ * call after it) pushed a request over its CPU budget, the platform terminated
+ * the Worker mid-request -- before this route's own try/catch ever got a chance
+ * to run -- so Cloudflare's edge substituted its own HTML error page for the
+ * response. The browser then failed on `await response.json()` with
+ * "JSON.parse: unexpected character at line 1 column 1", even though the order
+ * itself had already been created by the RPC call above. Moving the e-mail/PDF
+ * dispatch here means the response (order created successfully) goes out as soon
+ * as the cheap DB work is done, and a slow or CPU-heavy background failure can no
+ * longer corrupt it.
+ */
+function runInBackground(task: () => Promise<void>): void {
+    try {
+        const { ctx } = getCloudflareContext()
+        ctx.waitUntil(task())
+    } catch {
+        // Not running on Cloudflare (e.g. local `next start`) -- still don't block.
+        void task()
+    }
+}
+
 export async function POST(request: NextRequest) {
     try {
         const supabase = await createClient()
@@ -299,6 +339,7 @@ export async function POST(request: NextRequest) {
             billingAddress,
             paymentMethod,
             orderItems,
+            idempotencyKey,
         }: {
             total: number
             requireInvoice: boolean
@@ -306,7 +347,20 @@ export async function POST(request: NextRequest) {
             billingAddress: Record<string, unknown>
             paymentMethod: PaymentMethod
             orderItems: OrderItemInput[]
+            idempotencyKey?: string
         } = await request.json()
+
+        // Generated once per checkout attempt on the client and resent unchanged on
+        // every retry of that attempt (see app/checkout/page.tsx). Lets the RPC
+        // recognize "this is a retry of an order I already created" instead of
+        // creating a duplicate order and double-decrementing inventory every time a
+        // response is lost after the order actually committed. An invalid or missing
+        // key is treated as "no protection for this call" rather than an error --
+        // it can't cause a duplicate to go undetected, only fail to catch one.
+        const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+        const safeIdempotencyKey = typeof idempotencyKey === 'string' && UUID_RE.test(idempotencyKey)
+            ? idempotencyKey
+            : null
 
         const {
             data: { user },
@@ -334,6 +388,7 @@ export async function POST(request: NextRequest) {
                 p_billing_address: billingAddress,
                 p_payment_method: paymentMethod,
                 p_order_items: orderItems,
+                p_idempotency_key: safeIdempotencyKey,
             })
             .single<CreateOrderRpcResult>()
 
@@ -367,33 +422,38 @@ export async function POST(request: NextRequest) {
         }
 
         // Dispatch the Proforma / order-confirmation e-mail with the invoice PDF
-        // attached. This must never block or fail the checkout completion — any
-        // SMTP/rendering error is logged and swallowed.
-        try {
+        // attached in the background, after this response is sent — see
+        // runInBackground above for why this can no longer block or corrupt
+        // checkout completion.
+        if (user.email && data.order_id) {
             const locale = request.cookies.get('locale')?.value === 'pl' ? 'pl' : 'en'
+            const orderId = data.order_id
+            const buyerEmail = user.email
             console.log(
-                `[create-order] Order ${data.order_id} created; preparing proforma e-mail`,
-                { recipient: user.email, paymentMethod }
+                `[create-order] Order ${orderId} created; scheduling proforma e-mail`,
+                { recipient: buyerEmail, paymentMethod }
             )
-            if (user.email && data.order_id) {
-                await sendProformaEmail({
-                    supabase,
-                    orderId: data.order_id,
-                    paymentMethod,
-                    total,
-                    buyerEmail: user.email,
-                    shipping: shippingAddress as CheckoutAddressPayload & { nipNumber?: string },
-                    billing: billingAddress as CheckoutAddressPayload & { nipNumber?: string },
-                    locale,
-                })
-            } else {
-                console.error('[create-order] Skipping proforma e-mail: missing user.email or order id', {
-                    hasEmail: Boolean(user.email),
-                    orderId: data.order_id,
-                })
-            }
-        } catch (mailError) {
-            console.error('[create-order] Proforma e-mail dispatch failed (order still completed):', mailError)
+            runInBackground(async () => {
+                try {
+                    await sendProformaEmail({
+                        supabase,
+                        orderId,
+                        paymentMethod,
+                        total,
+                        buyerEmail,
+                        shipping: shippingAddress as CheckoutAddressPayload & { nipNumber?: string },
+                        billing: billingAddress as CheckoutAddressPayload & { nipNumber?: string },
+                        locale,
+                    })
+                } catch (mailError) {
+                    console.error(`[create-order] Proforma e-mail dispatch failed for order ${orderId} (order still completed):`, mailError)
+                }
+            })
+        } else {
+            console.error('[create-order] Skipping proforma e-mail: missing user.email or order id', {
+                hasEmail: Boolean(user.email),
+                orderId: data.order_id,
+            })
         }
 
         return NextResponse.json({ success: true, orderId: data.order_id })
