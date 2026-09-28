@@ -398,7 +398,18 @@ export default function CheckoutPage() {
                 }),
             })
 
-            const orderResult = await orderResponse.json()
+            // The response isn't guaranteed to be JSON: a platform-level failure
+            // (e.g. a CPU/timeout limit, or a proxy in front of the app) can substitute
+            // its own HTML error page for the route's response. Parsing that with
+            // .json() throws a SyntaxError ("JSON.parse: unexpected character..."),
+            // which — surfaced directly — looks cryptic and, worse, reads as a
+            // definitive failure when the order may well have been created already.
+            let orderResult: { success?: boolean; error?: string; orderId?: string } | null = null
+            try {
+                orderResult = await orderResponse.json()
+            } catch {
+                throw new Error(messages.checkout.errors.createOrderRetry)
+            }
 
             if (!orderResponse.ok || !orderResult?.success) {
                 throw new Error(orderResult?.error || messages.checkout.errors.createOrder)
