@@ -13,6 +13,22 @@
     "directory": ".open-next/assets",
     "binding": "ASSETS"
   },
+  // Plain (non-secret) runtime variables. IMPORTANT: `wrangler deploy` treats this
+  // block as authoritative for plain vars and resets them to match it on every
+  // deploy -- a plain variable added only through the dashboard, with nothing
+  // declared here, gets wiped the next time a deploy runs. That's what kept
+  // erasing NEXT_PUBLIC_SUPABASE_URL after every merge. Secrets (SUPABASE_SERVICE_
+  // ROLE_KEY, INVENTORY_SYNC_SECRET, CRON_SECRET, RESEND_API_KEY, ...) are a
+  // separate Cloudflare mechanism that deploys don't touch, so they stay in the
+  // dashboard's Variables and Secrets screen -- never put a secret in this file,
+  // it's committed to the repo in plain text.
+  //
+  // NEXT_PUBLIC_SUPABASE_URL is safe to commit: it's a project hostname, not a
+  // credential -- the same value already sits in this repo's README and
+  // .env.example, and Next.js ships it to every browser regardless.
+  "vars": {
+    "NEXT_PUBLIC_SUPABASE_URL": "https://mdwbxwsrbqxyefbuwstr.supabase.co"
+  },
   "observability": {
     // Keeps cron run logs (console.log/error from worker/index.mjs) in the
     // dashboard, so a failing sync is visible without `wrangler tail` attached.
