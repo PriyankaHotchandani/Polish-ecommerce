@@ -73,6 +73,32 @@ type FeedFetchResult = {
     durationMs: number
 }
 
+/**
+ * Wraps fetchTextWithRetry so one feed's failure can't abort the whole sync.
+ *
+ * The four supplier feeds were fetched with Promise.all, which fails the
+ * entire run the moment any single one rejects -- including the stock/price
+ * feeds that have nothing to do with, say, the Nokaut catalogue feed being
+ * down or blocked. Since this every-minute sync exists specifically to keep
+ * stock and prices current, one unrelated feed being unreachable (a 4xx/5xx
+ * from the supplier, a timeout, a network error) should degrade gracefully --
+ * an empty result for that feed only -- not take the whole run down with it.
+ *
+ * Safe to treat as empty: every downstream consumer merges by SKU (the sync
+ * RPCs UPDATE ... FROM a merged set, matched by SKU) rather than replacing
+ * wholesale, so a feed that came back empty updates nothing for the products
+ * it would have covered instead of wiping their existing stock/price/flags.
+ */
+async function fetchFeedTolerant(label: string, url: string): Promise<FeedFetchResult> {
+    try {
+        return await fetchTextWithRetry(url)
+    } catch (error) {
+        const message = error instanceof Error ? error.message : String(error)
+        console.error(`[inventory-sync] ${label} feed fetch failed, continuing without it: ${message}`)
+        return { content: '', durationMs: 0 }
+    }
+}
+
 type ParseStockResult = {
     rows: StockFeedRow[]
     skippedRows: number
@@ -765,10 +791,10 @@ async function runSync(request: NextRequest) {
         }
 
         const [nokautFetch, stockFetch, infoFetch, e24Fetch] = await Promise.all([
-            fetchTextWithRetry(nokautFeedUrl),
-            fetchTextWithRetry(stockFeedUrl),
-            fetchTextWithRetry(infoFeedUrl),
-            fetchTextWithRetry(e24FeedUrl),
+            fetchFeedTolerant('Nokaut', nokautFeedUrl),
+            fetchFeedTolerant('Stock', stockFeedUrl),
+            fetchFeedTolerant('Info', infoFeedUrl),
+            fetchFeedTolerant('E24', e24FeedUrl),
         ])
 
         nokautFetchMs = nokautFetch.durationMs
