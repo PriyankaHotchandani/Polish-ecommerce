@@ -339,6 +339,7 @@ export async function POST(request: NextRequest) {
             billingAddress,
             paymentMethod,
             orderItems,
+            idempotencyKey,
         }: {
             total: number
             requireInvoice: boolean
@@ -346,7 +347,20 @@ export async function POST(request: NextRequest) {
             billingAddress: Record<string, unknown>
             paymentMethod: PaymentMethod
             orderItems: OrderItemInput[]
+            idempotencyKey?: string
         } = await request.json()
+
+        // Generated once per checkout attempt on the client and resent unchanged on
+        // every retry of that attempt (see app/checkout/page.tsx). Lets the RPC
+        // recognize "this is a retry of an order I already created" instead of
+        // creating a duplicate order and double-decrementing inventory every time a
+        // response is lost after the order actually committed. An invalid or missing
+        // key is treated as "no protection for this call" rather than an error --
+        // it can't cause a duplicate to go undetected, only fail to catch one.
+        const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+        const safeIdempotencyKey = typeof idempotencyKey === 'string' && UUID_RE.test(idempotencyKey)
+            ? idempotencyKey
+            : null
 
         const {
             data: { user },
@@ -374,6 +388,7 @@ export async function POST(request: NextRequest) {
                 p_billing_address: billingAddress,
                 p_payment_method: paymentMethod,
                 p_order_items: orderItems,
+                p_idempotency_key: safeIdempotencyKey,
             })
             .single<CreateOrderRpcResult>()
 
