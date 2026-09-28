@@ -790,8 +790,20 @@ async function runSync(request: NextRequest) {
             )
         }
 
+        // The Nokaut catalogue export is enormous (17+ MB) and is only actually used
+        // for the full-sync path below (categories, translations, product upserts) --
+        // in light `inventory` mode its sole use is contributing to the
+        // is_promotional flag. Fetching and parsing 17+ MB every single minute for
+        // one boolean is wasteful, and repeatedly hitting an expensive
+        // dynamically-generated export at that frequency is a plausible trigger for
+        // rate/frequency-based rejections from the supplier (seen as sporadic
+        // HTTP 421s) that a once-daily full sync wouldn't provoke. Promotional flags
+        // sourced from Nokaut specifically now refresh once a day instead of every
+        // minute; flags sourced from the (much smaller) E24 feed are unaffected.
         const [nokautFetch, stockFetch, infoFetch, e24Fetch] = await Promise.all([
-            fetchFeedTolerant('Nokaut', nokautFeedUrl),
+            isFullSync
+                ? fetchFeedTolerant('Nokaut', nokautFeedUrl)
+                : Promise.resolve<FeedFetchResult>({ content: '', durationMs: 0 }),
             fetchFeedTolerant('Stock', stockFeedUrl),
             fetchFeedTolerant('Info', infoFeedUrl),
             fetchFeedTolerant('E24', e24FeedUrl),
