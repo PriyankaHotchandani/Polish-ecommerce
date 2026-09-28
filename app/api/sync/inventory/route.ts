@@ -73,6 +73,32 @@ type FeedFetchResult = {
     durationMs: number
 }
 
+/**
+ * Wraps fetchTextWithRetry so one feed's failure can't abort the whole sync.
+ *
+ * The four supplier feeds were fetched with Promise.all, which fails the
+ * entire run the moment any single one rejects -- including the stock/price
+ * feeds that have nothing to do with, say, the Nokaut catalogue feed being
+ * down or blocked. Since this every-minute sync exists specifically to keep
+ * stock and prices current, one unrelated feed being unreachable (a 4xx/5xx
+ * from the supplier, a timeout, a network error) should degrade gracefully --
+ * an empty result for that feed only -- not take the whole run down with it.
+ *
+ * Safe to treat as empty: every downstream consumer merges by SKU (the sync
+ * RPCs UPDATE ... FROM a merged set, matched by SKU) rather than replacing
+ * wholesale, so a feed that came back empty updates nothing for the products
+ * it would have covered instead of wiping their existing stock/price/flags.
+ */
+async function fetchFeedTolerant(label: string, url: string): Promise<FeedFetchResult> {
+    try {
+        return await fetchTextWithRetry(url)
+    } catch (error) {
+        const message = error instanceof Error ? error.message : String(error)
+        console.error(`[inventory-sync] ${label} feed fetch failed, continuing without it: ${message}`)
+        return { content: '', durationMs: 0 }
+    }
+}
+
 type ParseStockResult = {
     rows: StockFeedRow[]
     skippedRows: number
@@ -764,11 +790,23 @@ async function runSync(request: NextRequest) {
             )
         }
 
+        // The Nokaut catalogue export is enormous (17+ MB) and is only actually used
+        // for the full-sync path below (categories, translations, product upserts) --
+        // in light `inventory` mode its sole use is contributing to the
+        // is_promotional flag. Fetching and parsing 17+ MB every single minute for
+        // one boolean is wasteful, and repeatedly hitting an expensive
+        // dynamically-generated export at that frequency is a plausible trigger for
+        // rate/frequency-based rejections from the supplier (seen as sporadic
+        // HTTP 421s) that a once-daily full sync wouldn't provoke. Promotional flags
+        // sourced from Nokaut specifically now refresh once a day instead of every
+        // minute; flags sourced from the (much smaller) E24 feed are unaffected.
         const [nokautFetch, stockFetch, infoFetch, e24Fetch] = await Promise.all([
-            fetchTextWithRetry(nokautFeedUrl),
-            fetchTextWithRetry(stockFeedUrl),
-            fetchTextWithRetry(infoFeedUrl),
-            fetchTextWithRetry(e24FeedUrl),
+            isFullSync
+                ? fetchFeedTolerant('Nokaut', nokautFeedUrl)
+                : Promise.resolve<FeedFetchResult>({ content: '', durationMs: 0 }),
+            fetchFeedTolerant('Stock', stockFeedUrl),
+            fetchFeedTolerant('Info', infoFeedUrl),
+            fetchFeedTolerant('E24', e24FeedUrl),
         ])
 
         nokautFetchMs = nokautFetch.durationMs
