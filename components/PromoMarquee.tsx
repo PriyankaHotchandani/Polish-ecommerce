@@ -8,7 +8,12 @@ export default function PromoMarquee() {
 
     return (
         <div
-            className="fixed bottom-0 inset-x-0 z-50 pointer-events-none"
+            // Below modal/drawer-level UI (ShopFilters, admin Modal/Toast all use
+            // z-50): this is ambient page chrome, rendered last in layout.tsx, so at
+            // an equal z-index it would win DOM stacking order and paint over any
+            // drawer's buttons that happen to sit near the bottom of the viewport
+            // (e.g. the shop filter drawer's Apply button).
+            className="fixed bottom-0 inset-x-0 z-30 pointer-events-none"
             aria-hidden="true"
         >
             <div className="pointer-events-auto mx-auto max-w-full overflow-hidden border-t border-[#4f7dff]/30 bg-[#0b1327] backdrop-blur-md shadow-[0_-4px_24px_rgba(15,23,42,0.28)]">
